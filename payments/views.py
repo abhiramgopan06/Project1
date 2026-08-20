@@ -1,5 +1,11 @@
 from django. shortcuts import render,redirect
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+
+from cart.models import Cart, CartItem
 from .models import Payment
 from .forms import PaymentForm
 import razorpay
@@ -40,3 +46,58 @@ def payments_list(request):
 def order_success(request):
     return HttpResponse('Payment Successfull')
 
+@login_required
+@require_POST
+def create_payment_order(request):
+    try:
+        cart = Cart.objects.get(user=request.user)
+    except Cart.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Cart not found.'
+        }, status=404)
+
+    cart_items = CartItem.objects.filter(cart=cart).select_related('product')
+
+    if not cart_items.exists():
+        return JsonResponse({
+            'success': False,
+            'error': 'Your cart is empty.'
+        }, status=400)
+
+    total = 0
+
+    for item in cart_items:
+        if item.product.stock < item.quantity:
+            return JsonResponse({
+                'success': False,
+                'error': f'Not enough stock for {item.product.name}.'
+            }, status=400)
+
+        total += item.product.price * item.quantity
+
+    amount = int(total * 100)
+
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
+
+    try:
+        razorpay_order = client.order.create({
+            'amount': amount,
+            'currency': 'INR',
+            'payment_capture': 1
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Unable to create Razorpay order: {str(e)}'
+        }, status=500)
+
+    return JsonResponse({
+        'success': True,
+        'order_id': razorpay_order['id'],
+        'amount': amount,
+        'currency': 'INR',
+        'key': settings.RAZORPAY_KEY_ID
+    })

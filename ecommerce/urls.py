@@ -12,8 +12,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', include('orders.urls')),
     path('payments/', include('payments.urls')),
-    path('checkout/',include('orders.urls')),
-    path('payment_list/',views.payment_list,name='payment_list'),
+    path('payment_list/',views.payments_list,name='payment_list'),
 ]
 
 if settings.DEBUG:

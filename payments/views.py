@@ -39,3 +39,4 @@ def payments_list(request):
 
 def order_success(request):
     return HttpResponse('Payment Successfull')
+

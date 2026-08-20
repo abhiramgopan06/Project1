@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Successful | ShopEasy{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-card empty-cart" style="text-align:center;">
+        <h1>🎉 Order Placed Successfully!</h1>
+        <p>Your order has been placed successfully. Thank you for shopping with us.</p>
+        <a href="{% url 'products:home' %}" class="place-order-btn" style="display:inline-block; text-decoration:none;">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}E-Comerce Store | Online Store{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+<div class="container">
+    <section class="hero">
+        <div>
+            <h1>Everything you need, all in one place.</h1>
+            <p>Discover quality products at great prices. Browse categories, compare products and add your favourites to the cart.</p>
+            <a class="btn btn-primary" href="#products">Shop Now →</a>
+        </div>
+        <div class="hero-art">🛍️</div>
+    </section>
+
+    <div class="section-head">
+        <div>
+            <h2>Shop by Category</h2>
+            <p>Find what you are looking for faster.</p>
+        </div>
+    </div>
+
+    
+    <div class="category-row">
+        {% for category in categories %}
+        <a class="category-card" href="?category={{ category.id }}">
+            <div class="category-icon">
+                {% if category.name|lower == "electronics" %}💻
+                {% elif category.name|lower == "clothing" %}👕
+                {% elif category.name|lower == "books" %}📚
+                {% elif category.name|lower == "shoes" %}👟
+                {% else %}🛍️{% endif %}
+            </div>
+            {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="section-head" id="products">
+        <div>
+            <h2>All Products</h2>
+            <p>{{ products|length }} product{{ products|length|pluralize }} available</p>
+        </div>
+    </div>
+
+    <div class="shop-layout">
+        <aside class="filters">
+            <h3>Filters</h3>
+            <form method="get">
+                <label for="q">Search</label>
+                <input class="input" id="q" type="text" name="q" value="{{ request.GET.q }}" placeholder="Product name">
+
+                <label for="category">Category</label>
+                <select class="select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="min_price">Minimum price</label>
+                <input class="input" id="min_price" type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="₹0">
+
+                <label for="max_price">Maximum price</label>
+                <input class="input" id="max_price" type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="₹100000">
+
+                <button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Apply Filters</button>
+                <a class="btn btn-outline" style="width:100%;margin-top:8px" href="{% url 'products:home' %}">Clear</a>
+            </form>
+        </aside>
+
+        <section>
+            {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <article class="product-card">
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <span style="font-size:60px">📦</span>
+                        {% endif %}
+                    </a>
+                    <div class="product-info">
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        <div class="product-desc" data-description="{{ product.description|escapejs }}">
+                            <span class="desc-text"></span>
+                            <button type="button" class="desc-more" onclick="toggleDescription(this)">more</button>
+                        </div>
+                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        {% if product.stock > 0 and product.is_available %}
+                            <span class="stock">✓ In stock</span>
+                        {% else %}
+                            <span style="font-size:12px;color:#dc2626">Out of stock</span>
+                        {% endif %}
+                        <div class="product-actions">
+                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
+                            {% if product.stock > 0 and product.is_available %}
+                            <form method="post" action="{% url 'cart:add_to_cart' product.id %}" style="flex:1">
+                                {% csrf_token %}
+                                <button class="btn btn-primary" style="width:100%" type="submit">Add to Cart</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+                <div class="empty">
+                    <div style="font-size:45px">🔎</div>
+                    <h3>No products found</h3>
+                    <p>Try a different search or clear the filters.</p>
+                    <a class="btn btn-primary" href="{% url 'products:home' %}">View all products</a>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".product-desc").forEach(function (description) {
+
+            const fullText = description.dataset.description.trim();
+            const textElement = description.querySelector(".desc-text");
+            const moreButton = description.querySelector(".desc-more");
+
+            const words = fullText.split(/\s+/).filter(Boolean);
+
+            const wordLimit = 12;
+
+            if (words.length > wordLimit) {
+
+                textElement.textContent =
+                    words.slice(0, wordLimit).join(" ") + ".....";
+
+                moreButton.style.display = "inline";
+
+            } else {
+
+                textElement.textContent = fullText;
+                moreButton.style.display = "none";
+
+            }
+        });
+    });
+
+
+    function toggleDescription(button) {
+
+        const description = button.closest(".product-desc");
+        const textElement = description.querySelector(".desc-text");
+
+        const fullText = description.dataset.description.trim();
+
+        const words = fullText.split(/\s+/).filter(Boolean);
+
+        const wordLimit = 12;
+
+
+        if (description.classList.contains("expanded")) {
+
+            textElement.textContent =
+                words.slice(0, wordLimit).join(" ") + ".....";
+
+            button.textContent = "more";
+
+            description.classList.remove("expanded");
+
+        } else {
+
+            textElement.textContent = fullText;
+
+            button.textContent = "less";
+
+            description.classList.add("expanded");
+        }
+    }
+</script>
+{% endblock %}

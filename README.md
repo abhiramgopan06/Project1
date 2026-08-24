@@ -1,4 +1,4 @@
-# ShopEasy — Django E-Commerce Application
+# E-Comerce Store — Django E-Commerce Application
 
 A full-stack e-commerce web application built with Django, featuring separate **Admin** and **User** roles, product browsing with search/filtering, a persistent cart, order placement with delivery details, order status tracking, and both Cash-on-Delivery and online (Razorpay demo) payment options.
 

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} | E-Comerce Store{% endblock %}
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-header">
+        <h1>Order #{{ order.id }}</h1>
+        <p>Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+    </div>
+
+    {% if status_steps %}
+    <div class="checkout-card">
+        <h2 class="section-title">Order Status</h2>
+        <div class="status-tracker">
+            {% for step in status_steps %}
+            <div class="status-step {% if step.done %}status-step-done{% endif %}">
+                <span class="status-step-dot"></span>
+                <span class="status-step-label">{{ step.label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="checkout-card">
+        <h2 class="section-title">Order Status</h2>
+        <span class="pill order-status-cancelled">Cancelled</span>
+    </div>
+    {% endif %}
+
+    <div class="checkout-layout">
+        <div>
+            <div class="checkout-card">
+                <h2 class="section-title">Items</h2>
+                {% for item in order.items.all %}
+                <div class="product-item">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" class="product-image" alt="{{ item.product.name }}">
+                    {% else %}
+                        <div class="product-image product-image-empty"></div>
+                    {% endif %}
+                    <div class="product-info">
+                        <div class="product-name">{{ item.product.name }}</div>
+                        <div class="product-price">Price: ₹{{ item.price }}</div>
+                        <div class="product-quantity">Quantity: {{ item.quantity }}</div>
+                    </div>
+                    <div class="product-subtotal">₹{{ item.price|floatformat:2 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="checkout-card checkout-form-card">
+                <h2 class="section-title">Delivery Address</h2>
+                <p>{{ order.name }}</p>
+                <p>{{ order.address }}</p>
+                <p>{{ order.phone }} &middot; {{ order.email }}</p>
+            </div>
+        </div>
+
+        <aside>
+            <div class="checkout-card">
+                <h2 class="section-title">Payment</h2>
+                <div class="summary-row"><span>Method</span><span>{{ order.payment_method }}</span></div>
+                <div class="summary-row"><span>Payment Status</span><span>{{ order.payment_status }}</span></div>
+                <div class="summary-row total"><span>Total</span><span>₹{{ order.total_amount|floatformat:2 }}</span></div>
+            </div>
+            <a href="{% url 'order_history' %}" class="back-cart">← Back to My Orders</a>
+        </aside>
+    </div>
+</div>
+{% endblock %}

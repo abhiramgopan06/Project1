@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found | E-Comerce Store{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="empty" style="margin:60px 0; text-align:center;">
+        <div style="font-size:60px">🔍</div>
+        <h2>Page not found</h2>
+        <p>The page you're looking for doesn't exist or may have been moved.</p>
+        <a class="btn btn-primary" href="{% url 'products:home' %}">Back to Shop</a>
+    </div>
+</div>
+{% endblock %}

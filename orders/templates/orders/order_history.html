@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}My Orders | E-Comerce Store{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="section-head">
+        <div>
+            <h2>My Orders</h2>
+            <p>Track and review orders you've placed.</p>
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="order-list">
+        {% for order in orders %}
+        <a class="order-row" href="{% url 'order_detail' order.id %}">
+            <div class="order-row-main">
+                <div class="order-row-title">Order #{{ order.id }}</div>
+                <div class="order-row-meta">
+                    Placed on {{ order.created_at|date:"d M Y, h:i A" }}
+                    &middot; {{ order.items.count }} item{{ order.items.count|pluralize }}
+                </div>
+            </div>
+            <div class="order-row-status">
+                <span class="pill order-status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+                <div class="order-row-total">₹{{ order.total_amount|floatformat:2 }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty" style="margin:35px 0">
+            <div style="font-size:55px">📦</div>
+            <h2>No orders yet</h2>
+            <p>Your placed orders will show up here.</p>
+            <a class="btn btn-primary" href="{% url 'products:home' %}">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

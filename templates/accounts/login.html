@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login | E-Comerce Store{% endblock %}
+{% block content %}
+
+<div class="container auth-wrap">
+    <div class="auth-card">
+
+        <h1>Welcome back</h1>
+        <p style="color:#64748b">Login to continue shopping.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Login</button>
+        </form>
+
+        <p style="text-align:center;color:#64748b">Don't have an account? <a href="{% url 'register' %}" style="color:#2563eb;font-weight:700">Create one</a></p>
+        <p style="text-align:center;color:#64748b">Welcome to <a href="/admin/">Admin Login</a></p>
+    </div>
+</div>
+{% endblock %}
+

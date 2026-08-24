@@ -1,0 +1,61 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Manage Orders | E-Comerce Store{% endblock %}
+
+{% block dashboard_content %}
+<div class="section-head">
+    <div>
+        <h2>Orders</h2>
+        <p>View customer orders and update their status.</p>
+    </div>
+</div>
+
+<div class="dashboard-filters">
+    <a class="pill {% if not status_filter %}active{% endif %}" href="{% url 'dashboard:orders' %}">All</a>
+    {% for value, label in status_choices %}
+        <a class="pill {% if status_filter == value %}active{% endif %}" href="?status={{ value }}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+<div class="checkout-card">
+    {% if orders %}
+    <table class="dashboard-table">
+        <thead>
+            <tr>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Placed</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.name }}<br><span class="order-row-meta">{{ order.user.username }}</span></td>
+                <td>{{ order.items.count }}</td>
+                <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                <td>{{ order.payment_method }} &middot; {{ order.payment_status }}</td>
+                <td>
+                    <form method="post" action="{% url 'dashboard:update_order_status' order.id %}" class="status-form">
+                        {% csrf_token %}
+                        <select name="status" class="select status-select" onchange="this.form.submit()">
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <noscript><button class="btn btn-outline" type="submit">Update</button></noscript>
+                    </form>
+                </td>
+                <td>{{ order.created_at|date:"d M Y, h:i A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No orders found for this filter.</p>
+    {% endif %}
+</div>
+{% endblock %}

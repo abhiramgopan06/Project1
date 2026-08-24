@@ -1,0 +1,48 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Registered Users | E-Comerce Store{% endblock %}
+
+{% block dashboard_content %}
+<div class="section-head">
+    <div>
+        <h2>Registered Users</h2>
+        <p>Everyone who has created an account on the store.</p>
+    </div>
+</div>
+
+<div class="checkout-card">
+    {% if users %}
+    <table class="dashboard-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Orders</th>
+                <th>Joined</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email|default:"—" }}</td>
+                <td>{{ u.order_count }}</td>
+                <td>{{ u.date_joined|date:"d M Y" }}</td>
+                <td>
+                    {% if u.is_superuser %}
+                        <span class="pill order-status-delivered">Superuser</span>
+                    {% elif u.is_staff %}
+                        <span class="pill order-status-confirmed">Staff</span>
+                    {% else %}
+                        <span class="pill order-status-pending">Customer</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No registered users yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

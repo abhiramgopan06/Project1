@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | E-Comerce Store{% endblock %}
+{% block content %}
+<div class="container">
+    <div style="margin-top:25px;color:#64748b;font-size:14px">
+        <a href="{% url 'products:home' %}">Home</a> / {{ product.category.name }} / {{ product.name }}
+    </div>
+
+    <section class="detail">
+        <div class="detail-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <span style="font-size:100px">📦</span>
+            {% endif %}
+        </div>
+
+        <div>
+            <span class="product-category">{{ product.category.name }}</span>
+            <h1>{{ product.name }}</h1>
+            <div class="detail-price">₹{{ product.price|floatformat:2 }}</div>
+            <p class="detail-desc">{{ product.description }}</p>
+
+            <div class="meta">
+                <span class="pill">🚚 Fast delivery</span>
+                <span class="pill">↩ Easy returns</span>
+                {% if product.stock > 0 and product.is_available %}
+                    <span class="pill" style="color:#15803d">✓ In stock</span>
+                {% else %}
+                    <span class="pill" style="color:#dc2626">Out of stock</span>
+                {% endif %}
+            </div>
+
+            {% if product.stock > 0 and product.is_available %}
+                <p style="font-size:13px;color:#64748b">{{ product.stock }} item{{ product.stock|pluralize }} available</p>
+                <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-primary" type="submit" style="width:220px">Add to Cart</button>
+                </form>
+            {% else %}
+                <button class="btn btn-outline" disabled>Currently unavailable</button>
+            {% endif %}
+
+            <p style="margin-top:20px"><a href="{% url 'products:home' %}">← Continue shopping</a></p>
+        </div>
+    </section>
+</div>
+{% endblock %}

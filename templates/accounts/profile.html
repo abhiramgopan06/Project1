@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Profile | E-Comerce Store{% endblock %}
+{% block content %}
+
+<div class="container">
+
+    <div class="profile-card">
+        <h1>My Profile</h1>
+        <p style="color:#64748b">Keep your account and delivery details up to date.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <h3>Personal Information</h3>
+            {{ user_form.as_p }}
+            <h3 style="margin-top:25px">Delivery Information</h3>
+            {{ profile_form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

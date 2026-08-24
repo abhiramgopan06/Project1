@@ -1,28 +1,24 @@
 # ShopEasy — Django E-Commerce Application
 
-A full-stack e-commerce web application built with Django, featuring separate
-**Admin** and **User** roles, product browsing with search/filtering, a
-persistent cart, order placement with delivery details, order status
-tracking, and both Cash-on-Delivery and online (Razorpay demo) payment
-options.
+A full-stack e-commerce web application built with Django, featuring separate **Admin** and **User** roles, product browsing with search/filtering, a persistent cart, order placement with delivery details, order status tracking, and both Cash-on-Delivery and online (Razorpay demo) payment options.
 
 ---
 
 ## Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Database Design](#database-design)
-- [Setup & Installation](#setup--installation)
-- [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project)
-- [User Roles & Access](#user-roles--access)
-- [App-by-App Overview](#app-by-app-overview)
-- [Order Status Flow](#order-status-flow)
-- [Payment Flow](#payment-flow)
-- [Error Handling](#error-handling)
-- [Known Limitations](#known-limitations)
+- Features
+- Tech Stack
+- Project Structure
+- Database Design
+- Setup & Installation
+- Environment Variables
+- Running the Project
+- User Roles & Access
+- App-by-App Overview
+- Order Status Flow
+- Payment Flow
+- Error Handling
+- Known Limitations
 
 ---
 
@@ -30,15 +26,13 @@ options.
 
 ### Admin
 - Secure login (staff-only access to the dashboard)
-- Custom admin dashboard — store stats, revenue, low-stock alerts, recent
-  orders
+- Custom admin dashboard — store stats, revenue, low-stock alerts, recent orders
 - Add / update / delete products and categories (via Django Admin)
 - Upload and manage product images
 - Manage product stock and availability
 - View all registered users and their order counts
 - View all customer orders, filter by status
-- Update order status (Pending → Confirmed → Shipped → Delivered /
-  Cancelled)
+- Update order status (Pending → Confirmed → Shipped → Delivered / Cancelled)
 - View basic sales/revenue information
 
 ### User
@@ -86,9 +80,7 @@ project1/
 └── manage.py
 ```
 
-Each Django app follows the same internal layout: `models.py`, `views.py`,
-`urls.py`, `admin.py`, `forms.py` (where relevant), `migrations/`, and its
-own `templates/<app_name>/` folder.
+Each Django app follows the same internal layout: `models.py`, `views.py`, `urls.py`, `admin.py`, `forms.py` (where relevant), `migrations/`, and its own `templates/<app_name>/` folder.
 
 ---
 
@@ -104,19 +96,13 @@ User ──1:1── Cart ──1:N── CartItem ──N:1── Product ─�
 User ──1:N── Order ──1:N── OrderItem ──N:1── Product
 ```
 
-- **Product** — name, description, price, category (FK), image, stock,
-  is_available, created_at, updated_at
+- **Product** — name, description, price, category (FK), image, stock, is_available, created_at, updated_at
 - **Category** — name
-- **Cart / CartItem** — one cart per user; each cart item links a product
-  to a quantity
-- **Order / OrderItem** — snapshots the delivery details and payment info
-  per order; each order item stores the price *at the time of purchase*
-  (so later price changes don't affect historical orders)
-- **Order.status** — choice field: `Pending`, `Confirmed`, `Shipped`,
-  `Delivered`, `Cancelled`
+- **Cart / CartItem** — one cart per user; each cart item links a product to a quantity
+- **Order / OrderItem** — snapshots the delivery details and payment info per order; each order item stores the price *at the time of purchase* (so later price changes don't affect historical orders)
+- **Order.status** — choice field: `Pending`, `Confirmed`, `Shipped`, `Delivered`, `Cancelled`
 
-Stock is decremented atomically at checkout (using `select_for_update`)
-to prevent overselling under concurrent orders.
+Stock is decremented atomically at checkout (using `select_for_update`) to prevent overselling under concurrent orders.
 
 ---
 
@@ -162,18 +148,13 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Visit `http://127.0.0.1:8000/` for the storefront and
-`http://127.0.0.1:8000/dashboard/` for the admin dashboard (staff login
-required). The built-in Django admin is also available at
-`http://127.0.0.1:8000/admin/`.
+Visit `http://127.0.0.1:8000/` for the storefront and `http://127.0.0.1:8000/dashboard/` for the admin dashboard (staff login required). The built-in Django admin is also available at `http://127.0.0.1:8000/admin/`.
 
 ---
 
 ## Environment Variables
 
-The project reads the following from the environment, with safe local
-defaults if unset — so it runs out of the box for development, but should
-be configured properly for any real deployment:
+The project reads the following from the environment, with safe local defaults if unset — so it runs out of the box for development, but should be configured properly for any real deployment:
 
 | Variable               | Purpose                                  | Default (dev only)         |
 |--------------------------|-------------------------------------------|-------------------------------|
@@ -183,9 +164,7 @@ be configured properly for any real deployment:
 | `RAZORPAY_KEY_ID`        | Razorpay public key (demo)                | sandbox test key             |
 | `RAZORPAY_KEY_SECRET`    | Razorpay secret key (demo)                | sandbox test key             |
 
-For a real deployment, set these via your hosting platform's environment
-configuration rather than relying on the defaults, and set
-`DJANGO_DEBUG=False`.
+For a real deployment, set these via your hosting platform's environment configuration rather than relying on the defaults, and set `DJANGO_DEBUG=False`.
 
 ---
 
@@ -198,31 +177,18 @@ configuration rather than relying on the defaults, and set
 | `/admin/*` (Django Admin)  | Staff/superuser (per Django's own rules)  |
 | Order history / detail     | The order's owner only                    |
 
-Non-staff users attempting to reach `/dashboard/` are redirected to login;
-a logged-in non-staff user is denied.
+Non-staff users attempting to reach `/dashboard/` are redirected to login; a logged-in non-staff user is denied.
 
 ---
 
 ## App-by-App Overview
 
-- **`accounts`** — registration form, login/logout (Django's built-in auth
-  views), profile view/edit backed by a `UserProfile` model (phone,
-  address, city, state, pincode).
-- **`products`** — `Category` and `Product` models; home page with search
-  (`?q=`), category filter, and price-range filter; product detail page.
-- **`cart`** — add/remove/increase/decrease/set-quantity endpoints, all
-  scoped to the logged-in user's own cart; stock is checked on every
-  quantity change; a context processor exposes the live cart item count
-  to the navbar on every page.
-- **`orders`** — checkout view (COD path — atomic, locks cart items and
-  products, decrements stock, computes the total server-side rather than
-  trusting client input); order history and order detail (with a visual
-  Pending→Confirmed→Shipped→Delivered tracker, or a Cancelled badge).
-- **`payments`** — `create_payment_order` and `verify_payment` endpoints
-  used by the checkout page's "Pay Online" flow (see
-  [Payment Flow](#payment-flow) below).
-- **`dashboard`** — staff-only views: overview stats, order list with
-  status-update dropdown, and a registered-users list.
+- **`accounts`** — registration form, login/logout (Django's built-in auth views), profile view/edit backed by a `UserProfile` model (phone, address, city, state, pincode).
+- **`products`** — `Category` and `Product` models; home page with search (`?q=`), category filter, and price-range filter; product detail page.
+- **`cart`** — add/remove/increase/decrease/set-quantity endpoints, all scoped to the logged-in user's own cart; stock is checked on every quantity change; a context processor exposes the live cart item count to the navbar on every page.
+- **`orders`** — checkout view (COD path — atomic, locks cart items and products, decrements stock, computes the total server-side rather than trusting client input); order history and order detail (with a visual Pending→Confirmed→Shipped→Delivered tracker, or a Cancelled badge).
+- **`payments`** — `create_payment_order` and `verify_payment` endpoints used by the checkout page's "Pay Online" flow (see Payment Flow below).
+- **`dashboard`** — staff-only views: overview stats, order list with status-update dropdown, and a registered-users list.
 
 ---
 
@@ -236,8 +202,7 @@ Pending → Confirmed → Shipped → Delivered
 
 - New orders start as `Pending`.
 - Staff update the status from the admin dashboard's Orders page.
-- The user-facing order detail page shows a step tracker for the four
-  "happy path" states, or a distinct badge if the order was `Cancelled`.
+- The user-facing order detail page shows a step tracker for the four "happy path" states, or a distinct badge if the order was `Cancelled`.
 
 ---
 
@@ -245,48 +210,28 @@ Pending → Confirmed → Shipped → Delivered
 
 Two payment methods are offered at checkout:
 
-1. **Cash on Delivery (COD)** — handled entirely by `orders.views.checkout`.
-   The order is created with `payment_status='Pending'` and
-   `status='Pending'`.
+1. **Cash on Delivery (COD)** — handled entirely by `orders.views.checkout`. The order is created with `payment_status='Pending'` and `status='Pending'`.
 
 2. **Online payment (demo)** — handled by the `payments` app:
-   - `create_payment_order` validates the cart and stock, then returns a
-     simulated order reference (no real Razorpay order is created).
+   - `create_payment_order` validates the cart and stock, then returns a simulated order reference (no real Razorpay order is created).
    - The checkout page shows a demo payment popup.
-   - `verify_payment` then creates the `Order` (status `Confirmed`,
-     payment status `Paid`), creates the `OrderItem`s, and decrements
-     stock — all inside a single atomic transaction with row locking, the
-     same as the COD path.
+   - `verify_payment` then creates the `Order` (status `Confirmed`, payment status `Paid`), creates the `OrderItem`s, and decrements stock — all inside a single atomic transaction with row locking, the same as the COD path.
 
-> **Note:** The online payment integration runs in **demo mode**. It does
-> not contact Razorpay's servers or verify a real payment signature — it
-> exists to demonstrate the checkout UX and the order-creation logic for
-> an online payment path. Razorpay credentials are read from environment
-> variables (see above) and are not required for the demo flow to work.
+> **Note:** The online payment integration runs in **demo mode**. It does not contact Razorpay's servers or verify a real payment signature — it exists to demonstrate the checkout UX and the order-creation logic for an online payment path. Razorpay credentials are read from environment variables (see above) and are not required for the demo flow to work.
 
 ---
 
 ## Error Handling
 
-- Form-level validation with inline error messages (registration, profile,
-  checkout).
-- Stock and quantity checks throughout the cart and checkout flow, with
-  user-facing messages rather than silent failures or server errors.
-- Custom `404.html` and `500.html` templates so unexpected errors show a
-  branded page instead of a raw traceback (only visible in production,
-  i.e. when `DEBUG=False`).
-- Checkout and payment verification are wrapped in database transactions,
-  so a failure partway through never leaves a half-created order or
-  incorrect stock count.
+- Form-level validation with inline error messages (registration, profile, checkout).
+- Stock and quantity checks throughout the cart and checkout flow, with user-facing messages rather than silent failures or server errors.
+- Custom `404.html` and `500.html` templates so unexpected errors show a branded page instead of a raw traceback (only visible in production, i.e. when `DEBUG=False`).
+- Checkout and payment verification are wrapped in database transactions, so a failure partway through never leaves a half-created order or incorrect stock count.
 
 ---
 
 ## Known Limitations
 
-- The online payment flow is a **demo/simulation**, not a production
-  payment integration — see [Payment Flow](#payment-flow).
-- Product, category, and stock management is done through Django's
-  built-in Admin site rather than a custom-built product editor in the
-  staff dashboard.
-- SQLite is used by default; swap `DATABASES` in `ecommerce/settings.py`
-  for a production database (e.g. PostgreSQL) before deploying.
+- The online payment flow is a **demo/simulation**, not a production payment integration — see Payment Flow.
+- Product, category, and stock management is done through Django's built-in Admin site rather than a custom-built product editor in the staff dashboard.
+- SQLite is used by default; swap `DATABASES` in `ecommerce/settings.py` for a production database (e.g. PostgreSQL) before deploying.

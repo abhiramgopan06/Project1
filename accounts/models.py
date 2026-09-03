@@ -19,6 +19,7 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=100, blank=True)
 
     pincode = models.CharField(max_length=10, blank=True)
+    vector_data = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.user.username

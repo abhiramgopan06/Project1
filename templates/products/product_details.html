@@ -19,6 +19,7 @@
             <span class="product-category">{{ product.category.name }}</span>
             <h1>{{ product.name }}</h1>
             <div class="detail-price">₹{{ product.price|floatformat:2 }}</div>
+            <div style="margin:8px 0;font-size:18px">{% for i in "12345" %}{% if forloop.counter <= product.rating_average %}★{% else %}☆{% endif %}{% endfor %} <span style="font-size:14px;color:#64748b">{{ product.rating_average|floatformat:1 }}/5 ({{ product.rating_count }} reviews)</span></div>
             <p class="detail-desc">{{ product.description }}</p>
 
             <div class="meta">
@@ -44,5 +45,48 @@
             <p style="margin-top:20px"><a href="{% url 'products:home' %}">← Continue shopping</a></p>
         </div>
     </section>
+
+    <section style="margin-top:35px">
+        <h2>Ratings & Reviews</h2>
+        {% if request.user.is_authenticated %}
+        <form method="post" style="margin:15px 0;padding:18px;border:1px solid #e2e8f0;border-radius:12px">
+            {% csrf_token %}
+            <label>Rating</label>
+            {{ form.rating }}
+            <label style="display:block;margin-top:12px">Review</label>
+            {{ form.review }}
+            <button class="btn btn-primary" type="submit" style="margin-top:12px">{% if user_review %}Update Review{% else %}Submit Review{% endif %}</button>
+        </form>
+        {% else %}
+        <p><a href="{% url 'login' %}">Login</a> to rate and review this product.</p>
+        {% endif %}
+
+        {% for review in reviews %}
+        <article style="padding:15px 0;border-bottom:1px solid #e2e8f0">
+            <strong>{{ review.user.username }}</strong>
+            <div>
+                {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+            </div>
+            {% if review.review %}<p>{{ review.review }}</p>{% endif %}
+            <small style="color:#64748b">{{ review.created_at|date:"d M Y" }}</small>
+        </article>
+        {% empty %}
+        <p>No reviews yet. Be the first to review this product.</p>
+        {% endfor %}
+    </section>
+
+    {% if recommendations %}
+    <section style="margin-top:35px">
+        <h2>You May Also Like</h2>
+        <div class="product-grid">
+        {% for item in recommendations %}
+            <article class="product-card">
+                <a class="product-image" href="{% url 'products:product_detail' item.id %}">{% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<span style="font-size:60px">📦</span>{% endif %}</a>
+                <div class="product-info"><span class="product-category">{{ item.category.name }}</span><h3 class="product-title">{{ item.name }}</h3><div class="price">₹{{ item.price|floatformat:2 }}</div><div>⭐ {{ item.rating_average|floatformat:1 }} ({{ item.rating_count }})</div></div>
+            </article>
+        {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 </div>
 {% endblock %}

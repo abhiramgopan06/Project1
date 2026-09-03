@@ -37,6 +37,31 @@
         {% endfor %}
     </div>
 
+    {% if request.user.is_authenticated and recommendations %}
+    <div class="section-head">
+        <div>
+            <h2>Recommended for You</h2>
+            <p>Based on your searches and activity.</p>
+        </div>
+    </div>
+    <div class="product-grid">
+        {% for product in recommendations %}
+        <article class="product-card">
+            <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:60px">📦</span>{% endif %}
+            </a>
+            <div class="product-info">
+                <span class="product-category">{{ product.category.name }}</span>
+                <h3 class="product-title">{{ product.name }}</h3>
+                <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                <div style="margin:6px 0">⭐ {{ product.rating_average|floatformat:1 }} ({{ product.rating_count }})</div>
+                <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="section-head" id="products">
         <div>
             <h2>All Products</h2>
@@ -71,7 +96,14 @@
         </aside>
 
         <section>
-            {% if products %}
+            {% if price_error %}
+        <div class="empty" style="margin-bottom:20px">
+            <h3>Invalid price filter</h3>
+            <p>{{ price_error }}</p>
+        </div>
+    {% endif %}
+
+    {% if products %}
             <div class="product-grid">
                 {% for product in products %}
                 <article class="product-card">

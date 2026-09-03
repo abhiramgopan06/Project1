@@ -1,12 +1,22 @@
 import uuid
+from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import JsonResponse
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from cart.models import Cart, CartItem
+from cart.models import Cart
 from orders.models import Order, OrderItem
+from products.models import Product
+
+
+def _cart_total(cart_items):
+    return sum(
+        (item.product.price * item.quantity for item in cart_items),
+        Decimal('0.00')
+    )
 
 
 @login_required
@@ -15,63 +25,65 @@ def create_payment_order(request):
     try:
         cart = Cart.objects.get(user=request.user)
     except Cart.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Cart not found.'
-        }, status=404)
+        return JsonResponse({'success': False, 'error': 'Cart not found.'}, status=404)
 
-    cart_items = CartItem.objects.filter(cart=cart).select_related('product')
-
-    if not cart_items.exists():
-        return JsonResponse({
-            'success': False,
-            'error': 'Your cart is empty.'
-        }, status=400)
-
-    total = 0
+    cart_items = list(cart.items.select_related('product'))
+    if not cart_items:
+        return JsonResponse({'success': False, 'error': 'Your cart is empty.'}, status=400)
 
     for item in cart_items:
-        if item.product.stock < item.quantity:
+        if not item.product.is_available:
+            return JsonResponse({
+                'success': False,
+                'error': f'{item.product.name} is no longer available.'
+            }, status=400)
+        if item.quantity > item.product.stock:
             return JsonResponse({
                 'success': False,
                 'error': f'Not enough stock for {item.product.name}.'
             }, status=400)
 
-        total += item.product.price * item.quantity
-
-    amount = int(total * 100)
-
-    # DEMO MODE: no real Razorpay order is created and no network call
-    # is made to Razorpay. A fake order id is generated so the checkout
-    # page can simulate the payment popup without any real charge.
+    amount = int(_cart_total(cart_items) * 100)
     demo_order_id = f'order_DEMO{uuid.uuid4().hex[:14]}'
+
+    # The demo order reference is stored server-side so verify_payment
+    # cannot accept an arbitrary order id supplied by a client.
+    request.session['demo_payment_order_id'] = demo_order_id
+    request.session.modified = True
 
     return JsonResponse({
         'success': True,
         'razorpay_order_id': demo_order_id,
         'amount': amount,
         'currency': 'INR',
-        'name': 'E-Comerce Store',
-        'description': 'Order payment (Demo - no real charge)'
+        'name': 'E-Commerce Store',
+        'description': 'Order payment (Demo - no real charge)',
     })
 
 
 @login_required
 @require_POST
 def verify_payment(request):
-    razorpay_payment_id = request.POST.get('razorpay_payment_id')
-    razorpay_order_id = request.POST.get('razorpay_order_id')
+    razorpay_payment_id = request.POST.get('razorpay_payment_id', '').strip()
+    razorpay_order_id = request.POST.get('razorpay_order_id', '').strip()
+
+    expected_order_id = request.session.get('demo_payment_order_id')
+    if not expected_order_id or razorpay_order_id != expected_order_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid or expired payment session. Please start payment again.'
+        }, status=400)
+
+    if not razorpay_payment_id.startswith('pay_DEMO'):
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid demo payment reference.'
+        }, status=400)
 
     name = request.POST.get('name', '').strip()
     email = request.POST.get('email', '').strip()
     phone = request.POST.get('phone', '').strip()
     address = request.POST.get('address', '').strip()
-
-    if not all([razorpay_payment_id, razorpay_order_id]):
-        return JsonResponse({
-            'success': False,
-            'error': 'Payment information is missing.'
-        }, status=400)
 
     if not all([name, email, phone, address]):
         return JsonResponse({
@@ -79,16 +91,9 @@ def verify_payment(request):
             'error': 'Please provide all customer information.'
         }, status=400)
 
-    # DEMO MODE: there is no real Razorpay signature to verify here,
-    # since no real payment gateway was ever contacted. The payment is
-    # simulated as always successful once the demo popup is confirmed.
-
     try:
         with transaction.atomic():
-            cart = Cart.objects.select_for_update().get(
-                user=request.user
-            )
-
+            cart = Cart.objects.select_for_update().get(user=request.user)
             cart_items = list(
                 cart.items.select_related('product').select_for_update()
             )
@@ -99,19 +104,29 @@ def verify_payment(request):
                     'error': 'Your cart is empty.'
                 }, status=400)
 
-            total = 0
+            product_ids = [item.product_id for item in cart_items]
+            products = {
+                product.pk: product
+                for product in Product.objects.select_for_update().filter(pk__in=product_ids)
+            }
 
+            total = Decimal('0.00')
             for item in cart_items:
-                if item.quantity > item.product.stock:
+                product = products.get(item.product_id)
+                if product is None or not product.is_available:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'{item.product.name} is no longer available.'
+                    }, status=400)
+                if item.quantity > product.stock:
                     return JsonResponse({
                         'success': False,
                         'error': (
-                            f'Sorry, only {item.product.stock} '
-                            f'units of {item.product.name} are available.'
+                            f'Sorry, only {product.stock} units of '
+                            f'{product.name} are available.'
                         )
                     }, status=400)
-
-                total += item.product.price * item.quantity
+                total += product.price * item.quantity
 
             order = Order.objects.create(
                 user=request.user,
@@ -122,33 +137,29 @@ def verify_payment(request):
                 total_amount=total,
                 payment_method='razorpay (demo)',
                 payment_status='Paid',
-                status='Confirmed',
+                status=Order.STATUS_CONFIRMED,
                 razorpay_order_id=razorpay_order_id,
-                razorpay_payment_id=razorpay_payment_id
+                razorpay_payment_id=razorpay_payment_id,
             )
 
             for item in cart_items:
-                product = item.product
-
+                product = products[item.product_id]
                 OrderItem.objects.create(
                     order=order,
                     product=product,
                     quantity=item.quantity,
-                    price=product.price
+                    price=product.price,
                 )
-
                 product.stock -= item.quantity
                 product.save(update_fields=['stock'])
 
             cart.items.all().delete()
 
-    except Cart.DoesNotExist:
+        request.session.pop('demo_payment_order_id', None)
         return JsonResponse({
-            'success': False,
-            'error': 'Cart not found.'
-        }, status=404)
+            'success': True,
+            'redirect_url': reverse('order_success'),
+        })
 
-    return JsonResponse({
-        'success': True,
-        'redirect_url': '/order_success/'
-    })
+    except Cart.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Cart not found.'}, status=404)

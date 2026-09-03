@@ -1,4 +1,4 @@
-# E-Comerce Store — Django E-Commerce Application
+# E-Commerce Store — Django E-Commerce Application
 
 A full-stack e-commerce web application built with Django, featuring separate **Admin** and **User** roles, product browsing with search/filtering, a persistent cart, order placement with delivery details, order status tracking, and both Cash-on-Delivery and online (Razorpay demo) payment options.
 
@@ -88,14 +88,6 @@ Each Django app follows the same internal layout: `models.py`, `views.py`, `urls
 
 **Core relationships:**
 
-```
-User (Django auth) ──1:1── UserProfile
-
-User ──1:1── Cart ──1:N── CartItem ──N:1── Product ──N:1── Category
-
-User ──1:N── Order ──1:N── OrderItem ──N:1── Product
-```
-
 - **Product** — name, description, price, category (FK), image, stock, is_available, created_at, updated_at
 - **Category** — name
 - **Cart / CartItem** — one cart per user; each cart item links a product to a quantity
@@ -154,15 +146,15 @@ Visit `http://127.0.0.1:8000/` for the storefront and `http://127.0.0.1:8000/das
 
 ## Environment Variables
 
-The project reads the following from the environment, with safe local defaults if unset — so it runs out of the box for development, but should be configured properly for any real deployment:
+The project reads the following from the environment, from environment variables. The demo payment flow does not require Razorpay credentials:
 
 | Variable               | Purpose                                  | Default (dev only)         |
 |--------------------------|-------------------------------------------|-------------------------------|
 | `DJANGO_SECRET_KEY`      | Django cryptographic signing key          | insecure dev key             |
 | `DJANGO_DEBUG`           | Enable/disable debug mode                 | `True`                       |
 | `DJANGO_ALLOWED_HOSTS`   | Comma-separated allowed hosts             | `127.0.0.1,localhost`        |
-| `RAZORPAY_KEY_ID`        | Razorpay public key (demo)                | sandbox test key             |
-| `RAZORPAY_KEY_SECRET`    | Razorpay secret key (demo)                | sandbox test key             |
+| `RAZORPAY_KEY_ID`        | Optional real Razorpay public key         | empty                        |
+| `RAZORPAY_KEY_SECRET`    | Optional real Razorpay secret             | empty                        |
 
 For a real deployment, set these via your hosting platform's environment configuration rather than relying on the defaults, and set `DJANGO_DEBUG=False`.
 
@@ -217,7 +209,7 @@ Two payment methods are offered at checkout:
    - The checkout page shows a demo payment popup.
    - `verify_payment` then creates the `Order` (status `Confirmed`, payment status `Paid`), creates the `OrderItem`s, and decrements stock — all inside a single atomic transaction with row locking, the same as the COD path.
 
-> **Note:** The online payment integration runs in **demo mode**. It does not contact Razorpay's servers or verify a real payment signature — it exists to demonstrate the checkout UX and the order-creation logic for an online payment path. Razorpay credentials are read from environment variables (see above) and are not required for the demo flow to work.
+> **Note:** The online payment integration runs in **demo mode**. It does not contact Razorpay's servers or verify a real payment signature — it exists to demonstrate the checkout UX and the order-creation logic for an online payment path. Razorpay credentials are not used by the demo flow. If real Razorpay payments are added later, keep both credentials in environment variables and never commit the secret.
 
 ---
 

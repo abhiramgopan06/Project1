@@ -12,7 +12,10 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-local-development-key-change-me')
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-local-development-key-change-me'
+)
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
@@ -124,9 +127,19 @@ LOGOUT_REDIRECT_URL = '/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
-# Razorpay credentials are read from environment variables so secrets are not stored in source control.
-RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_TRe25cDTQoi8Nt')
-RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'RxsvSlxNfDelvulVgtPZMLnh')
+# Real payment credentials are intentionally not stored in source code.
+# The current checkout uses a clearly labelled demo payment flow.
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+
+if not DEBUG:
+    if SECRET_KEY == 'django-insecure-local-development-key-change-me':
+        raise RuntimeError('Set DJANGO_SECRET_KEY when DJANGO_DEBUG=False.')
+    if not ALLOWED_HOSTS:
+        raise RuntimeError('Set DJANGO_ALLOWED_HOSTS when DJANGO_DEBUG=False.')
 
 
 
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

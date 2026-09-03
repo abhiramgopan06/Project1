@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Cart, CartItem
@@ -7,6 +8,7 @@ from products.models import Product
 
 
 @login_required
+@require_POST
 def add_to_cart(request, id):
     product = get_object_or_404(
         Product,
@@ -58,6 +60,7 @@ def cart(request):
 
 
 @login_required
+@require_POST
 def remove_from_cart(request, id):
     cart = get_object_or_404(Cart, user=request.user)
     cart_item = get_object_or_404(
@@ -72,6 +75,7 @@ def remove_from_cart(request, id):
 
 
 @login_required
+@require_POST
 def increase_quantity(request, id):
     cart = get_object_or_404(Cart, user=request.user)
     cart_item = get_object_or_404(
@@ -93,6 +97,7 @@ def increase_quantity(request, id):
 
 
 @login_required
+@require_POST
 def decrease_quantity(request, id):
     cart = get_object_or_404(Cart, user=request.user)
     cart_item = get_object_or_404(
@@ -111,6 +116,7 @@ def decrease_quantity(request, id):
 
 
 @login_required
+@require_POST
 def update_cart(request, id):
     cart = get_object_or_404(Cart, user=request.user)
     cart_item = get_object_or_404(

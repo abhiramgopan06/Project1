@@ -1,3 +1,11 @@
+# cart/views.py
+# ----------------------------------------------------
+# This file has all the simple functions ("views") for the
+# shopping cart: adding a product, showing the cart page,
+# removing a product, and changing how many of a product
+# the user wants. Each function below does ONE small job.
+# ----------------------------------------------------
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -10,6 +18,7 @@ from products.models import Product
 @login_required
 @require_POST
 def add_to_cart(request, id):
+    # Step 1: find the product the user clicked "Add to Cart" on.
     product = get_object_or_404(
         Product,
         id=id,
@@ -42,6 +51,7 @@ def add_to_cart(request, id):
     return redirect('cart:cart')
 
 
+# Shows the cart page: every item in the cart plus the total price.
 @login_required
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
@@ -59,6 +69,7 @@ def cart(request):
     return render(request, 'products/cart.html', context)
 
 
+# Deletes one product from the cart completely.
 @login_required
 @require_POST
 def remove_from_cart(request, id):
@@ -74,6 +85,7 @@ def remove_from_cart(request, id):
     return redirect('cart:cart')
 
 
+# The "+" button: adds one more of this product to the cart.
 @login_required
 @require_POST
 def increase_quantity(request, id):
@@ -96,6 +108,8 @@ def increase_quantity(request, id):
     return redirect('cart:cart')
 
 
+# The "-" button: removes one of this product. If we're already
+# down to 1, remove the whole item instead of going to 0.
 @login_required
 @require_POST
 def decrease_quantity(request, id):
@@ -115,6 +129,8 @@ def decrease_quantity(request, id):
     return redirect('cart:cart')
 
 
+# Used when the user types a new quantity into the box and
+# clicks "Update" (instead of using the + / - buttons).
 @login_required
 @require_POST
 def update_cart(request, id):

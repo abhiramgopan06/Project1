@@ -1,3 +1,11 @@
+# dashboard/views.py
+# ----------------------------------------------------
+# This is the staff-only admin dashboard: overview numbers,
+# the list of orders (with a way to update their status),
+# and the list of registered users. Only staff members
+# (people with is_staff=True) are allowed to see these pages.
+# ----------------------------------------------------
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
@@ -8,6 +16,8 @@ from orders.models import Order
 from products.models import Product
 
 
+# The dashboard "home" page: a few summary numbers (total orders,
+# revenue, products, users) plus recent orders and low-stock items.
 @staff_member_required
 def dashboard_home(request):
     total_orders = Order.objects.count()
@@ -38,6 +48,8 @@ def dashboard_home(request):
     return render(request, 'dashboard/home.html', context)
 
 
+# Shows every order in the store, with an optional filter by
+# status (e.g. only "Pending" orders).
 @staff_member_required
 def dashboard_orders(request):
     orders = Order.objects.select_related('user').order_by('-created_at')
@@ -57,6 +69,8 @@ def dashboard_orders(request):
     return render(request, 'dashboard/orders.html', context)
 
 
+# Lets a staff member change an order's status (e.g. from
+# "Pending" to "Shipped") using the dropdown on the orders page.
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -78,6 +92,7 @@ def update_order_status(request, order_id):
     return redirect('dashboard:orders')
 
 
+# Shows every registered user and how many orders each one has made.
 @staff_member_required
 def dashboard_users(request):
     users = User.objects.annotate(

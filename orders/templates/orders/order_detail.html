@@ -33,11 +33,11 @@
                 {% for item in order.items.all %}
                 <div class="product-item">
                     {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" class="product-image" alt="{{ item.product.name }}">
+                        <img src="{{ item.product.image.url }}" class="order-item-image" alt="{{ item.product.name }}">
                     {% else %}
-                        <div class="product-image product-image-empty"></div>
+                        <div class="order-item-image order-item-image-empty"></div>
                     {% endif %}
-                    <div class="product-info">
+                    <div class="order-item-info">
                         <div class="product-name">{{ item.product.name }}</div>
                         <div class="product-price">Price: ₹{{ item.price }}</div>
                         <div class="product-quantity">Quantity: {{ item.quantity }}</div>

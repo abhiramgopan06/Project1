@@ -80,9 +80,27 @@
         <h2>You May Also Like</h2>
         <div class="product-grid">
         {% for item in recommendations %}
+            <!-- Small "you may also like" card, same compact style as
+                 the shop page cards. -->
             <article class="product-card">
-                <a class="product-image" href="{% url 'products:product_detail' item.id %}">{% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<span style="font-size:60px">📦</span>{% endif %}</a>
-                <div class="product-info"><span class="product-category">{{ item.category.name }}</span><h3 class="product-title">{{ item.name }}</h3><div class="price">₹{{ item.price|floatformat:2 }}</div><div>⭐ {{ item.rating_average|floatformat:1 }} ({{ item.rating_count }})</div></div>
+                <a class="product-image" href="{% url 'products:product_detail' item.id %}">
+                    {% if item.rating_count > 0 and item.rating_average >= 4.5 %}
+                    <span class="badge-bestseller">Bestseller</span>
+                    {% endif %}
+                    <span class="product-image-badge">{{ item.category.name }}</span>
+                    {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                    {% if item.rating_count > 0 %}
+                    <span class="product-rating">{{ item.rating_average|floatformat:1 }} ⭐</span>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <h3 class="product-title">{{ item.name }}</h3>
+                    {% if item.rating_count > 0 %}
+                    <span class="product-rating-count">{{ item.rating_count }} ratings</span>
+                    {% endif %}
+                    <div class="price">₹{{ item.price|floatformat:2 }}</div>
+                    <div class="product-delivery">🚚 Free delivery</div>
+                </div>
             </article>
         {% endfor %}
         </div>

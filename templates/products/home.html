@@ -33,14 +33,29 @@
             <div class="carousel-track" id="carouselTrack">
                 {% for product in products|slice:":8" %}
                 <div class="carousel-slide">
+                    <!-- One product card. Same info as the big grid below,
+                         just shown inside the sliding carousel. The
+                         "Bestseller" ribbon and the star rating both sit
+                         on top of the picture itself, like a real shopping
+                         site, instead of taking up space in the text below. -->
                     <article class="product-card">
                         <a class="product-image" href="{% url 'products:product_detail' product.id %}">
-                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:60px">📦</span>{% endif %}
+                            {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
+                            <span class="badge-bestseller">Bestseller</span>
+                            {% endif %}
+                            <span class="product-image-badge">{{ product.category.name }}</span>
+                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                            {% if product.rating_count > 0 %}
+                            <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
+                            {% endif %}
                         </a>
                         <div class="product-info">
-                            <span class="product-category">{{ product.category.name }}</span>
                             <h3 class="product-title">{{ product.name }}</h3>
+                            {% if product.rating_count > 0 %}
+                            <span class="product-rating-count">{{ product.rating_count }} ratings</span>
+                            {% endif %}
                             <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                            <div class="product-delivery">🚚 Free delivery</div>
                             <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
                         </div>
                     </article>
@@ -88,13 +103,22 @@
         {% for product in recommendations %}
         <article class="product-card">
             <a class="product-image" href="{% url 'products:product_detail' product.id %}">
-                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:60px">📦</span>{% endif %}
+                {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
+                <span class="badge-bestseller">Bestseller</span>
+                {% endif %}
+                <span class="product-image-badge">{{ product.category.name }}</span>
+                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                {% if product.rating_count > 0 %}
+                <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
+                {% endif %}
             </a>
             <div class="product-info">
-                <span class="product-category">{{ product.category.name }}</span>
                 <h3 class="product-title">{{ product.name }}</h3>
+                {% if product.rating_count > 0 %}
+                <span class="product-rating-count">{{ product.rating_count }} ratings</span>
+                {% endif %}
                 <div class="price">₹{{ product.price|floatformat:2 }}</div>
-                <div style="margin:6px 0">⭐ {{ product.rating_average|floatformat:1 }} ({{ product.rating_count }})</div>
+                <div class="product-delivery">🚚 Free delivery</div>
                 <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
             </div>
         </article>
@@ -146,22 +170,37 @@
     {% if products %}
             <div class="product-grid">
                 {% for product in products %}
+                <!-- One product card, styled like a card you'd see on
+                     Amazon or Flipkart: compact square-ish photo with a
+                     "Bestseller" ribbon and star rating sitting on top of
+                     it, then the name, price, stock status and an
+                     "Add to Cart" button underneath. -->
                 <article class="product-card">
                     <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
+                        <span class="badge-bestseller">Bestseller</span>
+                        {% endif %}
+                        <span class="product-image-badge">{{ product.category.name }}</span>
                         {% if product.image %}
                             <img src="{{ product.image.url }}" alt="{{ product.name }}">
                         {% else %}
-                            <span style="font-size:60px">📦</span>
+                            <span style="font-size:50px">📦</span>
+                        {% endif %}
+                        {% if product.rating_count > 0 %}
+                        <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
                         {% endif %}
                     </a>
                     <div class="product-info">
-                        <span class="product-category">{{ product.category.name }}</span>
                         <h3 class="product-title">{{ product.name }}</h3>
+                        {% if product.rating_count > 0 %}
+                        <span class="product-rating-count">{{ product.rating_count }} ratings</span>
+                        {% endif %}
                         <div class="product-desc" data-description="{{ product.description|escapejs }}">
                             <span class="desc-text"></span>
                             <button type="button" class="desc-more" onclick="toggleDescription(this)">more</button>
                         </div>
                         <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="product-delivery">🚚 Free delivery</div>
                         {% if product.stock > 0 and product.is_available %}
                             <span class="stock">✓ In stock</span>
                         {% else %}

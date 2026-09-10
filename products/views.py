@@ -1,3 +1,12 @@
+# products/views.py
+# ----------------------------------------------------
+# This file controls the two main pages people see for products:
+#   1. home()           -> the shop page with search, filters and cards
+#   2. product_detail()  -> one single product's page with reviews
+# There is also one small helper function, _record_search(), that
+# just remembers what a logged-in user searched for.
+# ----------------------------------------------------
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -9,6 +18,8 @@ from .recommendations import add_to_user_vector, recommended_products
 from accounts.models import UserProfile
 
 
+# Helper function (starts with "_" so we know it's just for this file).
+# Saves what the user searched for, so we can recommend products later.
 def _record_search(request, q, category, min_price, max_price):
     if not request.user.is_authenticated:
         return
@@ -20,7 +31,10 @@ def _record_search(request, q, category, min_price, max_price):
         add_to_user_vector(profile, query_text, weight=2)
 
 
+# The shop / home page: shows all products, and lets the user
+# search by name, filter by category, and filter by price.
 def home(request):
+    # Start with every product that is available to buy.
     products = Product.objects.filter(is_available=True).select_related('category')
     q = request.GET.get('q', '').strip()
     category_id = request.GET.get('category', '').strip()
@@ -67,6 +81,8 @@ def home(request):
     return render(request, 'products/home.html', {'products': products, 'categories': categories, 'recommendations': recommendations, 'price_error': price_error})
 
 
+# The single product page: shows the product's details, lets the
+# user write a review / rating, and shows a few similar products.
 def product_detail(request, id):
     product = get_object_or_404(Product.objects.select_related('category'), id=id)
     if not product.vector_data:

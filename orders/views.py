@@ -1,3 +1,9 @@
+# orders/views.py
+# ----------------------------------------------------
+# This file handles the checkout flow: turning a cart into a
+# real order, and showing order history / order details.
+# ----------------------------------------------------
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -8,6 +14,9 @@ from products.models import Product
 from .models import Order, OrderItem
 
 
+# The checkout page. On a normal visit it just shows the order
+# summary and the form. When the form is submitted (POST), it
+# creates the real Order and empties the cart.
 @login_required
 def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
@@ -40,7 +49,9 @@ def checkout(request):
 
         try:
             with transaction.atomic():
-                # Lock the cart items and the related products for this checkout.
+                # We "lock" the cart items and products here so that if two
+                # people check out the same product at the exact same time,
+                # we don't accidentally sell more than we have in stock.
                 locked_items = list(
                     cart.items.select_related('product').select_for_update()
                 )
@@ -106,11 +117,14 @@ def checkout(request):
     return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': total})
 
 
+# Simple "thank you, your order was placed" page.
 @login_required
 def order_success(request):
     return render(request, 'orders/order_success.html')
 
 
+# Shows a list of every order this user has made in the past,
+# newest first.
 @login_required
 def order_history(request):
     orders = Order.objects.filter(
@@ -124,6 +138,8 @@ def order_history(request):
     )
 
 
+# Shows everything about one single order: the items, the
+# address, and a little step-by-step delivery tracker.
 @login_required
 def order_detail(request, order_id):
     order = get_object_or_404(
@@ -132,6 +148,8 @@ def order_detail(request, order_id):
         user=request.user
     )
 
+    # Build the little "Pending -> Confirmed -> Shipped -> Delivered"
+    # tracker so the template can show which steps are already done.
     status_steps = None
 
     if order.status != Order.STATUS_CANCELLED:

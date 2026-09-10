@@ -1,4 +1,10 @@
 
+# accounts/views.py
+# ----------------------------------------------------
+# Handles account pages: creating a new account (register)
+# and editing your profile info (profile).
+# ----------------------------------------------------
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
@@ -8,6 +14,8 @@ from .models import UserProfile
 from .forms import UserForm, UserProfileForm
 
 
+# Sign-up page: creates a new Django User plus an empty
+# UserProfile to go with it.
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -34,6 +42,8 @@ def register(request):
     )
 
 
+# The "My Profile" page. Shows the current details in a form,
+# and saves them when the user submits changes.
 @login_required
 def profile(request):
 

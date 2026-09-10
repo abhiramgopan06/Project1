@@ -1,3 +1,12 @@
+# payments/views.py
+# ----------------------------------------------------
+# This file runs the "online payment" checkout. It's a DEMO
+# payment flow (no real money moves), but it's still written
+# carefully: we never trust the browser blindly, we always
+# double check stock and prices on the server before saving
+# an order.
+# ----------------------------------------------------
+
 import uuid
 from decimal import Decimal
 
@@ -12,6 +21,7 @@ from orders.models import Order, OrderItem
 from products.models import Product
 
 
+# Small helper: adds up price * quantity for every item in the cart.
 def _cart_total(cart_items):
     return sum(
         (item.product.price * item.quantity for item in cart_items),
@@ -19,6 +29,8 @@ def _cart_total(cart_items):
     )
 
 
+# Step 1 of the demo payment: create a fake "order" reference and
+# send it back to the page as JSON, so the payment popup can open.
 @login_required
 @require_POST
 def create_payment_order(request):
@@ -61,6 +73,8 @@ def create_payment_order(request):
     })
 
 
+# Step 2 of the demo payment: check everything is still valid
+# (stock, prices, session) and only THEN create the real Order.
 @login_required
 @require_POST
 def verify_payment(request):

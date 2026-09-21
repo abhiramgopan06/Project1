@@ -489,6 +489,41 @@
     transform: none;
 }
 
+.checkout-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.checkout-btn:hover {
+    background: #000000;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+}
+
+.checkout-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.checkout-btn:focus-visible {
+    outline: 3px solid #94a3b8;
+    outline-offset: 2px;
+}
+
 .empty {
     padding: 60px 25px;
     text-align: center;
@@ -1390,6 +1425,24 @@ main {
 
 .footer-col a:hover {
     color: #ffffff;
+}
+
+/* Column 1 of the footer ("E-Commerce Shop" and "Legal"):
+   the links under both headings are shown in white.
+   base.html gives that column the extra class "footer-white".
+
+   Why ".site-footer" is at the start: further down this file there is an
+   older rule, ".container > div:first-child a", that paints links dark.
+   The footer is also a ".container", so that rule was accidentally hitting
+   this first column and making the links dark on the dark footer.
+   Starting with ".site-footer" makes this rule "stronger" so white wins. */
+.site-footer .footer-col.footer-white a {
+    color: #ffffff;
+}
+
+/* white text cannot get "whiter" on hover, so we underline it instead */
+.site-footer .footer-col.footer-white a:hover {
+    text-decoration: underline;
 }
 
 .footer-social {

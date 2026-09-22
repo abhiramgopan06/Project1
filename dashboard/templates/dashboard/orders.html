@@ -18,11 +18,13 @@
 
 <div class="checkout-card">
     {% if orders %}
+    <div class="table-scroll">
     <table class="dashboard-table">
         <thead>
             <tr>
                 <th>Order</th>
                 <th>Customer</th>
+                <th>Ship To</th>
                 <th>Items</th>
                 <th>Total</th>
                 <th>Payment</th>
@@ -35,6 +37,12 @@
             <tr>
                 <td>#{{ order.id }}</td>
                 <td>{{ order.name }}<br><span class="order-row-meta">{{ order.user.username }}</span></td>
+                <td class="ship-to-cell">
+                    <div class="ship-to-name">{{ order.name }}</div>
+                    <div class="ship-to-address">{{ order.address|linebreaksbr }}</div>
+                    <div class="ship-to-contact">📞 {{ order.phone }}</div>
+                    <div class="ship-to-contact">✉ {{ order.email }}</div>
+                </td>
                 <td>{{ order.items.count }}</td>
                 <td>₹{{ order.total_amount|floatformat:2 }}</td>
                 <td>{{ order.payment_method }} &middot; {{ order.payment_status }}</td>
@@ -54,6 +62,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
         <p>No orders found for this filter.</p>
     {% endif %}

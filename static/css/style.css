@@ -832,6 +832,51 @@
     border-color: #94a3b8;
 }
 
+/* Special "Add to Cart" button used on the shop page and the
+   product detail page. It is styled like the dark, fully-rounded
+   "pill" button with a small cart icon that you see on a lot of
+   shopping apps: black background, a white cart icon on the left,
+   and bold cream-colored text with a soft warm glow behind it. */
+.btn-add-to-cart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 18px;
+    background: #0a0a0a;
+    border: 1px solid #0a0a0a;
+    border-radius: 999px;
+    color: #fdf1d6;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    text-shadow: 0 0 10px rgba(255, 175, 90, 0.55);
+    transition: all 0.2s ease;
+}
+
+.btn-add-to-cart:hover {
+    background: #000000;
+    transform: translateY(-1px);
+}
+
+.btn-add-to-cart:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* The little cart icon inside the button (an inline SVG, not an
+   image file, so it stays crisp on any screen). */
+.btn-add-to-cart svg {
+    width: 16px;
+    height: 16px;
+    stroke: #ffffff;
+    flex-shrink: 0;
+}
+
 /* ---------- Product Cards (compact Amazon / Flipkart style) ---------- */
 /* This grid holds all the product cards on the shop page.
    "auto-fill" + "minmax" just means: "fit as many 200px-ish cards
@@ -840,8 +885,8 @@
    look of a real shopping site instead of only 3 big cards. */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 22px;
 }
 
 /* One single product card: a compact square-ish picture on top
@@ -878,7 +923,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 190px;
+    height: 230px;
     overflow: hidden;
     background: #f8fafc;
     text-decoration: none;
@@ -2202,8 +2247,15 @@ main {
     font-weight: 600;
 }
 
+/* Lets the orders table scroll sideways on a narrow screen instead
+   of squashing the new "Ship To" column into nothing. */
+.table-scroll {
+    overflow-x: auto;
+}
+
 .dashboard-table {
     width: 100%;
+    min-width: 900px;
     border-collapse: collapse;
 }
 
@@ -2227,6 +2279,29 @@ main {
 
 .dashboard-table tr:last-child td {
     border-bottom: none;
+}
+
+/* The "Ship To" column on the orders page: the customer's
+   delivery name, address, phone and email, all in one small
+   block so staff can see exactly where to ship the order. */
+.ship-to-cell {
+    min-width: 220px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ship-to-name {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ship-to-address {
+    color: #334155;
+}
+
+.ship-to-contact {
+    color: #64748b;
+    font-size: 12px;
 }
 
 .low-stock-badge {
@@ -2303,10 +2378,10 @@ main {
    small phones so the compact cards don't feel too tall. */
 @media (max-width: 560px) {
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     }
 
     .product-image {
-        height: 150px;
+        height: 170px;
     }
 }

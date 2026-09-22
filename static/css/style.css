@@ -2281,6 +2281,29 @@ main {
     border-bottom: none;
 }
 
+/* The "Ship To" column on the orders page: the customer's
+   delivery name, address, phone and email, all in one small
+   block so staff can see exactly where to ship the order. */
+.ship-to-cell {
+    min-width: 220px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ship-to-name {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ship-to-address {
+    color: #334155;
+}
+
+.ship-to-contact {
+    color: #64748b;
+    font-size: 12px;
+}
+
 .low-stock-badge {
     background: #fee2e2;
     color: #991b1b;

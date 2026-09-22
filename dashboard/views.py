@@ -105,3 +105,26 @@ def dashboard_users(request):
     }
 
     return render(request, 'dashboard/users.html', context)
+
+
+# Shows everything about one single order for staff: the customer's
+# account info, the delivery address they typed in at checkout, the
+# items ordered, and a form to update the order status. This is the
+# page the "View" button on the orders table opens.
+@staff_member_required
+def dashboard_order_detail(request, order_id):
+    order = get_object_or_404(
+        Order.objects.select_related('user'),
+        id=order_id
+    )
+
+    order_items = order.items.select_related('product')
+
+    context = {
+        'active': 'orders',
+        'order': order,
+        'order_items': order_items,
+        'status_choices': Order.STATUS_CHOICES,
+    }
+
+    return render(request, 'dashboard/order_detail.html', context)

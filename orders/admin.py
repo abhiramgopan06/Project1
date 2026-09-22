@@ -8,6 +8,9 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'user',
+        'name',
+        'phone',
+        'address',
         'total_amount',
         'status',
         'created_at',
@@ -20,6 +23,10 @@ class OrderAdmin(admin.ModelAdmin):
 
     search_fields = (
         'user__username',
+        'name',
+        'email',
+        'phone',
+        'address',
     )
 
 

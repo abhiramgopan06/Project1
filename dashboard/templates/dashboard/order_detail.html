@@ -1,0 +1,72 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Order #{{ order.id }} | E-Commerce Store{% endblock %}
+
+{% block dashboard_content %}
+<div class="section-head">
+    <div>
+        <h2>Order #{{ order.id }}</h2>
+        <p>Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'dashboard:orders' %}">← Back to Orders</a>
+</div>
+
+<div class="checkout-layout">
+    <div>
+        <div class="checkout-card">
+            <h2 class="section-title">Customer Information</h2>
+            <p><strong>Name:</strong> {{ order.name }}</p>
+            <p><strong>Username:</strong> {{ order.user.username }}</p>
+            <p><strong>Email:</strong> {{ order.email }}</p>
+            <p><strong>Phone:</strong> {{ order.phone }}</p>
+        </div>
+
+        <div class="checkout-card checkout-form-card">
+            <h2 class="section-title">Shipping Address</h2>
+            <p>{{ order.name }}</p>
+            <p>{{ order.address|linebreaksbr }}</p>
+            <p>{{ order.phone }} &middot; {{ order.email }}</p>
+        </div>
+
+        <div class="checkout-card checkout-form-card">
+            <h2 class="section-title">Items</h2>
+            {% for item in order_items %}
+            <div class="product-item">
+                {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" class="order-item-image" alt="{{ item.product.name }}">
+                {% else %}
+                    <div class="order-item-image order-item-image-empty"></div>
+                {% endif %}
+                <div class="order-item-info">
+                    <div class="product-name">{{ item.product.name }}</div>
+                    <div class="product-price">Price: ₹{{ item.price }}</div>
+                    <div class="product-quantity">Quantity: {{ item.quantity }}</div>
+                </div>
+                <div class="product-subtotal">₹{{ item.price|floatformat:2 }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside>
+        <div class="checkout-card">
+            <h2 class="section-title">Payment</h2>
+            <div class="summary-row"><span>Method</span><span>{{ order.payment_method }}</span></div>
+            <div class="summary-row"><span>Payment Status</span><span>{{ order.payment_status }}</span></div>
+            <div class="summary-row total"><span>Total</span><span>₹{{ order.total_amount|floatformat:2 }}</span></div>
+        </div>
+
+        <div class="checkout-card checkout-form-card">
+            <h2 class="section-title">Update Status</h2>
+            <form method="post" action="{% url 'dashboard:update_order_status' order.id %}" class="status-form">
+                {% csrf_token %}
+                <select name="status" class="select status-select" style="width:100%">
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary" style="width:100%;margin-top:10px" type="submit">Save Status</button>
+            </form>
+        </div>
+    </aside>
+</div>
+{% endblock %}

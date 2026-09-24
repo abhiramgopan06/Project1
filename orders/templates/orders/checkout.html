@@ -39,21 +39,56 @@
                 <h2 class="section-title">Customer Information</h2>
                 <form method="POST" class="checkout-form" id="checkout-form" action="{% url 'checkout' %}">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+
+                    {% if addresses %}
+                    <div class="address-choice-list">
+                        {% for addr in addresses %}
+                        <label class="address-choice">
+                            <input type="radio" name="address_id" value="{{ addr.id }}"
+                                {% if addr.is_default %}checked{% endif %}
+                                data-name="{{ addr.full_name }}" data-email="{{ addr.email }}"
+                                data-phone="{{ addr.phone }}" data-address="{{ addr.address }}">
+                            <span class="address-choice-body">
+                                <span class="address-choice-head">
+                                    <strong>{{ addr.label|default:"Address" }}</strong>
+                                    {% if addr.is_default %}<span class="pill" style="color:#15803d">Default</span>{% endif %}
+                                </span>
+                                <span class="address-choice-text">{{ addr.full_name }} &middot; {{ addr.phone }}<br>{{ addr.address }}</span>
+                            </span>
+                        </label>
+                        {% endfor %}
+                        <label class="address-choice">
+                            <input type="radio" name="address_id" value="new" id="address-choice-new">
+                            <span class="address-choice-body">
+                                <strong>+ Add a new address</strong>
+                            </span>
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" placeholder="Enter your email address" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone</label>
-                        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="address">Delivery Address</label>
-                        <textarea id="address" name="address" rows="4" placeholder="Enter your complete delivery address" required></textarea>
+                    {% else %}
+                    <input type="hidden" name="address_id" value="new">
+                    {% endif %}
+
+                    <div id="new-address-fields">
+                        <div class="form-group">
+                            <label for="label">Address Label (optional)</label>
+                            <input type="text" id="label" name="label" placeholder="e.g. Home, Hostel, Temporary" data-always-optional="true">
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" placeholder="Enter your full name" {% if not addresses %}required{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" {% if not addresses %}required{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" {% if not addresses %}required{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Delivery Address</label>
+                            <textarea id="address" name="address" rows="4" placeholder="Enter your complete delivery address" {% if not addresses %}required{% endif %}></textarea>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="payment">Payment Method</label>
@@ -111,6 +146,53 @@
     const button = document.getElementById('place-order-btn');
     const errorBox = document.getElementById('payment-error');
     const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+    const addressRadios = form.querySelectorAll('input[name=address_id]');
+    const newAddressFields = document.getElementById('new-address-fields');
+
+    // If saved addresses exist, only show the typed-in fields when
+    // "+ Add a new address" is selected. Without any saved addresses
+    // the fields are always shown (there's nothing else to pick).
+    function syncAddressFieldsVisibility() {
+        if (!addressRadios.length || !newAddressFields) {
+            return;
+        }
+        const checked = form.querySelector('input[name=address_id]:checked');
+        const showFields = !checked || checked.value === 'new';
+        newAddressFields.hidden = !showFields;
+        newAddressFields.querySelectorAll('input, textarea').forEach(function (field) {
+            if (field.dataset.alwaysOptional !== 'true') {
+                field.required = showFields;
+            }
+        });
+    }
+
+    addressRadios.forEach(function (radio) {
+        radio.addEventListener('change', syncAddressFieldsVisibility);
+    });
+    syncAddressFieldsVisibility();
+
+    // Reads whichever customer details are currently active: either
+    // the saved address that's selected, or the typed-in fields.
+    function getSelectedCustomerInfo() {
+        const checked = form.querySelector('input[name=address_id]:checked');
+        if (checked && checked.value !== 'new') {
+            return {
+                address_id: checked.value,
+                name: checked.dataset.name || '',
+                email: checked.dataset.email || '',
+                phone: checked.dataset.phone || '',
+                address: checked.dataset.address || ''
+            };
+        }
+        return {
+            address_id: 'new',
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            label: document.getElementById('label').value.trim()
+        };
+    }
 
     // DEMO MODE: no real payment gateway is contacted anywhere in this
     // file. "create_payment_order" only reserves stock and returns a
@@ -164,6 +246,7 @@
         // Simulated payment identifiers - a real gateway would return
         // these after the customer actually pays.
         const demoPaymentId = 'pay_DEMO' + Date.now();
+        const info = getSelectedCustomerInfo();
 
         try {
             const verifyResponse = await fetch('{% url "verify_payment" %}', {
@@ -177,10 +260,12 @@
                     csrfmiddlewaretoken: csrfToken,
                     razorpay_payment_id: demoPaymentId,
                     razorpay_order_id: pendingOrder.razorpay_order_id,
-                    name: document.getElementById('name').value.trim(),
-                    email: document.getElementById('email').value.trim(),
-                    phone: document.getElementById('phone').value.trim(),
-                    address: document.getElementById('address').value.trim()
+                    address_id: info.address_id,
+                    name: info.name,
+                    email: info.email,
+                    phone: info.phone,
+                    address: info.address,
+                    label: info.label || ''
                 })
             });
             const result = await readJson(verifyResponse);

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}Add Address{% else %}Edit Address{% endif %} | E-Commerce Store{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div class="profile-card">
+        <h1>{% if is_new %}Add a New Address{% else %}Edit Address{% endif %}</h1>
+        <p style="color:#64748b">Save it once and pick it at checkout any time.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Address</button>
+            <a class="btn btn-outline" href="{% url 'profile' %}" style="margin-left:8px">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

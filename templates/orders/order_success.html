@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Order Successful | E-Comerce Store{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="empty" style="margin:70px auto;max-width:650px">
+        <div style="font-size:65px">✅</div>
+        <h1>Order Successful</h1>
+        <p>Your order has been placed successfully. Thank you for shopping with us.</p>
+        <a class="btn btn-primary" href="{% url 'products:home' %}">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

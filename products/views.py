@@ -5,15 +5,18 @@
 #   2. product_detail()  -> one single product's page with reviews
 # There is also one small helper function, _record_search(), that
 # just remembers what a logged-in user searched for.
+#
+# Ratings & reviews are NOT written from this page any more - a
+# customer can only rate a product from their Order Detail page,
+# and only once that order has actually been Delivered. See
+# orders/views.py -> rate_product().
 # ----------------------------------------------------
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Avg, Q
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
 
-from .models import Product, Category, ProductReview
-from .forms import ProductReviewForm
+from .models import Product, Category
 from .recommendations import add_to_user_vector, recommended_products
 from accounts.models import UserProfile
 
@@ -81,8 +84,10 @@ def home(request):
     return render(request, 'products/home.html', {'products': products, 'categories': categories, 'recommendations': recommendations, 'price_error': price_error})
 
 
-# The single product page: shows the product's details, lets the
-# user write a review / rating, and shows a few similar products.
+# The single product page: shows the product's details, its
+# average rating and existing reviews, and a few similar products.
+# (Writing a rating/review happens from the Order Detail page after
+# delivery, not here - see orders/views.py -> rate_product().)
 def product_detail(request, id):
     product = get_object_or_404(Product.objects.select_related('category'), id=id)
     if not product.vector_data:
@@ -93,29 +98,6 @@ def product_detail(request, id):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         add_to_user_vector(profile, f'{product.name} {product.category.name}', weight=0.25)
 
-    review = None
-    if request.user.is_authenticated:
-        review = ProductReview.objects.filter(product=product, user=request.user).first()
-
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('login')
-        form = ProductReviewForm(request.POST, instance=review)
-        if form.is_valid():
-            obj = form.save(commit=False)
-            obj.product = product
-            obj.user = request.user
-            obj.save()
-            add_to_user_vector(request.user.profile, f'{product.name} {product.category.name}', weight=float(obj.rating) * 1.5)
-            Product.objects.filter(pk=product.pk).update(
-                rating_average=ProductReview.objects.filter(product=product).aggregate(v=Avg('rating'))['v'] or 0,
-                rating_count=ProductReview.objects.filter(product=product).count(),
-            )
-            messages.success(request, 'Your rating and review were saved.')
-            return redirect('products:product_detail', id=product.id)
-    else:
-        form = ProductReviewForm(instance=review)
-
     reviews = product.reviews.select_related('user').all()
     recommendations = recommended_products(request.user, exclude_id=product.id, limit=4) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
-    return render(request, 'products/product_details.html', {'product': product, 'form': form, 'reviews': reviews, 'recommendations': recommendations, 'user_review': review})
+    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations})

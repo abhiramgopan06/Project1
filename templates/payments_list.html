@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    {% for payment in payments %}
+    <div>
+        Name: {{payment.client_name}}
+        email : {{payment.client_email}}
+        Amount : {{payment.amount}}
+        Payment link : <a href="{{payment.razorpay_payment_link}}" target="_blank">Make Payment</a>
+        date: {{payment.create_at | date:"Y-m-d-H:i"}}
+    </div>
+    {% endfor %}
+
+</body>
+</html>

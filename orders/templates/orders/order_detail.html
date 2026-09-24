@@ -18,6 +18,13 @@
             </div>
             {% endfor %}
         </div>
+
+        {% if can_cancel %}
+        <form method="post" action="{% url 'cancel_order' order.id %}" onsubmit="return confirm('Cancel this order? This cannot be undone.');" style="margin-top:16px">
+            {% csrf_token %}
+            <button class="btn btn-danger" type="submit">Cancel Order</button>
+        </form>
+        {% endif %}
     </div>
     {% else %}
     <div class="checkout-card">
@@ -30,7 +37,7 @@
         <div>
             <div class="checkout-card">
                 <h2 class="section-title">Items</h2>
-                {% for item in order.items.all %}
+                {% for item in order_items %}
                 <div class="product-item">
                     {% if item.product.image %}
                         <img src="{{ item.product.image.url }}" class="order-item-image" alt="{{ item.product.name }}">
@@ -41,6 +48,57 @@
                         <div class="product-name">{{ item.product.name }}</div>
                         <div class="product-price">Price: ₹{{ item.price }}</div>
                         <div class="product-quantity">Quantity: {{ item.quantity }}</div>
+
+                        {% if order.status == 'Delivered' %}
+                            {% if item.existing_review %}
+                            <div class="item-rating-display">
+                                <span class="item-rating-stars">{% for i in "12345" %}{% if forloop.counter <= item.existing_review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                                <span class="item-rating-note">You rated this {{ item.existing_review.rating }}/5</span>
+                            </div>
+                            {% else %}
+                            <form method="post" action="{% url 'rate_product' order.id item.id %}" class="rate-product-form">
+                                {% csrf_token %}
+                                <div class="star-rating">
+                                    <input type="radio" id="star5-{{ item.id }}" name="rating" value="5"><label for="star5-{{ item.id }}" title="5 stars">★</label>
+                                    <input type="radio" id="star4-{{ item.id }}" name="rating" value="4"><label for="star4-{{ item.id }}" title="4 stars">★</label>
+                                    <input type="radio" id="star3-{{ item.id }}" name="rating" value="3"><label for="star3-{{ item.id }}" title="3 stars">★</label>
+                                    <input type="radio" id="star2-{{ item.id }}" name="rating" value="2"><label for="star2-{{ item.id }}" title="2 stars">★</label>
+                                    <input type="radio" id="star1-{{ item.id }}" name="rating" value="1"><label for="star1-{{ item.id }}" title="1 star">★</label>
+                                </div>
+                                <textarea name="review" class="input" rows="2" placeholder="Write a short review (optional)"></textarea>
+                                <button class="btn btn-primary" type="submit" style="margin-top:8px">Submit Rating</button>
+                            </form>
+                            {% endif %}
+
+                            {% if item.product.is_returnable or item.product.is_replaceable %}
+                                {% if item.return_request_obj %}
+                                <div class="return-status-box">
+                                    <strong>{{ item.return_request_obj.request_type }} requested</strong>
+                                    <span class="pill">{{ item.return_request_obj.status }}</span>
+                                    {% if item.return_request_obj.reason %}<p style="margin:6px 0 0 0;color:#64748b">{{ item.return_request_obj.reason }}</p>{% endif %}
+                                </div>
+                                {% else %}
+                                <form method="post" action="{% url 'request_return_replace' order.id item.id %}" class="return-replace-form">
+                                    {% csrf_token %}
+                                    <label style="display:block;font-weight:600;font-size:13px;margin-bottom:6px">Not happy with this item?</label>
+                                    <div style="display:flex;gap:14px;margin-bottom:8px">
+                                        {% if item.product.is_returnable %}
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:13px">
+                                            <input type="radio" name="request_type" value="Return" required> Return
+                                        </label>
+                                        {% endif %}
+                                        {% if item.product.is_replaceable %}
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:13px">
+                                            <input type="radio" name="request_type" value="Replace" required> Replace
+                                        </label>
+                                        {% endif %}
+                                    </div>
+                                    <textarea name="reason" class="input" rows="2" placeholder="Tell us what went wrong (optional)"></textarea>
+                                    <button class="btn btn-outline" type="submit" style="margin-top:8px">Submit Request</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
                     </div>
                     <div class="product-subtotal">₹{{ item.price|floatformat:2 }}</div>
                 </div>

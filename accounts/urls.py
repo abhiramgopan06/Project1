@@ -30,4 +30,22 @@ urlpatterns = [
         views.profile,
         name='profile'
     ),
+
+    path(
+        'addresses/add/',
+        views.address_add,
+        name='address_add'
+    ),
+
+    path(
+        'addresses/<int:address_id>/edit/',
+        views.address_edit,
+        name='address_edit'
+    ),
+
+    path(
+        'addresses/<int:address_id>/delete/',
+        views.address_delete,
+        name='address_delete'
+    ),
 ]

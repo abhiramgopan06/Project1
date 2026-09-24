@@ -19,6 +19,7 @@ from django.views.decorators.http import require_POST
 from cart.models import Cart
 from orders.models import Order, OrderItem
 from products.models import Product
+from accounts.checkout_helpers import resolve_checkout_address
 
 
 # Small helper: adds up price * quantity for every item in the cart.
@@ -94,17 +95,12 @@ def verify_payment(request):
             'error': 'Invalid demo payment reference.'
         }, status=400)
 
-    name = request.POST.get('name', '').strip()
-    email = request.POST.get('email', '').strip()
-    phone = request.POST.get('phone', '').strip()
-    address = request.POST.get('address', '').strip()
-
-    if not all([name, email, phone, address]):
+    name, email, phone, address, error = resolve_checkout_address(request)
+    if error:
         return JsonResponse({
             'success': False,
-            'error': 'Please provide all customer information.'
+            'error': error
         }, status=400)
-
     try:
         with transaction.atomic():
             cart = Cart.objects.select_for_update().get(user=request.user)

@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Order, OrderItem
+from .models import Order, OrderItem, ReturnReplaceRequest
 
 
 @admin.register(Order)
@@ -39,3 +39,16 @@ class OrderItemAdmin(admin.ModelAdmin):
         'quantity',
         'price',
     )
+
+
+@admin.register(ReturnReplaceRequest)
+class ReturnReplaceRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'order_item',
+        'request_type',
+        'status',
+        'created_at',
+    )
+
+    list_filter = ('request_type', 'status')

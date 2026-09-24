@@ -207,9 +207,8 @@
                             <span style="font-size:12px;color:#dc2626">Out of stock</span>
                         {% endif %}
                         <div class="product-actions">
-                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
                             {% if product.stock > 0 and product.is_available %}
-                            <form method="post" action="{% url 'cart:add_to_cart' product.id %}" style="flex:1">
+                            <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
                                 {% csrf_token %}
                                 <button class="btn-add-to-cart" type="submit">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -221,6 +220,7 @@
                                 </button>
                             </form>
                             {% endif %}
+                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
                         </div>
                     </div>
                 </article>

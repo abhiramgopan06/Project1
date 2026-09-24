@@ -832,21 +832,21 @@
     border-color: #94a3b8;
 }
 
-/* Special "Add to Cart" button used on the shop page and the
-   product detail page. It is styled like the dark, fully-rounded
-   "pill" button with a small cart icon that you see on a lot of
-   shopping apps: black background, a white cart icon on the left,
-   and bold cream-colored text with a soft warm glow behind it. */
+/* "Add to Cart" button used on the shop page and the product
+   detail page. Kept the same square-cornered shape as the "View"
+   button (.btn-outline / .btn) next to it - same border-radius,
+   same padding/height - just filled dark instead of outlined, with
+   a small cart icon in front of the text. */
 .btn-add-to-cart {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 12px 18px;
+    padding: 10px 16px;
     background: #0a0a0a;
     border: 1px solid #0a0a0a;
-    border-radius: 999px;
+    border-radius: 8px;
     color: #fdf1d6;
     font-size: 14px;
     font-weight: 700;
@@ -1090,18 +1090,21 @@
     font-weight: 600;
 }
 
+/* Stacked, full-width action buttons - the same look as the
+   "Apply Filters" / "Clear" buttons in the sidebar: a solid dark
+   button on top, an outlined button underneath. */
 .product-actions {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
 }
 
 .product-actions .btn {
-    flex: 1;
+    width: 100%;
 }
 
 .product-actions form {
-    flex: 1;
+    width: 100%;
 }
 
 .empty {
@@ -1809,6 +1812,46 @@ main {
     cursor: pointer;
 }
 
+/* Generic styling for Django's {{ form.as_p }} output (used by the
+   dashboard "Add/Edit Product" form) - same look as .form-group,
+   just matching the <p> wrapper Django generates automatically. */
+.checkout-form-card form p {
+    margin: 0 0 18px;
+}
+
+.checkout-form-card form label {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.checkout-form-card form input,
+.checkout-form-card form select,
+.checkout-form-card form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+.checkout-form-card form input[type="checkbox"] {
+    width: auto;
+    box-sizing: content-box;
+    margin-right: 8px;
+}
+
+.checkout-form-card form textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
 .place-order-btn {
     width: 100%;
     padding: 14px 20px;
@@ -2383,5 +2426,274 @@ main {
 
     .product-image {
         height: 170px;
+    }
+}
+
+/* ---------- Saved Addresses ("My Addresses" page + checkout) ---------- */
+
+.address-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.address-card {
+    padding: 16px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.address-card-default {
+    border-color: #111827;
+    background: #ffffff;
+}
+
+.address-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* The radio-button address picker shown on the checkout page:
+   one card per saved address, plus an "Add a new address" card,
+   all in the same square-cornered style as the rest of the site. */
+.address-choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.address-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.address-choice:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+}
+
+.address-choice input[type="radio"] {
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.address-choice:has(input:checked) {
+    border-color: #111827;
+    background: #f8fafc;
+    box-shadow: 0 0 0 1px #111827;
+}
+
+.address-choice-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.address-choice-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.address-choice-text {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ---------- "Rate this product" (Order Detail, after Delivered) ---------- */
+
+.rate-product-form {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.rate-product-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    resize: vertical;
+}
+
+/* Pure-CSS star picker: the radios are listed 5..1 in the HTML but
+   laid out reversed, so hovering/checking a star also lights up
+   every star before it (to its left on screen). */
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+.star-rating input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.star-rating label {
+    font-size: 26px;
+    line-height: 1;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #f59e0b;
+}
+
+.item-rating-display {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item-rating-stars {
+    color: #f59e0b;
+    font-size: 18px;
+}
+
+.item-rating-note {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* ---------- Return / Replace request (Order Detail, after Delivered) ---------- */
+
+.return-replace-form {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.return-replace-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    resize: vertical;
+}
+
+.return-status-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-size: 13px;
+}
+
+.return-status-box .pill {
+    margin-left: 8px;
+}
+
+
+/* ---------- Order History (product list: image, name, value, date) ---------- */
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s ease;
+}
+
+.history-item:hover {
+    border-color: #111827;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.history-item-image {
+    width: 80px;
+    height: 80px;
+    flex: 0 0 80px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.history-item-image-empty {
+    display: block;
+}
+
+.history-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-item-name {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.history-item-meta {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.history-item-side {
+    text-align: right;
+}
+
+.history-item-value {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 600px) {
+    .history-item {
+        flex-wrap: wrap;
+    }
+
+    .history-item-side {
+        width: 100%;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .history-item-value {
+        margin-bottom: 0;
     }
 }

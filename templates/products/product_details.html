@@ -55,18 +55,7 @@
 
     <section style="margin-top:35px">
         <h2>Ratings & Reviews</h2>
-        {% if request.user.is_authenticated %}
-        <form method="post" style="margin:15px 0;padding:18px;border:1px solid #e2e8f0;border-radius:12px">
-            {% csrf_token %}
-            <label>Rating</label>
-            {{ form.rating }}
-            <label style="display:block;margin-top:12px">Review</label>
-            {{ form.review }}
-            <button class="btn btn-primary" type="submit" style="margin-top:12px">{% if user_review %}Update Review{% else %}Submit Review{% endif %}</button>
-        </form>
-        {% else %}
-        <p><a href="{% url 'login' %}">Login</a> to rate and review this product.</p>
-        {% endif %}
+        <p style="color:#64748b;font-size:14px;margin-top:-8px">Only customers who bought and received this product can rate it, from their <a href="{% url 'order_history' %}">Order History</a>.</p>
 
         {% for review in reviews %}
         <article style="padding:15px 0;border-bottom:1px solid #e2e8f0">
@@ -78,7 +67,7 @@
             <small style="color:#64748b">{{ review.created_at|date:"d M Y" }}</small>
         </article>
         {% empty %}
-        <p>No reviews yet. Be the first to review this product.</p>
+        <p>No reviews yet.</p>
         {% endfor %}
     </section>
 

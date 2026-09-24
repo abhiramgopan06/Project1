@@ -20,6 +20,14 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
+
+    # Whether this particular product can be returned or replaced
+    # after delivery. Set per-product by staff in the dashboard - a
+    # customer only sees a "Return"/"Replace" option on products
+    # that have one (or both) of these turned on.
+    is_returnable = models.BooleanField(default=False)
+    is_replaceable = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     vector_data = models.JSONField(default=dict, blank=True)

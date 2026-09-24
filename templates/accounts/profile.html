@@ -18,6 +18,56 @@
         </form>
 
     </div>
+
+    <div class="profile-card" style="margin-top:20px">
+        <div class="section-head" style="margin:0 0 10px 0">
+            <div>
+                <h1 style="margin:0">My Addresses</h1>
+                <p style="color:#64748b;margin:4px 0 0 0">Enter your details once, then reuse them at checkout. Add another address if you're moving somewhere temporarily.</p>
+            </div>
+            <a class="btn btn-primary" href="{% url 'address_add' %}">+ Add New Address</a>
+        </div>
+
+        {% if addresses %}
+        <div class="address-list">
+            {% for addr in addresses %}
+            <div class="address-card {% if addr.is_default %}address-card-default{% endif %}">
+                <div class="address-card-head">
+                    <strong>{{ addr.label|default:"Address" }}</strong>
+                    {% if addr.is_default %}<span class="pill" style="color:#15803d">Default</span>{% endif %}
+                </div>
+                <p style="margin:6px 0 0 0">{{ addr.full_name }}</p>
+                <p style="margin:2px 0;color:#64748b">{{ addr.address|linebreaksbr }}</p>
+                <p style="margin:2px 0;color:#64748b">📞 {{ addr.phone }} &middot; ✉ {{ addr.email }}</p>
+                <div style="margin-top:10px;display:flex;gap:8px">
+                    <a class="btn btn-outline" href="{% url 'address_edit' addr.id %}">Edit</a>
+                    <form method="post" action="{% url 'address_delete' addr.id %}" onsubmit="return confirm('Remove this address?');">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:#64748b">No saved addresses yet. Add one so you don't have to type your details every time you check out.</p>
+        {% endif %}
+    </div>
+    <div class="profile-card" style="margin-top:20px">
+        <div class="section-head" style="margin:0 0 10px 0">
+            <div>
+                <h1 style="margin:0">Order History</h1>
+                <p style="color:#64748b;margin:4px 0 0 0">Your most recent orders.</p>
+            </div>
+            <a class="btn btn-outline" href="{% url 'order_history' %}">View All</a>
+        </div>
+
+        {% if order_items %}
+            {% include "orders/_order_history_items.html" %}
+        {% else %}
+            <p style="color:#64748b">You haven't ordered anything yet.</p>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}

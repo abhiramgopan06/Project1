@@ -1,0 +1,24 @@
+{# Shows a list of ordered products: image, name, value and the day it was ordered. #}
+{# Used on both the "My Orders" page and the Profile page. #}
+<div class="history-list">
+    {% for item in order_items %}
+    <a class="history-item" href="{% url 'order_detail' item.order.id %}">
+        {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" class="history-item-image" alt="{{ item.product.name }}">
+        {% else %}
+            <div class="history-item-image history-item-image-empty"></div>
+        {% endif %}
+
+        <div class="history-item-info">
+            <div class="history-item-name">{{ item.product.name }}</div>
+            <div class="history-item-meta">Ordered on {{ item.order.created_at|date:"d M Y" }} &middot; Order #{{ item.order.id }}</div>
+            <div class="history-item-meta">₹{{ item.price|floatformat:2 }} &times; {{ item.quantity }}</div>
+        </div>
+
+        <div class="history-item-side">
+            <div class="history-item-value">₹{{ item.line_total|floatformat:2 }}</div>
+            <span class="pill order-status-{{ item.order.status|lower }}">{{ item.order.get_status_display }}</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>

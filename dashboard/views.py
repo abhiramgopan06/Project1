@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from orders.models import Order
 from products.models import Product
+from products.forms import ProductForm
 
 
 # The dashboard "home" page: a few summary numbers (total orders,
@@ -128,3 +129,87 @@ def dashboard_order_detail(request, order_id):
     }
 
     return render(request, 'dashboard/order_detail.html', context)
+
+
+# ----------------------------------------------------
+# Product management - the "separate admin dashboard" area where
+# staff can add and edit products, without needing to go into the
+# built-in Django /admin/ site.
+# ----------------------------------------------------
+
+# Shows every product (available or not) so staff can see the
+# whole catalog and jump into add/edit.
+@staff_member_required
+def dashboard_products(request):
+    products = Product.objects.select_related('category').order_by('-created_at')
+
+    context = {
+        'active': 'products',
+        'products': products,
+    }
+
+    return render(request, 'dashboard/products.html', context)
+
+
+# Add a brand-new product to the catalog.
+@staff_member_required
+def dashboard_product_add(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            product = form.save()
+            messages.success(request, f'"{product.name}" was added to the catalog.')
+            return redirect('dashboard:products')
+    else:
+        form = ProductForm()
+
+    context = {
+        'active': 'products',
+        'form': form,
+        'is_new': True,
+    }
+
+    return render(request, 'dashboard/product_form.html', context)
+
+
+# Edit an existing product's details, price, stock, image, etc.
+@staff_member_required
+def dashboard_product_edit(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'"{product.name}" was updated.')
+            return redirect('dashboard:products')
+    else:
+        form = ProductForm(instance=product)
+
+    context = {
+        'active': 'products',
+        'form': form,
+        'is_new': False,
+        'product': product,
+    }
+
+    return render(request, 'dashboard/product_form.html', context)
+
+
+# Toggle a product between available and unavailable. We don't
+# offer a hard "delete" here on purpose - a product that's already
+# part of someone's order history has to stick around so those old
+# orders still make sense, so "deactivate" is the safe equivalent.
+@staff_member_required
+def dashboard_product_toggle(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        product.is_available = not product.is_available
+        product.save(update_fields=['is_available'])
+        state = 'activated' if product.is_available else 'deactivated'
+        messages.success(request, f'"{product.name}" was {state}.')
+
+    return redirect('dashboard:products')

@@ -69,5 +69,59 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    # price x quantity for this line - shown as the "value" in order history.
+    @property
+    def line_total(self):
+        return self.price * self.quantity
+
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+
+
+# A customer's request to return or replace one item from a
+# delivered order. Only created if the product allows that option
+# (Product.is_returnable / is_replaceable) - the view that creates
+# these checks that before saving.
+class ReturnReplaceRequest(models.Model):
+    REQUEST_RETURN = 'Return'
+    REQUEST_REPLACE = 'Replace'
+
+    REQUEST_TYPE_CHOICES = [
+        (REQUEST_RETURN, 'Return'),
+        (REQUEST_REPLACE, 'Replace'),
+    ]
+
+    STATUS_REQUESTED = 'Requested'
+    STATUS_APPROVED = 'Approved'
+    STATUS_REJECTED = 'Rejected'
+    STATUS_COMPLETED = 'Completed'
+
+    STATUS_CHOICES = [
+        (STATUS_REQUESTED, 'Requested'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+        (STATUS_COMPLETED, 'Completed'),
+    ]
+
+    # One request per order item - a customer can't ask to both
+    # return AND replace the same item at the same time.
+    order_item = models.OneToOneField(
+        OrderItem,
+        on_delete=models.CASCADE,
+        related_name='return_request'
+    )
+
+    request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
+    reason = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_REQUESTED
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.request_type} request for {self.order_item}'

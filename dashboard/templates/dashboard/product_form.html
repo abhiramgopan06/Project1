@@ -1,0 +1,26 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}{% if is_new %}Add Product{% else %}Edit Product{% endif %} | E-Commerce Store{% endblock %}
+
+{% block dashboard_content %}
+<div class="section-head">
+    <div>
+        <h2>{% if is_new %}Add Product{% else %}Edit Product{% endif %}</h2>
+        <p>{% if is_new %}Add a new product to the catalog.{% else %}Update "{{ product.name }}".{% endif %}</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a>
+</div>
+
+<div class="profile-card" style="margin:20px 0 0 0;max-width:640px">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if not is_new and product.image %}
+        <div style="margin-bottom:18px">
+            <label style="display:block;margin-bottom:7px;color:#334155;font-size:14px;font-weight:600">Current Image</label>
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0">
+        </div>
+        {% endif %}
+        {{ form.as_p }}
+        <button class="btn btn-primary" type="submit">{% if is_new %}Add Product{% else %}Save Changes{% endif %}</button>
+    </form>
+</div>
+{% endblock %}

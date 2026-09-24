@@ -6,6 +6,7 @@
             <h3>Admin Dashboard</h3>
             <nav>
                 <a class="dashboard-nav-link {% if active == 'home' %}active{% endif %}" href="{% url 'dashboard:home' %}" {% if active == 'home' %}aria-current="page"{% endif %}><span class="nav-icon">📊</span>Overview</a>
+                <a class="dashboard-nav-link {% if active == 'products' %}active{% endif %}" href="{% url 'dashboard:products' %}" {% if active == 'products' %}aria-current="page"{% endif %}><span class="nav-icon">🛍️</span>Products</a>
                 <a class="dashboard-nav-link {% if active == 'orders' %}active{% endif %}" href="{% url 'dashboard:orders' %}" {% if active == 'orders' %}aria-current="page"{% endif %}><span class="nav-icon">📦</span>Orders</a>
                 <a class="dashboard-nav-link {% if active == 'users' %}active{% endif %}" href="{% url 'dashboard:users' %}" {% if active == 'users' %}aria-current="page"{% endif %}><span class="nav-icon">👥</span>Users</a>
                 <a class="dashboard-nav-link" href="{% url 'admin:index' %}"><span class="nav-icon">⚙️</span>Django Admin</a>

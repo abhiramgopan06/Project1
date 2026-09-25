@@ -49,6 +49,15 @@
                         <div class="product-price">Price: ₹{{ item.price }}</div>
                         <div class="product-quantity">Quantity: {{ item.quantity }}</div>
 
+                        {% if item.is_cancelled %}
+                            <span class="pill order-status-cancelled" style="margin-top:6px;display:inline-block">Cancelled</span>
+                        {% elif item.can_cancel_item %}
+                            <form method="post" action="{% url 'cancel_order_item' order.id item.id %}" onsubmit="return confirm('Cancel only this product?');" style="margin-top:8px">
+                                {% csrf_token %}
+                                <button class="btn btn-danger" type="submit">Cancel This Product</button>
+                            </form>
+                        {% endif %}
+
                         {% if order.status == 'Delivered' %}
                             {% if item.existing_review %}
                             <div class="item-rating-display">

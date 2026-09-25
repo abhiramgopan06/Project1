@@ -18,6 +18,7 @@
         <div class="history-item-side">
             <div class="history-item-value">₹{{ item.line_total|floatformat:2 }}</div>
             <span class="pill order-status-{{ item.order.status|lower }}">{{ item.order.get_status_display }}</span>
+            {% if item.is_cancelled %}<span class="pill order-status-cancelled">Product cancelled</span>{% endif %}
         </div>
     </a>
     {% endfor %}

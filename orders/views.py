@@ -200,6 +200,10 @@ def order_detail(request, order_id):
     # shipped out for delivery (or already been delivered/cancelled).
     can_cancel = order.status in (Order.STATUS_PENDING, Order.STATUS_CONFIRMED, Order.STATUS_SHIPPED)
 
+    # Each product row gets its own cancel button (only if it is not cancelled yet).
+    for item in order_items:
+        item.can_cancel_item = can_cancel and not item.is_cancelled
+
     return render(
         request,
         'orders/order_detail.html',
@@ -224,13 +228,53 @@ def cancel_order(request, order_id):
 
         if order.status in cancellable:
             with transaction.atomic():
-                for item in order.items.all():
+                # Only put back the products that were NOT already cancelled
+                # one-by-one, so the stock is never added twice.
+                for item in order.items.filter(is_cancelled=False):
                     Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
                 order.status = Order.STATUS_CANCELLED
                 order.save(update_fields=['status'])
             messages.success(request, f'Order #{order.id} was cancelled.')
         else:
             messages.error(request, 'This order can no longer be cancelled.')
+
+    return redirect('order_detail', order_id=order.id)
+
+
+# Lets a customer cancel ONE product from an order (not the whole order).
+# The product goes back into stock and the order total goes down.
+# If every product in the order is cancelled, the order is cancelled too.
+@login_required
+def cancel_order_item(request, order_id, item_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    item = get_object_or_404(OrderItem, id=item_id, order=order)
+
+    cancellable = (Order.STATUS_PENDING, Order.STATUS_CONFIRMED, Order.STATUS_SHIPPED)
+
+    if request.method == 'POST':
+        if item.is_cancelled:
+            messages.error(request, 'This product is already cancelled.')
+        elif order.status not in cancellable:
+            messages.error(request, 'This product can no longer be cancelled.')
+        else:
+            with transaction.atomic():
+                # 1. Put the stock back
+                Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
+
+                # 2. Mark this one product as cancelled
+                item.is_cancelled = True
+                item.save(update_fields=['is_cancelled'])
+
+                # 3. Take its price out of the order total
+                order.total_amount = order.total_amount - item.line_total
+
+                # 4. If nothing is left un-cancelled, cancel the whole order
+                if not order.items.filter(is_cancelled=False).exists():
+                    order.status = Order.STATUS_CANCELLED
+
+                order.save(update_fields=['total_amount', 'status'])
+
+            messages.success(request, f'"{item.product.name}" was cancelled.')
 
     return redirect('order_detail', order_id=order.id)
 

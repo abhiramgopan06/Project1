@@ -69,6 +69,9 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    # True when the customer cancelled just this one product.
+    is_cancelled = models.BooleanField(default=False)
+
     # price x quantity for this line - shown as the "value" in order history.
     @property
     def line_total(self):

@@ -23,11 +23,11 @@
         <nav class="nav-links">
             <a href="{% url 'products:home' %}">Shop</a>
             {% if user.is_authenticated %}
-                {# Admins (staff) manage the store - they don't buy products, so no cart for them. #}
+                {# Admins (staff) manage the store - they don't buy products or place orders themselves, so no Cart or My Orders link for them. #}
                 {% if not user.is_staff %}
                     <a class="icon-link" href="{% url 'cart:cart' %}">🛒 Cart <span class="badge">{{ cart_count }}</span></a>
+                    <a href="{% url 'order_history' %}">My Orders</a>
                 {% endif %}
-                <a href="{% url 'order_history' %}">My Orders</a>
                 {% if user.is_staff %}
                     <a href="{% url 'dashboard:home' %}">Admin Dashboard</a>
                 {% endif %}

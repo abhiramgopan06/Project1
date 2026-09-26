@@ -2243,6 +2243,10 @@ main {
 
 .dashboard-nav-link.active {
     background: #111827;
+    color: #ffffff !important;
+}
+
+.dashboard-nav-link.active .nav-icon {
     color: #ffffff;
 }
 

@@ -30,7 +30,7 @@ def dashboard_home(request):
     total_products = Product.objects.count()
     total_users = User.objects.count()
 
-    recent_orders = Order.objects.order_by('-created_at')[:5]
+    recent_orders = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')[:5]
 
     low_stock_products = Product.objects.filter(
         stock__lte=5

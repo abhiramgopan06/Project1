@@ -210,6 +210,7 @@
                             {% if product.stock > 0 and product.is_available %}
                             <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
                                 {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                 <button class="btn-add-to-cart" type="submit">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="9" cy="21" r="1"></circle>

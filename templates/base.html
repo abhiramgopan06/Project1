@@ -47,7 +47,15 @@
 {% if messages %}
 <div class="container messages">
     {% for message in messages %}
+        {% if 'cart_added' in message.tags %}
+        <div class="cart-toast">
+            <span class="cart-toast-icon">🛒</span>
+            <span class="cart-toast-text">{{ message }}</span>
+            <a class="btn btn-primary cart-toast-btn" href="{% url 'cart:cart' %}">Go to Cart</a>
+        </div>
+        {% else %}
         <div class="alert">{{ message }}</div>
+        {% endif %}
     {% endfor %}
 </div>
 {% endif %}

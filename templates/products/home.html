@@ -33,11 +33,7 @@
             <div class="carousel-track" id="carouselTrack">
                 {% for product in products|slice:":16" %}
                 <div class="carousel-slide">
-                    <!-- One product card. Same info as the big grid below,
-                         just shown inside the sliding carousel. The
-                         "Bestseller" ribbon and the star rating both sit
-                         on top of the picture itself, like a real shopping
-                         site, instead of taking up space in the text below. -->
+                    
                     <article class="product-card">
                         <a class="product-image" href="{% url 'products:product_detail' product.id %}">
                             {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
@@ -170,11 +166,7 @@
     {% if products %}
             <div class="product-grid">
                 {% for product in products %}
-                <!-- One product card, styled like a card you'd see on
-                     Amazon or Flipkart: compact square-ish photo with a
-                     "Bestseller" ribbon and star rating sitting on top of
-                     it, then the name, price, stock status and an
-                     "Add to Cart" button underneath. -->
+                
                 <article class="product-card">
                     <a class="product-image" href="{% url 'products:product_detail' product.id %}">
                         {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
@@ -298,9 +290,6 @@
         }
     }
 
-    // ---------- Featured Products Carousel ----------
-    // Beginner-friendly slider: it groups the product cards into "pages"
-    // and slides to the next page automatically every 8 seconds.
     document.addEventListener("DOMContentLoaded", function () {
         const track = document.getElementById("carouselTrack");
         const carousel = document.getElementById("productCarousel");
@@ -308,17 +297,14 @@
         const prevBtn = document.getElementById("carouselPrev");
         const nextBtn = document.getElementById("carouselNext");
 
-        if (!track) return; // no products to show, nothing to do
+        if (!track) return; 
 
         const slides = track.children;
         const totalSlides = slides.length;
-        const AUTO_SLIDE_DELAY = 8000; // 8 seconds, as requested
+        const AUTO_SLIDE_DELAY = 8000; 
 
-        // each slide's width, as a percentage of the TRACK's own width
-        // (this never changes, no matter how many cards are visible at once)
         const slidePercent = 100 / totalSlides;
 
-        // how many product cards fit on screen at once
         function getVisibleCount() {
             if (window.innerWidth <= 640) return 1;
             if (window.innerWidth <= 960) return 2;
@@ -330,21 +316,17 @@
         let currentPage = 0;
         let autoSlideTimer = null;
 
-        // give every slide its fixed share of the track's width
         function applySlideWidth() {
             for (let i = 0; i < slides.length; i++) {
                 slides[i].style.flex = "0 0 " + slidePercent + "%";
             }
         }
 
-        // the track itself must be wide enough to fit all slides,
-        // shown "visibleCount" at a time
         function applyTrackWidth() {
             const trackWidthPercent = (totalSlides / visibleCount) * 100;
             track.style.width = trackWidthPercent + "%";
         }
 
-        // build the small dots below the carousel
         function buildDots() {
             dotsWrapper.innerHTML = "";
             for (let i = 0; i < totalPages; i++) {
@@ -368,10 +350,9 @@
             }
         }
 
-        // slide the track to the current page
         function updateTrackPosition() {
             let slideIndex = currentPage * visibleCount;
-            // don't scroll past the last card - snap the final page to the end
+
             const maxSlideIndex = Math.max(0, totalSlides - visibleCount);
             if (slideIndex > maxSlideIndex) slideIndex = maxSlideIndex;
 
@@ -415,7 +396,6 @@
             });
         }
 
-        // pause the auto-swipe while the visitor's mouse is over the carousel
         if (carousel) {
             carousel.addEventListener("mouseenter", function () {
                 clearInterval(autoSlideTimer);
@@ -425,7 +405,6 @@
             });
         }
 
-        // recalculate the layout when the window is resized
         window.addEventListener("resize", function () {
             visibleCount = getVisibleCount();
             totalPages = Math.max(1, Math.ceil(totalSlides / visibleCount));

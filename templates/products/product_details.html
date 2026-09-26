@@ -77,8 +77,7 @@
         <h2>You May Also Like</h2>
         <div class="product-grid">
         {% for item in recommendations %}
-            <!-- Small "you may also like" card, same compact style as
-                 the shop page cards. -->
+            
             <article class="product-card">
                 <a class="product-image" href="{% url 'products:product_detail' item.id %}">
                     {% if item.rating_count > 0 and item.rating_average >= 4.5 %}

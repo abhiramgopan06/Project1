@@ -2588,9 +2588,7 @@ main {
     justify-content: space-between;
 }
 
-/* The radio-button address picker shown on the checkout page:
-   one card per saved address, plus an "Add a new address" card,
-   all in the same square-cornered style as the rest of the site. */
+
 .address-choice-list {
     display: flex;
     flex-direction: column;
@@ -2712,7 +2710,6 @@ main {
     font-size: 13px;
 }
 
-/* ---------- Return / Replace request (Order Detail, after Delivered) ---------- */
 
 .return-replace-form {
     margin-top: 10px;
@@ -2914,3 +2911,597 @@ main {
         width: auto;
     }
 }
+
+/* ================================================================
+   BEGINNER-FRIENDLY RESPONSIVE DESIGN
+   ---------------------------------------------------------------
+   These rules keep the existing desktop design, then make the
+   important parts smaller and easier to use on phones and tablets.
+   Product cards intentionally use TWO columns on small screens.
+   ================================================================ */
+
+/* Tablet: give the page a little more breathing room. */
+@media (max-width: 900px) {
+    .container {
+        width: min(1200px, 94%);
+    }
+
+    .category-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cart-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .summary {
+        position: static;
+    }
+
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sidebar {
+        position: static;
+    }
+
+    .dashboard-sidebar nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-nav-link {
+        flex: 1 1 150px;
+        text-align: center;
+    }
+}
+
+/* Phones: two compact product cards in every product grid. */
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+
+    .container {
+        width: 94%;
+    }
+
+    /* ---------------- Navbar ---------------- */
+    .nav-inner {
+        min-height: auto;
+        padding: 12px 0;
+        gap: 10px;
+    }
+
+    .brand {
+        width: 100%;
+        font-size: 21px;
+        text-align: center;
+    }
+
+    .nav-search {
+        flex-basis: 100%;
+        width: 100%;
+        max-width: none;
+    }
+
+    .nav-search input {
+        padding: 10px 12px;
+    }
+
+    .nav-links {
+        width: 100%;
+        margin-left: 0;
+        justify-content: center;
+        gap: 7px 10px;
+    }
+
+    .nav-links a:not(.btn),
+    .nav-links form {
+        font-size: 13px;
+    }
+
+    .nav-links .btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* ---------------- Headings / sections ---------------- */
+    .section-head {
+        margin: 25px 0 16px;
+        padding-bottom: 12px;
+    }
+
+    .section-head h2 {
+        font-size: 22px;
+    }
+
+    .section-head p {
+        font-size: 13px;
+    }
+
+    /* ---------------- Hero ---------------- */
+    .hero {
+        margin: 20px 0 30px;
+        padding: 25px 16px;
+        border-radius: 14px;
+    }
+
+    .hero h1 {
+        font-size: 28px;
+    }
+
+    .hero p {
+        font-size: 14px;
+        line-height: 1.55;
+    }
+
+    .hero-art-badge {
+        width: 130px;
+        height: 130px;
+        border-radius: 22px;
+    }
+
+    .hero-art-badge svg {
+        width: 65px;
+        height: 65px;
+    }
+
+    /* ---------------- Categories ---------------- */
+    .category-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    .category-card {
+        min-height: 105px;
+        padding: 12px 8px;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .category-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 8px;
+        font-size: 24px;
+    }
+
+    /* ---------------- Product grid ---------------- */
+    .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .product-card {
+        min-width: 0;
+        border-radius: 9px;
+    }
+
+    .product-image {
+        height: 135px;
+    }
+
+    .product-image-badge {
+        top: 6px;
+        right: 6px;
+        max-width: calc(100% - 12px);
+        padding: 2px 5px;
+        font-size: 8px;
+    }
+
+    .badge-bestseller {
+        top: 6px;
+        left: 6px;
+        padding: 2px 5px;
+        font-size: 8px;
+    }
+
+    .product-rating {
+        bottom: 6px;
+        left: 6px;
+        padding: 2px 5px;
+        font-size: 9px;
+    }
+
+    .product-info {
+        padding: 10px;
+    }
+
+    .product-title {
+        margin-bottom: 4px;
+        font-size: 13px;
+    }
+
+    .product-rating-count {
+        margin-bottom: 4px;
+        font-size: 10px;
+    }
+
+    .product-desc {
+        margin-bottom: 7px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    .price {
+        font-size: 16px;
+    }
+
+    .product-delivery,
+    .stock {
+        margin-bottom: 6px;
+        font-size: 10px;
+    }
+
+    .product-actions {
+        gap: 5px;
+    }
+
+    .product-actions .btn,
+    .product-actions .btn-add-to-cart,
+    .product-actions form {
+        width: 100%;
+    }
+
+    .product-actions .btn,
+    .btn-add-to-cart {
+        padding: 8px 5px;
+        font-size: 11px;
+    }
+
+    .btn-add-to-cart svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    /* ---------------- Featured carousel ---------------- */
+    .carousel {
+        gap: 0;
+    }
+
+    .carousel-slide {
+        padding: 0 5px;
+    }
+
+    /* ---------------- Filters ---------------- */
+    .filters {
+        position: static;
+        padding: 15px;
+    }
+
+    .filters h3 {
+        margin-bottom: 14px;
+        font-size: 17px;
+    }
+
+    .filters label {
+        margin-top: 11px;
+    }
+
+    /* ---------------- Product detail ---------------- */
+    .detail {
+        margin: 18px 0 35px;
+        padding: 15px;
+        gap: 18px;
+        border-radius: 12px;
+    }
+
+    .detail-image,
+    .detail-image img {
+        min-height: 250px;
+        height: 250px;
+    }
+
+    .detail > div:last-child {
+        padding: 0;
+    }
+
+    .detail h1 {
+        font-size: 25px;
+    }
+
+    .detail-price {
+        margin-bottom: 14px;
+        font-size: 24px;
+    }
+
+    .detail-desc {
+        font-size: 14px;
+        line-height: 1.55;
+    }
+
+    .detail .btn,
+    .detail .btn-primary,
+    .detail .btn-outline,
+    .detail .btn-add-to-cart,
+    .detail form {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .meta {
+        gap: 6px;
+        margin: 14px 0;
+    }
+
+    .pill {
+        padding: 6px 9px;
+        font-size: 10px;
+    }
+
+    /* ---------------- Cart ---------------- */
+    .cart-item {
+        grid-template-columns: 65px 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .cart-item img {
+        width: 65px;
+        height: 65px;
+    }
+
+    .cart-item h3 {
+        font-size: 14px;
+    }
+
+    .cart-item .item-total {
+        grid-column: 1 / -1;
+        min-width: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left !important;
+    }
+
+    .qty-form {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .qty-input {
+        width: 55px;
+    }
+
+    .summary {
+        padding: 16px;
+    }
+
+    /* ---------------- Auth / profile ---------------- */
+    .auth-wrap {
+        min-height: auto;
+        padding: 25px 0;
+    }
+
+    .auth-card,
+    .profile-card {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .auth-card h1,
+    .profile-card h1 {
+        font-size: 24px;
+    }
+
+    .profile-card {
+        margin: 25px auto;
+    }
+
+    /* ---------------- Checkout ---------------- */
+    .checkout-container {
+        margin: 25px auto;
+        padding: 0;
+    }
+
+    .checkout-header h1 {
+        font-size: 25px;
+    }
+
+    .checkout-card {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    /* ---------------- Orders / history ---------------- */
+    .order-row {
+        padding: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .order-row-status {
+        text-align: left;
+    }
+
+    .history-item {
+        padding: 11px;
+        gap: 10px;
+    }
+
+    .history-item-image {
+        width: 60px;
+        height: 60px;
+        flex-basis: 60px;
+    }
+
+    /* ---------------- Footer ---------------- */
+    .site-footer {
+        margin-top: 45px;
+    }
+
+    .footer-top {
+        grid-template-columns: 1fr 1fr;
+        gap: 22px 14px;
+        padding: 35px 0 25px;
+    }
+
+    .footer-col h4 {
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .footer-col a {
+        font-size: 12px;
+    }
+
+    .footer-bottom {
+        align-items: flex-start;
+        padding: 16px 0;
+    }
+
+    .footer-payments {
+        flex-wrap: wrap;
+        gap: 9px;
+        font-size: 18px;
+    }
+
+    /* ---------------- Dashboard ---------------- */
+    .dashboard-layout {
+        padding: 20px 0 40px;
+        gap: 15px;
+    }
+
+    .dashboard-sidebar {
+        padding: 14px;
+    }
+
+    .dashboard-sidebar nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .dashboard-nav-link {
+        padding: 9px 6px;
+        font-size: 12px;
+    }
+
+    .stat-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 13px;
+    }
+
+    .stat-card-value {
+        font-size: 20px;
+    }
+
+    .stat-card-label {
+        font-size: 11px;
+    }
+
+    /* Tables scroll horizontally instead of breaking the page. */
+    .table-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Long address/card lists remain two columns where there is room. */
+    .address-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .address-card {
+        padding: 11px;
+        font-size: 12px;
+    }
+}
+
+/* Very small phones: keep the two-column product design but make the
+   pictures and text slightly smaller so it still fits comfortably. */
+@media (max-width: 380px) {
+    .product-grid {
+        gap: 7px;
+    }
+
+    .product-image {
+        height: 115px;
+    }
+
+    .product-info {
+        padding: 8px;
+    }
+
+    .product-title {
+        font-size: 12px;
+    }
+
+    .price {
+        font-size: 15px;
+    }
+
+    .product-actions .btn,
+    .btn-add-to-cart {
+        font-size: 10px;
+    }
+
+    /* iPhone SE / very small phones: keep the footer in two compact
+       columns, matching the reference layout instead of stacking every
+       section into one long column. */
+    .footer-top {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px 14px;
+        padding: 28px 0 22px;
+    }
+
+    .footer-col {
+        min-width: 0;
+    }
+
+    .footer-col h4 {
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .footer-subhead {
+        margin-top: 20px;
+    }
+
+    .footer-col a {
+        margin-bottom: 11px;
+        font-size: 11px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .footer-social {
+        gap: 9px;
+    }
+
+    .footer-social a {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+    }
+
+    /* Keep the copyright and payment methods as two simple rows. */
+    .footer-bottom {
+        display: block;
+        padding: 16px 0;
+    }
+
+    .footer-copyright {
+        margin-bottom: 15px;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .footer-payments {
+        gap: 9px;
+        font-size: 18px;
+    }
+
+    .footer-payments-label {
+        font-size: 11px;
+        margin-right: 2px;
+    }
+}
+

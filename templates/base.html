@@ -49,9 +49,11 @@
     {% for message in messages %}
         {% if 'cart_added' in message.tags %}
         <div class="cart-toast">
-            <span class="cart-toast-icon">🛒</span>
-            <span class="cart-toast-text">{{ message }}</span>
-            <a class="btn btn-primary cart-toast-btn" href="{% url 'cart:cart' %}">Go to Cart</a>
+            <div class="cart-toast-message">
+                <span class="cart-toast-icon">🛒</span>
+                <span class="cart-toast-text">{{ message }}</span>
+            </div>
+            <a class="cart-toast-btn" href="{% url 'cart:cart' %}">Go to Cart</a>
         </div>
         {% else %}
         <div class="alert">{{ message }}</div>
@@ -67,6 +69,8 @@
 <footer class="site-footer">
     <div class="container footer-top">
 
+        <!-- Column 1: brand name used as the heading, then a Legal group -->
+        <!-- "footer-white" makes all the links in this column white (see style.css) -->
         <div class="footer-col footer-white">
             <h4>E-Commerce Shop</h4>
             <a href="#">About Us</a>
@@ -80,6 +84,7 @@
             <a href="#">Terms &amp; Conditions</a>
         </div>
 
+        <!-- Column 2: shopping links, then a Join Us group -->
         <div class="footer-col">
             <h4>Shopping</h4>
             <a href="{% url 'products:home' %}">How It Works</a>
@@ -93,12 +98,14 @@
             <a href="#">Work With Us</a>
         </div>
 
+        <!-- Column 3: support, with a small "team" badge like a real help desk -->
         <div class="footer-col">
             <h4>Support</h4>
             <a href="#">Contact Support</a>
             <a href="#"> +91 90610 76083</a>
         </div>
 
+        <!-- Column 4: app badges, then the Follow Us social icons -->
         <div class="footer-col">
             <h4 class="footer-subhead">Follow Us</h4>
             <div class="footer-social">

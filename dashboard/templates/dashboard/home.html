@@ -31,6 +31,7 @@
 <div class="checkout-card">
     <h2 class="section-title">Recent Orders</h2>
     {% if recent_orders %}
+    <div class="table-scroll">
     <table class="dashboard-table">
         <thead>
             <tr>
@@ -57,6 +58,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
         <p>No orders placed yet.</p>
     {% endif %}
@@ -65,6 +67,7 @@
 <div class="checkout-card">
     <h2 class="section-title">Low Stock Products</h2>
     {% if low_stock_products %}
+    <div class="table-scroll">
     <table class="dashboard-table">
         <thead>
             <tr>
@@ -83,6 +86,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
         <p>All products are well stocked.</p>
     {% endif %}

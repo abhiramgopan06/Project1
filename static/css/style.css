@@ -601,6 +601,36 @@
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
 }
 
+/* Below this width the two hero columns (text + the little dark
+   badge) no longer have room side by side, so stack them instead -
+   text on top, badge underneath, both centered. */
+@media (max-width: 860px) {
+    .hero {
+        grid-template-columns: 1fr;
+        padding: 40px 25px;
+        text-align: center;
+    }
+
+    .hero h1,
+    .hero p {
+        max-width: none;
+    }
+
+    .hero-art {
+        min-height: 140px;
+    }
+}
+
+@media (max-width: 560px) {
+    .hero {
+        padding: 30px 18px;
+    }
+
+    .hero h1 {
+        font-size: 32px;
+    }
+}
+
 /* ---------- Featured Products Carousel ---------- */
 /* Simple, beginner-friendly slider that shows product cards
    and automatically swipes to the next set every 8 seconds. */
@@ -752,6 +782,21 @@
     align-items: start;
 }
 
+/* Same idea as ".dashboard-layout" above: below this width the
+   240px filters column doesn't leave enough room for the product
+   grid, so drop the sidebar above the products instead of beside
+   them, and un-stick it since there's no room to keep it pinned
+   while scrolling a single narrow column. */
+@media (max-width: 860px) {
+    .shop-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        position: static;
+    }
+}
+
 .filters {
     position: sticky;
     top: 20px;
@@ -860,6 +905,20 @@
 .btn-add-to-cart:hover {
     background: #000000;
     transform: translateY(-1px);
+}
+
+/* Shown to admins instead of the real button - looks the same but
+   does nothing when clicked. Admins manage the store, they don't
+   buy products, so this is just for visual consistency. */
+.btn-add-to-cart-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-shadow: none;
+}
+
+.btn-add-to-cart-disabled:hover {
+    background: #0a0a0a;
+    transform: none;
 }
 
 .btn-add-to-cart:disabled {
@@ -1149,6 +1208,32 @@
     border-radius: 14px;
 }
 
+/* The product picture and its info are side by side above this
+   width; below it, stack the picture on top and shrink it a bit so
+   it doesn't take up the whole screen. */
+@media (max-width: 800px) {
+    .detail {
+        grid-template-columns: 1fr;
+        padding: 25px;
+        gap: 25px;
+    }
+
+    .detail-image,
+    .detail-image img {
+        min-height: 320px;
+        height: 320px;
+    }
+
+    .detail h1 {
+        font-size: 28px;
+    }
+
+    .detail .btn-primary,
+    .detail .btn-outline {
+        width: 100%;
+    }
+}
+
 .detail-image img {
     width: 100%;
     height: 450px;
@@ -1381,6 +1466,38 @@ body {
 
 .nav-links form {
     margin: 0;
+}
+
+/* On a narrow screen there isn't room for the logo, search box and
+   all the nav links on one line, so let the row wrap. Giving the
+   search box "flex-basis: 100%" makes it drop to its own full-width
+   line first, and the links then wrap to the line under that. */
+@media (max-width: 860px) {
+    .nav-inner {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+    .nav-search {
+        max-width: none;
+        flex-basis: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    /* base.html already put this class on the "Hi, {{ user.username }}"
+       link, but nothing ever defined it, so it was never actually
+       hidden. Defining it here makes it do what its name says, which
+       frees up space for the links that matter more on a small screen. */
+    .hide-mobile {
+        display: none;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        gap: 10px 14px;
+    }
 }
 
 .btn {
@@ -2257,6 +2374,18 @@ main {
     margin-bottom: 20px;
 }
 
+/* Links inside the dashboard (like the Order # link in Recent
+   Orders, or "Add your first product") shouldn't get an underline,
+   including on hover - the rest of the dashboard doesn't use
+   underlines, so this keeps it consistent. */
+.dashboard-content a {
+    text-decoration: none;
+}
+
+.dashboard-content a:hover {
+    text-decoration: none;
+}
+
 .dashboard-content h2 {
     color: #0f172a;
     margin-bottom: 4px;
@@ -2714,14 +2843,20 @@ main {
     right: 20px;
     z-index: 1000;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
-    padding: 14px 16px;
+    padding: 16px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
-    max-width: 360px;
+    width: 300px;
+}
+
+.cart-toast-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .cart-toast-icon {
@@ -2735,11 +2870,40 @@ main {
     font-weight: 600;
 }
 
-.cart-toast-btn {
-    width: auto;
-    padding: 8px 14px;
-    font-size: 13px;
-    white-space: nowrap;
+/* The "Go to Cart" button gets its own complete style here
+   (instead of sharing .btn / .btn-primary) so its look - and its
+   white text - can never be accidentally changed by editing those
+   shared button classes elsewhere.
+
+   Why it starts with ".messages": further down this file there is an
+   older rule, ".container > div:first-child a", that paints links
+   dark (see the note above ".site-footer .footer-col.footer-white a"
+   for the same issue). The toast is the first child div inside
+   ".container.messages", so plain ".cart-toast-btn" was losing that
+   fight and the white text was rendering as dark-on-dark, making it
+   unreadable. Starting the selector with ".messages" makes this rule
+   "stronger" so the white text wins, the same trick used for the
+   footer links. */
+.messages .cart-toast .cart-toast-btn {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 16px;
+    background: #111827;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.messages .cart-toast .cart-toast-btn:hover {
+    background: #000000;
+    color: #ffffff;
 }
 
 @media (max-width: 560px) {
@@ -2747,6 +2911,6 @@ main {
         left: 16px;
         right: 16px;
         top: 12px;
-        max-width: none;
+        width: auto;
     }
 }

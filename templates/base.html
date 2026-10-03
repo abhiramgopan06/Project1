@@ -84,13 +84,15 @@
             <a href="#">Terms &amp; Conditions</a>
         </div>
 
-        <!-- Column 2: shopping links, then a Join Us group -->
+        <!-- Column 2: customer shopping links, then a Join Us group -->
         <div class="footer-col">
             <h4>Shopping</h4>
             <a href="{% url 'products:home' %}">How It Works</a>
             <a href="#">Shipping &amp; Returns</a>
             <a href="#">Size Guide</a>
-            <a href="{% url 'order_history' %}">Track My Order</a>
+            {% if not user.is_staff %}
+                <a href="{% url 'order_history' %}">Track My Order</a>
+            {% endif %}
 
             <h4 class="footer-subhead">Join Us</h4>
             <a href="#">Careers</a>

@@ -2315,47 +2315,55 @@ main {
 }
 
 /* ---------- Admin dashboard ---------- */
+/* Simple professional dashboard layout. The styles are intentionally
+   straightforward so they are easy to understand and maintain. */
 .dashboard-layout {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 230px 1fr;
     gap: 28px;
-    padding: 32px 0 60px;
+    padding: 34px 0 64px;
 }
 
 .dashboard-sidebar {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 14px;
+    padding: 20px 14px;
     align-self: start;
     position: sticky;
     top: 90px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
 }
 
 .dashboard-sidebar h3 {
-    margin-bottom: 16px;
+    margin: 2px 8px 18px;
     color: #0f172a;
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 800;
 }
 
 .dashboard-sidebar nav {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 
 .dashboard-nav-link {
-    padding: 10px 12px;
-    border-radius: 8px;
-    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 9px;
+    color: #475569;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .dashboard-nav-link:hover {
     background: #f1f5f9;
+    color: #0f172a;
 }
 
 .dashboard-nav-link.active {
@@ -2367,17 +2375,23 @@ main {
     color: #ffffff;
 }
 
+.dashboard-content {
+    min-width: 0;
+}
+
 .dashboard-content .section-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 22px;
 }
 
-/* Links inside the dashboard (like the Order # link in Recent
-   Orders, or "Add your first product") shouldn't get an underline,
-   including on hover - the rest of the dashboard doesn't use
-   underlines, so this keeps it consistent. */
+.dashboard-content .section-head h2 {
+    margin: 0 0 5px;
+    font-size: 25px;
+}
+
 .dashboard-content a {
     text-decoration: none;
 }
@@ -2386,12 +2400,8 @@ main {
     text-decoration: none;
 }
 
-.dashboard-content h2 {
-    color: #0f172a;
-    margin-bottom: 4px;
-}
-
 .dashboard-content .section-head p {
+    margin: 0;
     color: #64748b;
     font-size: 14px;
 }
@@ -2400,18 +2410,19 @@ main {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
-    margin-bottom: 28px;
+    margin-bottom: 26px;
 }
 
 .stat-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 20px;
+    padding: 19px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
 }
 
 .stat-card-value {
-    font-size: 26px;
+    font-size: 25px;
     font-weight: 800;
     color: #0f172a;
 }
@@ -2423,8 +2434,17 @@ main {
     font-weight: 600;
 }
 
-/* Lets the orders table scroll sideways on a narrow screen instead
-   of squashing the new "Ship To" column into nothing. */
+.dashboard-content .checkout-card {
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-content .section-title {
+    font-size: 17px;
+    margin-bottom: 14px;
+}
+
 .table-scroll {
     overflow-x: auto;
 }
@@ -2437,11 +2457,12 @@ main {
 
 .dashboard-table th {
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: #64748b;
-    padding: 10px 12px;
+    background: #f8fafc;
+    padding: 11px 12px;
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -2453,13 +2474,14 @@ main {
     vertical-align: middle;
 }
 
+.dashboard-table tbody tr:hover {
+    background: #fafafa;
+}
+
 .dashboard-table tr:last-child td {
     border-bottom: none;
 }
 
-/* The "Ship To" column on the orders page: the customer's
-   delivery name, address, phone and email, all in one small
-   block so staff can see exactly where to ship the order. */
 .ship-to-cell {
     min-width: 220px;
     font-size: 13px;
@@ -2510,9 +2532,9 @@ main {
 }
 
 .select.status-select {
-    padding: 6px 10px;
+    padding: 7px 10px;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border-radius: 7px;
     font-size: 13px;
     background: #ffffff;
     color: #0f172a;

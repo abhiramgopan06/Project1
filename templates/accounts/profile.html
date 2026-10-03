@@ -53,6 +53,7 @@
         <p style="color:#64748b">No saved addresses yet. Add one so you don't have to type your details every time you check out.</p>
         {% endif %}
     </div>
+    {% if not user.is_staff %}
     <div class="profile-card" style="margin-top:20px">
         <div class="section-head" style="margin:0 0 10px 0">
             <div>
@@ -68,6 +69,7 @@
             <p style="color:#64748b">You haven't ordered anything yet.</p>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 
 {% endblock %}

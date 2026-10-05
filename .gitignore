@@ -5,5 +5,6 @@ db.sqlite3
 media/
 
 # Local virtual environment
+env/
 venv/
 .venv/

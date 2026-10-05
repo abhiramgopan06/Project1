@@ -49,14 +49,18 @@ class RegistrationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Keep the registration page order simple and beginner-friendly.
+        # Keep the fields in a natural registration order:
+        # account name -> personal details -> contact -> password.
+        # This matches the layout used by the other project and is
+        # easier for a beginner to follow.
         self.order_fields([
             'username',
-            'password1',
-            'email',
-            'password2',
             'first_name',
             'last_name',
+            'email',
             'phone',
+            'password1',
+            'password2',
         ])
         self.fields['password1'].widget.attrs.update({
             'class': 'input',

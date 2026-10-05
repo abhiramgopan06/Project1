@@ -2,20 +2,43 @@
 {% block title %}Create Account | E-Commerce Store{% endblock %}
 {% block content %}
 
-<div class="container auth-wrap">
-    <div class="auth-card">
+<div class="container auth-wrap register-wrap">
+    <div class="auth-card register-card">
         <h1>Create your account</h1>
-        <p style="color:#64748b">Enter your basic account details first, then your personal information.</p>
+        <p class="register-intro">Enter your details below to create your E-Commerce Shop account.</p>
 
-        <form method="post">
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post" class="register-form" novalidate>
             {% csrf_token %}
-            {{ form.as_p }}
-            <button class="btn btn-primary" type="submit">Create Account</button>
+
+            {% for field in form %}
+                <div class="register-field{% if field.errors %} has-error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+
+                    {% if field.errors %}
+                        <div class="field-errors">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <div class="field-help">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button class="btn btn-primary register-submit" type="submit">Create Account</button>
         </form>
 
-        <p style="text-align:center;color:#64748b">
+        <p class="register-login">
             Already have an account?
-            <a href="{% url 'login' %}" style="color:#2563eb;font-weight:700">Login</a>
+            <a href="{% url 'login' %}">Login</a>
         </p>
     </div>
 </div>

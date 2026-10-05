@@ -62,6 +62,9 @@ class RegistrationForm(UserCreationForm):
             'password1',
             'password2',
         ])
+        # Hide Django's default username rules/help text on the registration page.
+        self.fields['username'].help_text = ''
+
         self.fields['password1'].widget.attrs.update({
             'class': 'input',
             'placeholder': 'Create a password',

@@ -9,6 +9,8 @@
 #     (so next time it shows up in their saved address list too)
 # ----------------------------------------------------
 
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from .models import Address
 
 
@@ -24,6 +26,12 @@ def resolve_checkout_address(request):
         address = Address.objects.filter(id=address_id, user=request.user).first()
         if address is None:
             return None, None, None, None, 'Please choose a valid address.'
+        try:
+            validate_email(address.email)
+        except ValidationError:
+            return None, None, None, None, 'The selected address has an invalid email address.'
+        if not address.phone.isdigit() or not 10 <= len(address.phone) <= 15:
+            return None, None, None, None, 'The selected address has an invalid phone number.'
         return address.full_name, address.email, address.phone, address.address, None
 
     name = request.POST.get('name', '').strip()
@@ -34,6 +42,16 @@ def resolve_checkout_address(request):
 
     if not name or not email or not phone or not address_text:
         return None, None, None, None, 'Please fill in all customer information.'
+
+    # Validate email and phone on the server as well as in the browser.
+    # Browser validation can be bypassed, so the server must check too.
+    try:
+        validate_email(email)
+    except ValidationError:
+        return None, None, None, None, 'Please enter a valid email address.'
+
+    if not phone.isdigit() or not 10 <= len(phone) <= 15:
+        return None, None, None, None, 'Phone number must contain 10 to 15 digits only.'
 
     # Save this as a new address so the user only has to type it
     # once. The first address they ever save becomes the default.

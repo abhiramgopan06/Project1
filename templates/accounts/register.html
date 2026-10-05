@@ -5,7 +5,7 @@
 <div class="container auth-wrap">
     <div class="auth-card">
         <h1>Create your account</h1>
-        <p style="color:#64748b">Join E-Commerce Store and start shopping.</p>
+        <p style="color:#64748b">Enter your basic account details first, then your personal information.</p>
 
         <form method="post">
             {% csrf_token %}
@@ -13,9 +13,11 @@
             <button class="btn btn-primary" type="submit">Create Account</button>
         </form>
 
-        <p style="text-align:center;color:#64748b">Already have an account? <a href="{% url 'login' %}" style="color:#2563eb;font-weight:700">Login</a></p>
+        <p style="text-align:center;color:#64748b">
+            Already have an account?
+            <a href="{% url 'login' %}" style="color:#2563eb;font-weight:700">Login</a>
+        </p>
     </div>
 </div>
 
 {% endblock %}
-

@@ -10,7 +10,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 
 from .models import Cart, CartItem
 from products.models import Product
@@ -19,27 +18,16 @@ from products.models import Product
 @login_required
 @require_POST
 def add_to_cart(request, id):
-    # Step 1: find the product the user clicked "Add to Cart" on.
+    """Add one product and then take the customer straight to the cart."""
     product = get_object_or_404(
         Product,
         id=id,
         is_available=True
     )
 
-    # Step 2: work out where to send the user back to. Every
-    # "Add to Cart" form includes a hidden "next" field with the
-    # page it was submitted from (home page, product page, etc) -
-    # we stay on that page instead of jumping to the cart, so a
-    # small "Added to cart" box can pop up there with a
-    # "Go to Cart" button. The user only goes to the cart when
-    # they actually click that button.
-    next_url = request.POST.get('next', '')
-    if not next_url.startswith('/'):
-        next_url = reverse('products:product_detail', args=[id])
-
     if product.stock <= 0:
         messages.error(request, 'This product is out of stock.')
-        return redirect(next_url)
+        return redirect('products:product_detail', id=id)
 
     cart, created = Cart.objects.get_or_create(user=request.user)
 
@@ -57,13 +45,10 @@ def add_to_cart(request, id):
                 request,
                 'You cannot add more than the available stock.'
             )
-            return redirect(next_url)
+            return redirect('cart:cart')
 
-    # extra_tags='cart_added' marks this message so base.html shows
-    # it as a small "Go to Cart" notification box instead of a
-    # plain banner.
-    messages.success(request, f'{product.name} added to cart.', extra_tags='cart_added')
-    return redirect(next_url)
+    messages.success(request, f'{product.name} added to cart.')
+    return redirect('cart:cart')
 
 
 # Shows the cart page: every item in the cart plus the total price.

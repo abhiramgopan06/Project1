@@ -6,7 +6,7 @@
 # ----------------------------------------------------
 
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
+from .forms import RegistrationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -21,12 +21,14 @@ from .forms import UserForm, UserProfileForm, AddressForm
 # UserProfile to go with it.
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
 
         if form.is_valid():
             user = form.save()
-
-            UserProfile.objects.create(user=user)
+            UserProfile.objects.create(
+                user=user,
+                phone=form.cleaned_data['phone']
+            )
 
             messages.success(
                 request,
@@ -34,9 +36,8 @@ def register(request):
             )
 
             return redirect('login')
-
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
 
     return render(
         request,

@@ -1314,6 +1314,17 @@
     text-decoration: none;
 }
 
+/* Keep action links readable when they use the dark cart-button style.
+   The general .detail a rule above should not turn button text black. */
+.detail a.btn-add-to-cart {
+    color: #ffffff;
+}
+
+.detail a.btn-add-to-cart:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
 .detail a:hover {
     text-decoration: underline;
 }

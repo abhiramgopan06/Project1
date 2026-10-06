@@ -37,7 +37,7 @@
     <div class="section-head">
         <div>
             <h2>Featured Products</h2>
-            <p>Browse popular products by dragging left or right.</p>
+            <p>Popular products. They move automatically every 5 seconds, or you can drag them.</p>
         </div>
     </div>
 
@@ -166,7 +166,7 @@
     <div class="section-head">
         <div>
             <h2>Recommended for You</h2>
-            <p>Based on your searches and activity.</p>
+            <p>Based on your recent searches and products you viewed.</p>
         </div>
     </div>
 
@@ -455,37 +455,147 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll(".product-carousel").forEach(function (carousel) {
         const viewport = carousel.querySelector(".product-carousel-viewport");
+        const track = carousel.querySelector(".product-carousel-track");
+        const cards = Array.from(carousel.querySelectorAll(".product-carousel-card"));
         const prev = carousel.querySelector(".product-carousel-prev");
         const next = carousel.querySelector(".product-carousel-next");
 
-        function scrollAmount() {
-            const card = carousel.querySelector(".product-carousel-card");
-            return card ? card.getBoundingClientRect().width + 18 : viewport.clientWidth * 0.8;
+        if (!viewport || !track || cards.length === 0) {
+            return;
         }
 
-        prev.addEventListener("click", function () {
-            viewport.scrollBy({
-                left: -scrollAmount() * 2,
-                behavior: "smooth"
-            });
-        });
-
-        next.addEventListener("click", function () {
-            viewport.scrollBy({
-                left: scrollAmount() * 2,
-                behavior: "smooth"
-            });
-        });
-
+        let timer = null;
         let dragging = false;
         let startX = 0;
         let startScroll = 0;
+
+        function cardWidth() {
+            const card = cards[0];
+            const styles = window.getComputedStyle(track);
+            const gap = parseFloat(styles.columnGap || styles.gap || 18);
+            return card.getBoundingClientRect().width + gap;
+        }
+
+        function visibleCards() {
+            return Math.max(1, Math.floor((viewport.clientWidth + 18) / cardWidth()));
+        }
+
+        function moveAmount() {
+            // Move two cards at a time. This makes the number of positions
+            // grow naturally when more recommended products are added.
+            return cardWidth() * Math.min(2, Math.max(1, cards.length));
+        }
+
+        function maxScroll() {
+            return Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        }
+
+        function positionCount() {
+            const visible = visibleCards();
+            const remainingCards = Math.max(0, cards.length - visible);
+            return Math.max(1, Math.ceil(remainingCards / 2) + 1);
+        }
+
+        function currentPosition() {
+            const max = maxScroll();
+            if (max <= 0) {
+                return 0;
+            }
+            return Math.round((viewport.scrollLeft / max) * (positionCount() - 1));
+        }
+
+        function addPositionDots() {
+            let dots = carousel.querySelector(".product-carousel-dots");
+            if (!dots) {
+                dots = document.createElement("div");
+                dots.className = "product-carousel-dots";
+                carousel.appendChild(dots);
+            }
+
+            dots.innerHTML = "";
+            const count = positionCount();
+
+            if (count <= 1) {
+                dots.style.display = "none";
+                return;
+            }
+
+            dots.style.display = "flex";
+            for (let i = 0; i < count; i += 1) {
+                const dot = document.createElement("button");
+                dot.type = "button";
+                dot.className = "product-carousel-dot";
+                dot.setAttribute("aria-label", "Go to product group " + (i + 1));
+                dot.addEventListener("click", function () {
+                    const target = maxScroll() * (i / (count - 1));
+                    viewport.scrollTo({ left: target, behavior: "smooth" });
+                    restartTimer();
+                });
+                dots.appendChild(dot);
+            }
+            updateDots();
+        }
+
+        function updateDots() {
+            const dots = carousel.querySelectorAll(".product-carousel-dot");
+            const active = currentPosition();
+            dots.forEach(function (dot, index) {
+                dot.classList.toggle("active", index === active);
+            });
+        }
+
+        function scrollNext() {
+            const max = maxScroll();
+            if (max <= 0) {
+                return;
+            }
+
+            if (viewport.scrollLeft >= max - 5) {
+                viewport.scrollTo({ left: 0, behavior: "smooth" });
+            } else {
+                viewport.scrollBy({ left: moveAmount(), behavior: "smooth" });
+            }
+            restartTimer();
+        }
+
+        function scrollPrevious() {
+            if (viewport.scrollLeft <= 5) {
+                viewport.scrollTo({ left: maxScroll(), behavior: "smooth" });
+            } else {
+                viewport.scrollBy({ left: -moveAmount(), behavior: "smooth" });
+            }
+            restartTimer();
+        }
+
+        function startTimer() {
+            stopTimer();
+            if (maxScroll() > 0) {
+                timer = window.setInterval(scrollNext, 5000);
+            }
+        }
+
+        function stopTimer() {
+            if (timer) {
+                window.clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function restartTimer() {
+            startTimer();
+        }
+
+        prev.addEventListener("click", scrollPrevious);
+        next.addEventListener("click", scrollNext);
+
+        viewport.addEventListener("scroll", updateDots);
 
         viewport.addEventListener("pointerdown", function (event) {
             dragging = true;
             startX = event.clientX;
             startScroll = viewport.scrollLeft;
             viewport.classList.add("is-dragging");
+            stopTimer();
             viewport.setPointerCapture(event.pointerId);
         });
 
@@ -497,13 +607,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         function stopDragging() {
+            if (!dragging) {
+                return;
+            }
             dragging = false;
             viewport.classList.remove("is-dragging");
+            restartTimer();
         }
 
         viewport.addEventListener("pointerup", stopDragging);
         viewport.addEventListener("pointercancel", stopDragging);
         viewport.addEventListener("mouseleave", stopDragging);
+
+        carousel.addEventListener("mouseenter", stopTimer);
+        carousel.addEventListener("mouseleave", startTimer);
+
+        window.addEventListener("resize", function () {
+            addPositionDots();
+            startTimer();
+        });
+
+        addPositionDots();
+        startTimer();
     });
 });
 

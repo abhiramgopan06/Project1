@@ -80,7 +80,7 @@ def home(request):
 
     _record_search(request, q, category, min_price, max_price)
     categories = Category.objects.all()
-    recommendations = recommended_products(request.user, limit=6) if request.user.is_authenticated else []
+    recommendations = recommended_products(request.user, limit=12) if request.user.is_authenticated else []
     return render(request, 'products/home.html', {'products': products, 'categories': categories, 'recommendations': recommendations, 'price_error': price_error})
 
 

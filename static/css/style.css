@@ -4005,3 +4005,42 @@ main {
         padding: 40px 18px;
     }
 }
+
+/* Carousel position dots are created automatically from the number of cards. */
+.product-carousel {
+    flex-wrap: wrap;
+}
+
+.product-carousel-dots {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    margin-top: -34px;
+    margin-bottom: 34px;
+}
+
+.product-carousel-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #cbd5e1;
+    cursor: pointer;
+}
+
+.product-carousel-dot.active {
+    width: 22px;
+    border-radius: 10px;
+    background: #111827;
+}
+
+@media (max-width: 700px) {
+    .product-carousel-dots {
+        margin-top: -28px;
+        margin-bottom: 28px;
+    }
+}

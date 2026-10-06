@@ -1,0 +1,12 @@
+CAROUSEL AND RECOMMENDATION CHANGES
+
+1. Featured Products now moves automatically every 5 seconds.
+2. The carousel moves two cards at a time, so more cards create more movement positions.
+3. The carousel loops back to the beginning after reaching the end.
+4. The arrows still work manually.
+5. Dragging with a mouse or touch still works.
+6. Automatic movement pauses while the user is using or hovering over the carousel.
+7. Small position dots are created automatically based on the number of cards.
+8. Recommended Products can now show up to 12 products instead of only 6.
+9. Recommendations use recent searches, searched categories, viewed products, ratings, and newer products when there is not enough history.
+10. The recommendation message now clearly explains that it is based on the user's recent activity.

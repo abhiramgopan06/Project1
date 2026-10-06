@@ -39,18 +39,79 @@ def product_score(product, user_vector):
     return score
 
 
-def recommended_products(user, exclude_id=None, limit=6):
-    from .models import Product
+def recommended_products(user, exclude_id=None, limit=12):
+    from .models import Product, SearchHistory
+
+    products = list(
+        Product.objects.filter(is_available=True)
+        .select_related('category')
+    )
+
     try:
         profile = user.profile
     except Exception:
-        return Product.objects.filter(is_available=True).order_by('-created_at')[:limit]
+        profile = None
 
-    products = list(Product.objects.filter(is_available=True).select_related('category'))
-    scored = [(product_score(p, profile.vector_data or {}), p) for p in products if p.id != exclude_id]
-    scored.sort(key=lambda x: (x[0], float(x[1].rating_average or 0), x[1].created_at), reverse=True)
-    selected = [p for score, p in scored if score > 0][:limit]
+    user_vector = profile.vector_data if profile else {}
+
+    # Use recent searches as an easy-to-understand extra signal.
+    # A product matching the user's recent category or search words gets
+    # a higher score, so recommendations change as the user shops.
+    recent_history = list(
+        SearchHistory.objects.filter(user=user)
+        .select_related('category')
+        .order_by('-created_at')[:10]
+    )
+
+    recent_words = Counter()
+    recent_categories = Counter()
+    for history in recent_history:
+        for word in tokenize(history.query):
+            recent_words[word] += 1
+        if history.category_id:
+            recent_categories[history.category_id] += 1
+
+    scored = []
+    for product in products:
+        if product.id == exclude_id:
+            continue
+
+        score = product_score(product, user_vector)
+        product_words = set((product.vector_data or {}).keys())
+
+        # Recent search words have a strong influence.
+        for word, count in recent_words.items():
+            if word in product_words:
+                score += count * 3
+
+        # Recently searched categories also get a small boost.
+        if product.category_id in recent_categories:
+            score += recent_categories[product.category_id] * 4
+
+        # Ratings help break ties between otherwise similar products.
+        score += float(product.rating_average or 0) * 0.8
+        scored.append((score, product))
+
+    scored.sort(
+        key=lambda item: (item[0], item[1].created_at),
+        reverse=True
+    )
+
+    selected = [product for score, product in scored if score > 0][:limit]
+
+    # If there is not enough history yet, fill the remaining places with
+    # newer products so the recommendation section is still useful.
     if len(selected) < limit:
-        seen = {p.id for p in selected}
-        selected.extend([p for p in products if p.id not in seen and p.id != exclude_id][:limit-len(selected)])
+        seen = {product.id for product in selected}
+        fallback = sorted(
+            [product for product in products
+             if product.id not in seen and product.id != exclude_id],
+            key=lambda product: (
+                float(product.rating_average or 0),
+                product.created_at
+            ),
+            reverse=True
+        )
+        selected.extend(fallback[:limit - len(selected)])
+
     return selected

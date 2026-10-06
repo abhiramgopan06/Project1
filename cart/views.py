@@ -18,7 +18,7 @@ from products.models import Product
 @login_required
 @require_POST
 def add_to_cart(request, id):
-    """Add one product and then take the customer straight to the cart."""
+    """Add one product and keep the customer on the page they came from."""
     product = get_object_or_404(
         Product,
         id=id,
@@ -45,10 +45,19 @@ def add_to_cart(request, id):
                 request,
                 'You cannot add more than the available stock.'
             )
-            return redirect('cart:cart')
+            next_url = request.POST.get('next')
+            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                return redirect(next_url)
+            return redirect('products:product_detail', id=id)
 
     messages.success(request, f'{product.name} added to cart.')
-    return redirect('cart:cart')
+
+    # Stay on the current product/shop page after adding. The template
+    # will now show a "Go to Cart" button because the product is in the cart.
+    next_url = request.POST.get('next')
+    if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+        return redirect(next_url)
+    return redirect('products:product_detail', id=id)
 
 
 # Shows the cart page: every item in the cart plus the total price.

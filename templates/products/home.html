@@ -22,52 +22,52 @@
     <div class="section-head">
         <div>
             <h2>Featured Products</h2>
-            <p>A few of our best picks — updated regularly.</p>
+            <p>Browse more products by dragging the section left or right.</p>
         </div>
     </div>
 
-    <div class="carousel" id="productCarousel">
-        <button class="carousel-arrow" id="carouselPrev" type="button" aria-label="Previous products">&#10094;</button>
-
-        <div class="carousel-viewport">
-            <div class="carousel-track" id="carouselTrack">
+    <section class="product-carousel" aria-label="Featured Products">
+        <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous featured products">&#10094;</button>
+        <div class="product-carousel-viewport">
+            <div class="product-carousel-track">
                 {% for product in products|slice:":16" %}
-                <div class="carousel-slide">
-                    <!-- One product card. Same info as the big grid below,
-                         just shown inside the sliding carousel. The
-                         "Bestseller" ribbon and the star rating both sit
-                         on top of the picture itself, like a real shopping
-                         site, instead of taking up space in the text below. -->
-                    <article class="product-card">
-                        <a class="product-image" href="{% url 'products:product_detail' product.id %}">
-                            {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
-                            <span class="badge-bestseller">Bestseller</span>
-                            {% endif %}
-                            <span class="product-image-badge">{{ product.category.name }}</span>
-                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
-                            {% if product.rating_count > 0 %}
-                            <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
-                            {% endif %}
-                        </a>
-                        <div class="product-info">
-                            <h3 class="product-title">{{ product.name }}</h3>
-                            {% if product.rating_count > 0 %}
-                            <span class="product-rating-count">{{ product.rating_count }} ratings</span>
-                            {% endif %}
-                            <div class="price">₹{{ product.price|floatformat:2 }}</div>
-                            <div class="product-delivery">🚚 Free delivery</div>
+                <article class="product-card product-carousel-card">
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}<span class="badge-bestseller">Bestseller</span>{% endif %}
+                        <span class="product-image-badge">{{ product.category.name }}</span>
+                        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                        {% if product.rating_count > 0 %}<span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>{% endif %}
+                    </a>
+                    <div class="product-info">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        {% if product.rating_count > 0 %}<span class="product-rating-count">{{ product.rating_count }} ratings</span>{% endif %}
+                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="product-delivery">🚚 Free delivery</div>
+                        <div class="product-actions">
+                            {% if product.stock > 0 and product.is_available %}
+                                {% if user.is_authenticated %}
+                                    {% if product.id in cart_product_ids %}
+                                    <a class="btn-add-to-cart" href="{% url 'cart:cart' %}">🛒 Go to Cart</a>
+                                    {% else %}
+                                    <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button class="btn-add-to-cart" type="submit">🛒 Add to Cart</button>
+                                    </form>
+                                    {% endif %}
+                                {% else %}
+                                    <a class="btn-add-to-cart" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">🛒 Add to Cart</a>
+                                {% endif %}
+                            {% else %}<span class="stock" style="color:#dc2626">Out of stock</span>{% endif %}
                             <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
                         </div>
-                    </article>
-                </div>
+                    </div>
+                </article>
                 {% endfor %}
             </div>
         </div>
-
-        <button class="carousel-arrow" id="carouselNext" type="button" aria-label="Next products">&#10095;</button>
-    </div>
-    <div class="carousel-dots" id="carouselDots"></div>
-    {% endif %}
+        <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next featured products">&#10095;</button>
+    </section>
 
     <div class="section-head">
         <div>
@@ -96,34 +96,48 @@
     <div class="section-head">
         <div>
             <h2>Recommended for You</h2>
-            <p>Based on your searches and activity.</p>
+            <p>Based on your searches and activity. Drag to explore more.</p>
         </div>
     </div>
-    <div class="product-grid">
-        {% for product in recommendations %}
-        <article class="product-card">
-            <a class="product-image" href="{% url 'products:product_detail' product.id %}">
-                {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
-                <span class="badge-bestseller">Bestseller</span>
-                {% endif %}
-                <span class="product-image-badge">{{ product.category.name }}</span>
-                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
-                {% if product.rating_count > 0 %}
-                <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
-                {% endif %}
-            </a>
-            <div class="product-info">
-                <h3 class="product-title">{{ product.name }}</h3>
-                {% if product.rating_count > 0 %}
-                <span class="product-rating-count">{{ product.rating_count }} ratings</span>
-                {% endif %}
-                <div class="price">₹{{ product.price|floatformat:2 }}</div>
-                <div class="product-delivery">🚚 Free delivery</div>
-                <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
+
+    <section class="product-carousel" aria-label="Recommended for You">
+        <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous recommended products">&#10094;</button>
+        <div class="product-carousel-viewport">
+            <div class="product-carousel-track">
+                {% for product in recommendations %}
+                <article class="product-card product-carousel-card">
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}<span class="badge-bestseller">Bestseller</span>{% endif %}
+                        <span class="product-image-badge">{{ product.category.name }}</span>
+                        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                        {% if product.rating_count > 0 %}<span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>{% endif %}
+                    </a>
+                    <div class="product-info">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        {% if product.rating_count > 0 %}<span class="product-rating-count">{{ product.rating_count }} ratings</span>{% endif %}
+                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="product-delivery">🚚 Free delivery</div>
+                        <div class="product-actions">
+                            {% if product.stock > 0 and product.is_available %}
+                                {% if product.id in cart_product_ids %}
+                                <a class="btn-add-to-cart" href="{% url 'cart:cart' %}">🛒 Go to Cart</a>
+                                {% else %}
+                                <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button class="btn-add-to-cart" type="submit">🛒 Add to Cart</button>
+                                </form>
+                                {% endif %}
+                            {% else %}<span class="stock" style="color:#dc2626">Out of stock</span>{% endif %}
+                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
-        </article>
-        {% endfor %}
-    </div>
+        </div>
+        <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next recommended products">&#10095;</button>
+    </section>
     {% endif %}
 
     <div class="section-head" id="products">
@@ -320,149 +334,48 @@
         }
     }
 
-    // ---------- Featured Products Carousel ----------
-    // Beginner-friendly slider: it groups the product cards into "pages"
-    // and slides to the next page automatically every 8 seconds.
+    // ---------- Drag-to-scroll product carousels ----------
     document.addEventListener("DOMContentLoaded", function () {
-        const track = document.getElementById("carouselTrack");
-        const carousel = document.getElementById("productCarousel");
-        const dotsWrapper = document.getElementById("carouselDots");
-        const prevBtn = document.getElementById("carouselPrev");
-        const nextBtn = document.getElementById("carouselNext");
+        document.querySelectorAll(".product-carousel").forEach(function (carousel) {
+            const viewport = carousel.querySelector(".product-carousel-viewport");
+            const track = carousel.querySelector(".product-carousel-track");
+            const prev = carousel.querySelector(".product-carousel-prev");
+            const next = carousel.querySelector(".product-carousel-next");
+            let dragging = false;
+            let startX = 0;
+            let startScroll = 0;
 
-        if (!track) return; // no products to show, nothing to do
-
-        const slides = track.children;
-        const totalSlides = slides.length;
-        const AUTO_SLIDE_DELAY = 8000; // 8 seconds, as requested
-
-        // each slide's width, as a percentage of the TRACK's own width
-        // (this never changes, no matter how many cards are visible at once)
-        const slidePercent = 100 / totalSlides;
-
-        // how many product cards fit on screen at once
-        function getVisibleCount() {
-            if (window.innerWidth <= 640) return 2;
-            if (window.innerWidth <= 960) return 2;
-            return 4;
-        }
-
-        let visibleCount = getVisibleCount();
-        let totalPages = Math.max(1, Math.ceil(totalSlides / visibleCount));
-        let currentPage = 0;
-        let autoSlideTimer = null;
-
-        // give every slide its fixed share of the track's width
-        function applySlideWidth() {
-            for (let i = 0; i < slides.length; i++) {
-                slides[i].style.flex = "0 0 " + slidePercent + "%";
+            function scrollAmount() {
+                const card = carousel.querySelector(".product-carousel-card");
+                return card ? card.getBoundingClientRect().width + 18 : viewport.clientWidth * 0.8;
             }
-        }
 
-        // the track itself must be wide enough to fit all slides,
-        // shown "visibleCount" at a time
-        function applyTrackWidth() {
-            const trackWidthPercent = (totalSlides / visibleCount) * 100;
-            track.style.width = trackWidthPercent + "%";
-        }
+            prev.addEventListener("click", function () {
+                viewport.scrollBy({ left: -scrollAmount() * 2, behavior: "smooth" });
+            });
+            next.addEventListener("click", function () {
+                viewport.scrollBy({ left: scrollAmount() * 2, behavior: "smooth" });
+            });
 
-        // build the small dots below the carousel
-        function buildDots() {
-            dotsWrapper.innerHTML = "";
-            for (let i = 0; i < totalPages; i++) {
-                const dot = document.createElement("button");
-                dot.type = "button";
-                dot.className = "carousel-dot";
-                dot.setAttribute("aria-label", "Go to slide " + (i + 1));
-                dot.addEventListener("click", function () {
-                    goToPage(i);
-                    restartAutoSlide();
-                });
-                dotsWrapper.appendChild(dot);
+            viewport.addEventListener("pointerdown", function (event) {
+                dragging = true;
+                startX = event.clientX;
+                startScroll = viewport.scrollLeft;
+                viewport.classList.add("is-dragging");
+                viewport.setPointerCapture(event.pointerId);
+            });
+            viewport.addEventListener("pointermove", function (event) {
+                if (!dragging) return;
+                viewport.scrollLeft = startScroll - (event.clientX - startX);
+            });
+            function stopDragging() {
+                dragging = false;
+                viewport.classList.remove("is-dragging");
             }
-            updateDots();
-        }
-
-        function updateDots() {
-            const dots = dotsWrapper.children;
-            for (let i = 0; i < dots.length; i++) {
-                dots[i].classList.toggle("active", i === currentPage);
-            }
-        }
-
-        // slide the track to the current page
-        function updateTrackPosition() {
-            let slideIndex = currentPage * visibleCount;
-            // don't scroll past the last card - snap the final page to the end
-            const maxSlideIndex = Math.max(0, totalSlides - visibleCount);
-            if (slideIndex > maxSlideIndex) slideIndex = maxSlideIndex;
-
-            const offsetPercent = slideIndex * slidePercent;
-            track.style.transform = "translateX(-" + offsetPercent + "%)";
-            updateDots();
-        }
-
-        function goToPage(pageIndex) {
-            currentPage = (pageIndex + totalPages) % totalPages;
-            updateTrackPosition();
-        }
-
-        function nextPage() {
-            goToPage(currentPage + 1);
-        }
-
-        function prevPage() {
-            goToPage(currentPage - 1);
-        }
-
-        function startAutoSlide() {
-            autoSlideTimer = setInterval(nextPage, AUTO_SLIDE_DELAY);
-        }
-
-        function restartAutoSlide() {
-            clearInterval(autoSlideTimer);
-            startAutoSlide();
-        }
-
-        if (prevBtn) {
-            prevBtn.addEventListener("click", function () {
-                prevPage();
-                restartAutoSlide();
-            });
-        }
-        if (nextBtn) {
-            nextBtn.addEventListener("click", function () {
-                nextPage();
-                restartAutoSlide();
-            });
-        }
-
-        // pause the auto-swipe while the visitor's mouse is over the carousel
-        if (carousel) {
-            carousel.addEventListener("mouseenter", function () {
-                clearInterval(autoSlideTimer);
-            });
-            carousel.addEventListener("mouseleave", function () {
-                startAutoSlide();
-            });
-        }
-
-        // recalculate the layout when the window is resized
-        window.addEventListener("resize", function () {
-            visibleCount = getVisibleCount();
-            totalPages = Math.max(1, Math.ceil(totalSlides / visibleCount));
-            currentPage = 0;
-            applyTrackWidth();
-            buildDots();
-            updateTrackPosition();
+            viewport.addEventListener("pointerup", stopDragging);
+            viewport.addEventListener("pointercancel", stopDragging);
+            viewport.addEventListener("mouseleave", stopDragging);
         });
-
-        // first-time setup
-        applySlideWidth();
-        applyTrackWidth();
-        buildDots();
-        updateTrackPosition();
-        startAutoSlide();
     });
 </script>
 {% endblock %}

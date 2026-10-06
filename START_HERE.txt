@@ -1,0 +1,18 @@
+BEGINNER SETUP
+
+1. Open this project folder in VS Code.
+2. Open a terminal in this folder.
+3. Create a fresh virtual environment:
+   python -m venv env
+4. Activate it on Windows:
+   env\Scripts\activate
+5. Install the project packages:
+   pip install -r requirements.txt
+6. Start the server:
+   python manage.py runserver
+7. Open:
+   http://127.0.0.1:8000/
+
+IMPORTANT:
+The old bundled virtual environment was removed because it contained mixed Django package files.
+Always create a fresh environment using requirements.txt.

@@ -10,28 +10,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import Cart, CartItem
 from products.models import Product
 
 
-def _redirect_back_to_product_page(request, id):
-    """Safely return the customer to the page where Add to Cart was clicked."""
-    next_url = request.POST.get('next', '').strip()
-    if next_url and url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
-    ):
-        return redirect(next_url)
-    return redirect('products:product_detail', id=id)
-
-
 @login_required
 @require_POST
 def add_to_cart(request, id):
-    """Add one product and stay on the page where the customer clicked."""
+    """Add one product and then take the customer straight to the cart."""
     product = get_object_or_404(
         Product,
         id=id,
@@ -40,7 +27,7 @@ def add_to_cart(request, id):
 
     if product.stock <= 0:
         messages.error(request, 'This product is out of stock.')
-        return _redirect_back_to_product_page(request, id)
+        return redirect('products:product_detail', id=id)
 
     cart, created = Cart.objects.get_or_create(user=request.user)
 
@@ -58,12 +45,10 @@ def add_to_cart(request, id):
                 request,
                 'You cannot add more than the available stock.'
             )
-            return _redirect_back_to_product_page(request, id)
+            return redirect('cart:cart')
 
-    messages.success(request, f'{product.name} added to cart.', extra_tags='cart_added')
-
-    # Keep the customer on the current page after adding an item.
-    return _redirect_back_to_product_page(request, id)
+    messages.success(request, f'{product.name} added to cart.')
+    return redirect('cart:cart')
 
 
 # Shows the cart page: every item in the cart plus the total price.

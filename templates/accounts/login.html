@@ -1,22 +1,108 @@
 {% extends "base.html" %}
-{% block title %}Login | E-Commerce Store{% endblock %}
+{% block title %}Login | E-Commerce Shop{% endblock %}
 {% block content %}
 
-<div class="container auth-wrap">
-    <div class="auth-card">
+<section class="login-page" aria-labelledby="login-title">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon" aria-hidden="true">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h1 id="login-title">Welcome back</h1>
+            <p>Sign in to continue shopping and manage your account.</p>
+        </div>
 
-        <h1>Welcome back</h1>
-        <p style="color:#64748b">Login to continue shopping.</p>
+        {% if form.non_field_errors %}
+            <div class="login-error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <div>
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
 
-        <form method="post">
+        <form method="post" class="login-form" novalidate>
             {% csrf_token %}
-            {{ form.as_p }}
-            <button class="btn btn-primary" type="submit">Login</button>
+
+            <div class="login-field {% if form.username.errors %}has-error{% endif %}">
+                <label for="id_username">Username</label>
+                <div class="login-input-wrap">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <input
+                        type="text"
+                        name="username"
+                        id="id_username"
+                        value="{{ form.username.value|default:'' }}"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        autofocus
+                        required
+                    >
+                </div>
+                {% if form.username.errors %}
+                    <div class="login-field-error" role="alert">
+                        {% for error in form.username.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="login-field {% if form.password.errors %}has-error{% endif %}">
+                <div class="login-label-row">
+                    <label for="id_password">Password</label>
+                </div>
+                <div class="login-input-wrap">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <input
+                        type="password"
+                        name="password"
+                        id="id_password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="button" class="password-toggle" aria-label="Show password" aria-controls="id_password">
+                        <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                {% if form.password.errors %}
+                    <div class="login-field-error" role="alert">
+                        {% for error in form.password.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+            <button class="login-submit" type="submit">
+                <span>Login</span>
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
         </form>
 
-        <p style="text-align:center;color:#64748b">Don't have an account? <a href="{% url 'register' %}" style="color:#2563eb;font-weight:700">Create one</a></p>
-        <p style="text-align:center;color:#64748b">Welcome to <a href="/admin/">Admin Login</a></p>
-    </div>
-</div>
-{% endblock %}
+        <div class="login-divider"><span>New to E-Commerce Shop?</span></div>
 
+        <a class="login-create" href="{% url 'register' %}">Create an account</a>
+
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggle = document.querySelector('.password-toggle');
+    const password = document.getElementById('id_password');
+
+    if (toggle && password) {
+        toggle.addEventListener('click', function () {
+            const showing = password.type === 'text';
+            password.type = showing ? 'password' : 'text';
+            toggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+            toggle.innerHTML = showing
+                ? '<i class="fa-regular fa-eye" aria-hidden="true"></i>'
+                : '<i class="fa-regular fa-eye-slash" aria-hidden="true"></i>';
+        });
+    }
+});
+</script>
+{% endblock %}

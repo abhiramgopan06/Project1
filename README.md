@@ -54,7 +54,7 @@ A full-stack e-commerce web application built with Django, featuring separate **
 
 | Layer            | Technology                          |
 |-------------------|--------------------------------------|
-| Backend           | Django 5.x (Python)                  |
+| Backend           | Django 6.1.1 (Python)                  |
 | Database          | SQLite (default, swappable)          |
 | Frontend          | Django Templates, HTML, CSS, vanilla JS |
 | Image handling    | Pillow                               |
@@ -101,7 +101,7 @@ Stock is decremented atomically at checkout (using `select_for_update`) to preve
 ## Setup & Installation
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.12–3.14 (recommended for Django 6.1.1)
 - pip
 
 ### 1. Clone / extract the project
@@ -143,6 +143,13 @@ python manage.py runserver
 Visit `http://127.0.0.1:8000/` for the storefront and `http://127.0.0.1:8000/dashboard/` for the admin dashboard (staff login required). The built-in Django admin is also available at `http://127.0.0.1:8000/admin/`.
 
 ---
+
+
+### Registration & authentication
+
+Registration uses Django's built-in `UserCreationForm`. Usernames are stored in Django's `auth_user` table, email/first name/last name are stored on the same user record, and passwords are stored only as Django password hashes (never plain text). The phone number is stored in the one-to-one `UserProfile` record.
+
+The registration form validates email format, prevents duplicate email addresses, validates the phone number, applies Django password validation, and creates the profile after the user is successfully created.
 
 ## Environment Variables
 

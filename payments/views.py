@@ -1,11 +1,3 @@
-# payments/views.py
-# ----------------------------------------------------
-# This file runs the "online payment" checkout. It's a DEMO
-# payment flow (no real money moves), but it's still written
-# carefully: we never trust the browser blindly, we always
-# double check stock and prices on the server before saving
-# an order.
-# ----------------------------------------------------
 
 import uuid
 from decimal import Decimal
@@ -19,10 +11,10 @@ from django.views.decorators.http import require_POST
 from cart.models import Cart
 from orders.models import Order, OrderItem
 from products.models import Product
+from products.recommendations import record_product_history
 from accounts.checkout_helpers import resolve_checkout_address
 
 
-# Small helper: adds up price * quantity for every item in the cart.
 def _cart_total(cart_items):
     return sum(
         (item.product.price * item.quantity for item in cart_items),
@@ -30,8 +22,6 @@ def _cart_total(cart_items):
     )
 
 
-# Step 1 of the demo payment: create a fake "order" reference and
-# send it back to the page as JSON, so the payment popup can open.
 @login_required
 @require_POST
 def create_payment_order(request):
@@ -59,8 +49,6 @@ def create_payment_order(request):
     amount = int(_cart_total(cart_items) * 100)
     demo_order_id = f'order_DEMO{uuid.uuid4().hex[:14]}'
 
-    # The demo order reference is stored server-side so verify_payment
-    # cannot accept an arbitrary order id supplied by a client.
     request.session['demo_payment_order_id'] = demo_order_id
     request.session.modified = True
 
@@ -74,8 +62,6 @@ def create_payment_order(request):
     })
 
 
-# Step 2 of the demo payment: check everything is still valid
-# (stock, prices, session) and only THEN create the real Order.
 @login_required
 @require_POST
 def verify_payment(request):
@@ -160,6 +146,7 @@ def verify_payment(request):
                     quantity=item.quantity,
                     price=product.price,
                 )
+                record_product_history(request.user, product, 'order')
                 product.stock -= item.quantity
                 product.save(update_fields=['stock'])
 

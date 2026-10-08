@@ -52,3 +52,18 @@ class Address(models.Model):
 
     def __str__(self):
         return f'{self.label} - {self.user.username}'
+
+class PendingRegistration(models.Model):
+    username = models.CharField(max_length=150, unique=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15)
+    password_hash = models.CharField(max_length=128)
+    otp_hash = models.CharField(max_length=128)
+    otp_created_at = models.DateTimeField(auto_now=True)
+    attempts = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.username} - pending registration'

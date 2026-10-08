@@ -1,129 +1,57 @@
 {% extends "base.html" %}
-
 {% block title %}E-Commerce Store | Online Store{% endblock %}
-
 {% block content %}
 <div class="container">
-
     <section class="hero">
-        <div class="hero-content">
+        <div>
             <h1>Everything you need, all in one place.</h1>
-            <p>
-                Discover quality products at great prices. Browse categories,
-                compare products and add your favourites to the cart.
-            </p>
+            <p>Discover quality products at great prices. Browse categories, compare products and add your favourites to the cart.</p>
             <a class="btn btn-primary" href="#products">Shop Now →</a>
         </div>
-
-        <div class="hero-image">
-            {% if products.0.image %}
-                <img src="{{ products.0.image.url }}" alt="{{ products.0.name }}">
-            {% else %}
-                <div class="hero-art-badge" aria-hidden="true">
-                    <svg width="90" height="90" viewBox="0 0 24 24" fill="none">
-                        <path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"
-                              stroke="#ffffff" stroke-width="1.5"
-                              stroke-linejoin="round"/>
-                        <path d="M9 8V6a3 3 0 0 1 6 0v2"
-                              stroke="#ffffff" stroke-width="1.5"
-                              stroke-linecap="round"/>
-                    </svg>
-                </div>
-            {% endif %}
+        <div class="hero-art">
+            <div class="hero-art-badge">
+                <svg width="90" height="90" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
         </div>
     </section>
 
-    {% if products %}
+    {% if featured_products %}
     <div class="section-head">
         <div>
             <h2>Featured Products</h2>
-            <p>Popular products. They move automatically every 5 seconds, or you can drag them.</p>
+            <p>Explore our latest products.</p>
         </div>
     </div>
 
     <section class="product-carousel" aria-label="Featured Products">
-        <button class="product-carousel-arrow product-carousel-prev"
-                type="button" aria-label="Previous featured products">&#10094;</button>
-
+        <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous featured products">&#10094;</button>
         <div class="product-carousel-viewport">
             <div class="product-carousel-track">
-                {% for product in products|slice:":16" %}
+                {% for product in featured_products %}
                 <article class="product-card product-carousel-card">
-                    <a class="product-image"
-                       href="{% url 'products:product_detail' product.id %}">
-                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
-                            <span class="badge-bestseller">Bestseller</span>
-                        {% endif %}
-
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}<span class="badge-bestseller">Bestseller</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
-
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                        {% else %}
-                            <span class="product-image-placeholder">📦</span>
-                        {% endif %}
-
-                        {% if product.rating_count > 0 %}
-                            <span class="product-rating">
-                                {{ product.rating_average|floatformat:1 }} ⭐
-                            </span>
-                        {% endif %}
+                        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                        {% if product.rating_count > 0 %}<span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>{% endif %}
                     </a>
-
                     <div class="product-info">
                         <h3 class="product-title">{{ product.name }}</h3>
-
-                        {% if product.rating_count > 0 %}
-                            <span class="product-rating-count">
-                                {{ product.rating_count }} ratings
-                            </span>
-                        {% endif %}
-
+                        {% if product.rating_count > 0 %}<span class="product-rating-count">{{ product.rating_count }} ratings</span>{% endif %}
                         <div class="price">₹{{ product.price|floatformat:2 }}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
-
                         <div class="product-actions">
-                            {% if product.stock > 0 and product.is_available %}
-                                {% if user.is_authenticated %}
-                                    {% if product.id in cart_product_ids %}
-                                        <a class="btn-add-to-cart"
-                                           href="{% url 'cart:cart' %}">
-                                            🛒 Go to Cart
-                                        </a>
-                                    {% else %}
-                                        <form method="post"
-                                              action="{% url 'cart:add_to_cart' product.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="next"
-                                                   value="{{ request.get_full_path }}">
-                                            <button class="btn-add-to-cart" type="submit">
-                                                🛒 Add to Cart
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                {% else %}
-                                    <a class="btn-add-to-cart"
-                                       href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
-                                        🛒 Add to Cart
-                                    </a>
-                                {% endif %}
-                            {% else %}
-                                <span class="stock stock-out">Out of stock</span>
-                            {% endif %}
-
-                            <a class="btn btn-outline"
-                               href="{% url 'products:product_detail' product.id %}">
-                                View
-                            </a>
+                            <a class="btn btn-primary carousel-view-btn" href="{% url 'products:product_detail' product.id %}">View Product</a>
                         </div>
                     </div>
                 </article>
                 {% endfor %}
             </div>
         </div>
-
-        <button class="product-carousel-arrow product-carousel-next"
-                type="button" aria-label="Next featured products">&#10095;</button>
+        <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next featured products">&#10095;</button>
     </section>
     {% endif %}
 
@@ -134,118 +62,56 @@
         </div>
     </div>
 
-    {% if categories %}
+    
     <div class="category-row">
         {% for category in categories %}
         <a class="category-card" href="?category={{ category.id }}">
             <div class="category-icon">
-                {% if category.name|lower == "electronics" %}
-                    💻
-                {% elif category.name|lower == "clothing" %}
-                    👕
-                {% elif category.name|lower == "books" %}
-                    📚
-                {% elif category.name|lower == "shoes" %}
-                    👟
-                {% else %}
-                    🛍️
-                {% endif %}
+                {% if category.name|lower == "electronics" %}💻
+                {% elif category.name|lower == "clothing" %}👕
+                {% elif category.name|lower == "books" %}📚
+                {% elif category.name|lower == "shoes" %}👟
+                {% else %}🛍️{% endif %}
             </div>
             {{ category.name }}
         </a>
         {% endfor %}
     </div>
-    {% else %}
-        <div class="empty category-empty">
-            <h3>No categories available</h3>
-            <p>Categories will appear here when they are added by the store admin.</p>
-        </div>
-    {% endif %}
 
     {% if request.user.is_authenticated and recommendations %}
     <div class="section-head">
         <div>
             <h2>Recommended for You</h2>
-            <p>Based on your recent searches and products you viewed.</p>
+            <p>Products selected for you.</p>
         </div>
     </div>
 
     <section class="product-carousel" aria-label="Recommended for You">
-        <button class="product-carousel-arrow product-carousel-prev"
-                type="button" aria-label="Previous recommended products">&#10094;</button>
-
+        <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous recommended products">&#10094;</button>
         <div class="product-carousel-viewport">
             <div class="product-carousel-track">
                 {% for product in recommendations %}
                 <article class="product-card product-carousel-card">
-                    <a class="product-image"
-                       href="{% url 'products:product_detail' product.id %}">
-                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
-                            <span class="badge-bestseller">Bestseller</span>
-                        {% endif %}
-
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}<span class="badge-bestseller">Bestseller</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
-
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                        {% else %}
-                            <span class="product-image-placeholder">📦</span>
-                        {% endif %}
-
-                        {% if product.rating_count > 0 %}
-                            <span class="product-rating">
-                                {{ product.rating_average|floatformat:1 }} ⭐
-                            </span>
-                        {% endif %}
+                        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span style="font-size:50px">📦</span>{% endif %}
+                        {% if product.rating_count > 0 %}<span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>{% endif %}
                     </a>
-
                     <div class="product-info">
                         <h3 class="product-title">{{ product.name }}</h3>
-
-                        {% if product.rating_count > 0 %}
-                            <span class="product-rating-count">
-                                {{ product.rating_count }} ratings
-                            </span>
-                        {% endif %}
-
+                        {% if product.rating_count > 0 %}<span class="product-rating-count">{{ product.rating_count }} ratings</span>{% endif %}
                         <div class="price">₹{{ product.price|floatformat:2 }}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
-
                         <div class="product-actions">
-                            {% if product.stock > 0 and product.is_available %}
-                                {% if product.id in cart_product_ids %}
-                                    <a class="btn-add-to-cart"
-                                       href="{% url 'cart:cart' %}">
-                                        🛒 Go to Cart
-                                    </a>
-                                {% else %}
-                                    <form method="post"
-                                          action="{% url 'cart:add_to_cart' product.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next"
-                                               value="{{ request.get_full_path }}">
-                                        <button class="btn-add-to-cart" type="submit">
-                                            🛒 Add to Cart
-                                        </button>
-                                    </form>
-                                {% endif %}
-                            {% else %}
-                                <span class="stock stock-out">Out of stock</span>
-                            {% endif %}
-
-                            <a class="btn btn-outline"
-                               href="{% url 'products:product_detail' product.id %}">
-                                View
-                            </a>
+                            <a class="btn btn-primary carousel-view-btn" href="{% url 'products:product_detail' product.id %}">View Product</a>
                         </div>
                     </div>
                 </article>
                 {% endfor %}
             </div>
         </div>
-
-        <button class="product-carousel-arrow product-carousel-next"
-                type="button" aria-label="Next recommended products">&#10095;</button>
+        <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next recommended products">&#10095;</button>
     </section>
     {% endif %}
 
@@ -259,395 +125,241 @@
     <div class="shop-layout">
         <aside class="filters">
             <h3>Filters</h3>
-
-            <form method="get" action="{% url 'products:home' %}">
+            <form method="get">
                 <label for="q">Search</label>
-                <input class="input"
-                       id="q"
-                       type="text"
-                       name="q"
-                       value="{{ request.GET.q }}"
-                       placeholder="Product name">
+                <input class="input" id="q" type="text" name="q" value="{{ request.GET.q }}" placeholder="Product name">
 
                 <label for="category">Category</label>
                 <select class="select" id="category" name="category">
                     <option value="">All Categories</option>
                     {% for category in categories %}
-                        <option value="{{ category.id }}"
-                            {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                     {% endfor %}
                 </select>
 
                 <label for="min_price">Minimum price</label>
-                <input class="input"
-                       id="min_price"
-                       type="number"
-                       name="min_price"
-                       min="0"
-                       step="0.01"
-                       value="{{ request.GET.min_price }}"
-                       placeholder="₹0">
+                <input class="input" id="min_price" type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="₹0">
 
                 <label for="max_price">Maximum price</label>
-                <input class="input"
-                       id="max_price"
-                       type="number"
-                       name="max_price"
-                       min="0"
-                       step="0.01"
-                       value="{{ request.GET.max_price }}"
-                       placeholder="₹100000">
+                <input class="input" id="max_price" type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="₹100000">
 
-                <button class="btn btn-primary filter-button"
-                        type="submit">
-                    Apply Filters
-                </button>
-
-                <a class="btn btn-outline filter-button"
-                   href="{% url 'products:home' %}">
-                    Clear
-                </a>
+                <button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Apply Filters</button>
+                <a class="btn btn-outline" style="width:100%;margin-top:8px" href="{% url 'products:home' %}">Clear</a>
             </form>
         </aside>
 
         <section>
             {% if price_error %}
-                <div class="empty filter-error">
-                    <h3>Invalid price filter</h3>
-                    <p>{{ price_error }}</p>
-                </div>
-            {% endif %}
+        <div class="empty" style="margin-bottom:20px">
+            <h3>Invalid price filter</h3>
+            <p>{{ price_error }}</p>
+        </div>
+    {% endif %}
 
-            {% if products %}
-                <div class="product-grid">
-                    {% for product in products %}
-                    <article class="product-card">
-                        <a class="product-image"
-                           href="{% url 'products:product_detail' product.id %}">
-                            {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
-                                <span class="badge-bestseller">Bestseller</span>
-                            {% endif %}
-
-                            <span class="product-image-badge">{{ product.category.name }}</span>
-
-                            {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                            {% else %}
-                                <span class="product-image-placeholder">📦</span>
-                            {% endif %}
-
-                            {% if product.rating_count > 0 %}
-                                <span class="product-rating">
-                                    {{ product.rating_average|floatformat:1 }} ⭐
-                                </span>
-                            {% endif %}
-                        </a>
-
-                        <div class="product-info">
-                            <h3 class="product-title">{{ product.name }}</h3>
-
-                            {% if product.rating_count > 0 %}
-                                <span class="product-rating-count">
-                                    {{ product.rating_count }} ratings
-                                </span>
-                            {% endif %}
-
-                            <div class="product-desc"
-                                 data-description="{{ product.description|escapejs }}">
-                                <span class="desc-text"></span>
-                                <button type="button"
-                                        class="desc-more"
-                                        onclick="toggleDescription(this)">
-                                    more
-                                </button>
-                            </div>
-
-                            <div class="price">₹{{ product.price|floatformat:2 }}</div>
-                            <div class="product-delivery">🚚 Free delivery</div>
-
+    {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <article class="product-card">
+                    <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                        {% if product.rating_count > 0 and product.rating_average >= 4.5 %}
+                        <span class="badge-bestseller">Bestseller</span>
+                        {% endif %}
+                        <span class="product-image-badge">{{ product.category.name }}</span>
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <span style="font-size:50px">📦</span>
+                        {% endif %}
+                        {% if product.rating_count > 0 %}
+                        <span class="product-rating">{{ product.rating_average|floatformat:1 }} ⭐</span>
+                        {% endif %}
+                    </a>
+                    <div class="product-info">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        {% if product.rating_count > 0 %}
+                        <span class="product-rating-count">{{ product.rating_count }} ratings</span>
+                        {% endif %}
+                        <div class="product-desc" data-description="{{ product.description|escapejs }}">
+                            <span class="desc-text"></span>
+                            <button type="button" class="desc-more" onclick="toggleDescription(this)">more</button>
+                        </div>
+                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="product-delivery">🚚 Free delivery</div>
+                        {% if product.stock > 0 and product.is_available %}
+                            <span class="stock">✓ In stock</span>
+                        {% else %}
+                            <span style="font-size:12px;color:#dc2626">Out of stock</span>
+                        {% endif %}
+                        <div class="product-actions">
                             {% if product.stock > 0 and product.is_available %}
-                                <span class="stock">✓ In stock</span>
-                            {% else %}
-                                <span class="stock stock-out">Out of stock</span>
-                            {% endif %}
-
-                            <div class="product-actions">
-                                {% if product.stock > 0 and product.is_available %}
-                                    {% if user.is_staff %}
-                                        <button class="btn-add-to-cart btn-add-to-cart-disabled"
-                                                type="button"
-                                                disabled
-                                                title="Admins can't add products to cart">
+                                {% if user.is_staff %}
+                                <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="9" cy="21" r="1"></circle>
+                                        <circle cx="20" cy="21" r="1"></circle>
+                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                                {% else %}
+                                {% if product.id in cart_product_ids %}
+                                    <a class="btn-add-to-cart" href="{% url 'cart:cart' %}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="9" cy="21" r="1"></circle>
+                                            <circle cx="20" cy="21" r="1"></circle>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                        </svg>
+                                        Go to Cart
+                                    </a>
+                                {% else %}
+                                    <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button class="btn-add-to-cart" type="submit">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="9" cy="21" r="1"></circle>
+                                                <circle cx="20" cy="21" r="1"></circle>
+                                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                            </svg>
                                             Add to Cart
                                         </button>
-                                    {% elif product.id in cart_product_ids %}
-                                        <a class="btn-add-to-cart"
-                                           href="{% url 'cart:cart' %}">
-                                            🛒 Go to Cart
-                                        </a>
-                                    {% else %}
-                                        <form method="post"
-                                              action="{% url 'cart:add_to_cart' product.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="next"
-                                                   value="{{ request.get_full_path }}">
-                                            <button class="btn-add-to-cart"
-                                                    type="submit">
-                                                🛒 Add to Cart
-                                            </button>
-                                        </form>
-                                    {% endif %}
+                                    </form>
                                 {% endif %}
-
-                                <a class="btn btn-outline"
-                                   href="{% url 'products:product_detail' product.id %}">
-                                    View
-                                </a>
-                            </div>
+                                {% endif %}
+                            {% endif %}
+                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View</a>
                         </div>
-                    </article>
-                    {% endfor %}
-                </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
             {% else %}
-                <div class="empty no-products">
-                    <div class="empty-icon">🔎</div>
+                <div class="empty">
+                    <div style="font-size:45px">🔎</div>
                     <h3>No products found</h3>
-
-                    {% if request.GET.q or request.GET.category or request.GET.min_price or request.GET.max_price %}
-                        <p>
-                            Try changing your search or price range, or clear the filters.
-                        </p>
-                        <a class="btn btn-primary"
-                           href="{% url 'products:home' %}">
-                            View All Products
-                        </a>
-                    {% else %}
-                        <p>
-                            There are no products available right now.
-                            Please check back later.
-                        </p>
-                    {% endif %}
+                    <p>Try a different search or clear the filters.</p>
+                    <a class="btn btn-primary" href="{% url 'products:home' %}">View all products</a>
                 </div>
             {% endif %}
         </section>
     </div>
 </div>
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".product-desc").forEach(function (description) {
-        const fullText = description.dataset.description.trim();
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".product-desc").forEach(function (description) {
+
+            const fullText = description.dataset.description.trim();
+            const textElement = description.querySelector(".desc-text");
+            const moreButton = description.querySelector(".desc-more");
+
+            const words = fullText.split(/\s+/).filter(Boolean);
+
+            const wordLimit = 12;
+
+            if (words.length > wordLimit) {
+
+                textElement.textContent =
+                    words.slice(0, wordLimit).join(" ") + ".....";
+
+                moreButton.style.display = "inline";
+
+            } else {
+
+                textElement.textContent = fullText;
+                moreButton.style.display = "none";
+
+            }
+        });
+    });
+
+
+    function toggleDescription(button) {
+
+        const description = button.closest(".product-desc");
         const textElement = description.querySelector(".desc-text");
-        const moreButton = description.querySelector(".desc-more");
+
+        const fullText = description.dataset.description.trim();
+
         const words = fullText.split(/\s+/).filter(Boolean);
+
         const wordLimit = 12;
 
-        if (words.length > wordLimit) {
-            textElement.textContent = words.slice(0, wordLimit).join(" ") + ".....";
-            moreButton.style.display = "inline";
+
+        if (description.classList.contains("expanded")) {
+
+            textElement.textContent =
+                words.slice(0, wordLimit).join(" ") + ".....";
+
+            button.textContent = "more";
+
+            description.classList.remove("expanded");
+
         } else {
+
             textElement.textContent = fullText;
-            moreButton.style.display = "none";
+
+            button.textContent = "less";
+
+            description.classList.add("expanded");
         }
-    });
-
-    document.querySelectorAll(".product-carousel").forEach(function (carousel) {
-        const viewport = carousel.querySelector(".product-carousel-viewport");
-        const track = carousel.querySelector(".product-carousel-track");
-        const cards = Array.from(carousel.querySelectorAll(".product-carousel-card"));
-        const prev = carousel.querySelector(".product-carousel-prev");
-        const next = carousel.querySelector(".product-carousel-next");
-
-        if (!viewport || !track || cards.length === 0) {
-            return;
-        }
-
-        let timer = null;
-        let dragging = false;
-        let startX = 0;
-        let startScroll = 0;
-
-        function cardWidth() {
-            const card = cards[0];
-            const styles = window.getComputedStyle(track);
-            const gap = parseFloat(styles.columnGap || styles.gap || 18);
-            return card.getBoundingClientRect().width + gap;
-        }
-
-        function visibleCards() {
-            return Math.max(1, Math.floor((viewport.clientWidth + 18) / cardWidth()));
-        }
-
-        function moveAmount() {
-            // Move two cards at a time. This makes the number of positions
-            // grow naturally when more recommended products are added.
-            return cardWidth() * Math.min(2, Math.max(1, cards.length));
-        }
-
-        function maxScroll() {
-            return Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-        }
-
-        function positionCount() {
-            const visible = visibleCards();
-            const remainingCards = Math.max(0, cards.length - visible);
-            return Math.max(1, Math.ceil(remainingCards / 2) + 1);
-        }
-
-        function currentPosition() {
-            const max = maxScroll();
-            if (max <= 0) {
-                return 0;
-            }
-            return Math.round((viewport.scrollLeft / max) * (positionCount() - 1));
-        }
-
-        function addPositionDots() {
-            let dots = carousel.querySelector(".product-carousel-dots");
-            if (!dots) {
-                dots = document.createElement("div");
-                dots.className = "product-carousel-dots";
-                carousel.appendChild(dots);
-            }
-
-            dots.innerHTML = "";
-            const count = positionCount();
-
-            if (count <= 1) {
-                dots.style.display = "none";
-                return;
-            }
-
-            dots.style.display = "flex";
-            for (let i = 0; i < count; i += 1) {
-                const dot = document.createElement("button");
-                dot.type = "button";
-                dot.className = "product-carousel-dot";
-                dot.setAttribute("aria-label", "Go to product group " + (i + 1));
-                dot.addEventListener("click", function () {
-                    const target = maxScroll() * (i / (count - 1));
-                    viewport.scrollTo({ left: target, behavior: "smooth" });
-                    restartTimer();
-                });
-                dots.appendChild(dot);
-            }
-            updateDots();
-        }
-
-        function updateDots() {
-            const dots = carousel.querySelectorAll(".product-carousel-dot");
-            const active = currentPosition();
-            dots.forEach(function (dot, index) {
-                dot.classList.toggle("active", index === active);
-            });
-        }
-
-        function scrollNext() {
-            const max = maxScroll();
-            if (max <= 0) {
-                return;
-            }
-
-            if (viewport.scrollLeft >= max - 5) {
-                viewport.scrollTo({ left: 0, behavior: "smooth" });
-            } else {
-                viewport.scrollBy({ left: moveAmount(), behavior: "smooth" });
-            }
-            restartTimer();
-        }
-
-        function scrollPrevious() {
-            if (viewport.scrollLeft <= 5) {
-                viewport.scrollTo({ left: maxScroll(), behavior: "smooth" });
-            } else {
-                viewport.scrollBy({ left: -moveAmount(), behavior: "smooth" });
-            }
-            restartTimer();
-        }
-
-        function startTimer() {
-            stopTimer();
-            if (maxScroll() > 0) {
-                timer = window.setInterval(scrollNext, 5000);
-            }
-        }
-
-        function stopTimer() {
-            if (timer) {
-                window.clearInterval(timer);
-                timer = null;
-            }
-        }
-
-        function restartTimer() {
-            startTimer();
-        }
-
-        prev.addEventListener("click", scrollPrevious);
-        next.addEventListener("click", scrollNext);
-
-        viewport.addEventListener("scroll", updateDots);
-
-        viewport.addEventListener("pointerdown", function (event) {
-            dragging = true;
-            startX = event.clientX;
-            startScroll = viewport.scrollLeft;
-            viewport.classList.add("is-dragging");
-            stopTimer();
-            viewport.setPointerCapture(event.pointerId);
-        });
-
-        viewport.addEventListener("pointermove", function (event) {
-            if (!dragging) {
-                return;
-            }
-            viewport.scrollLeft = startScroll - (event.clientX - startX);
-        });
-
-        function stopDragging() {
-            if (!dragging) {
-                return;
-            }
-            dragging = false;
-            viewport.classList.remove("is-dragging");
-            restartTimer();
-        }
-
-        viewport.addEventListener("pointerup", stopDragging);
-        viewport.addEventListener("pointercancel", stopDragging);
-        viewport.addEventListener("mouseleave", stopDragging);
-
-        carousel.addEventListener("mouseenter", stopTimer);
-        carousel.addEventListener("mouseleave", startTimer);
-
-        window.addEventListener("resize", function () {
-            addPositionDots();
-            startTimer();
-        });
-
-        addPositionDots();
-        startTimer();
-    });
-});
-
-function toggleDescription(button) {
-    const description = button.closest(".product-desc");
-    const textElement = description.querySelector(".desc-text");
-    const fullText = description.dataset.description.trim();
-    const words = fullText.split(/\s+/).filter(Boolean);
-    const wordLimit = 12;
-
-    if (description.classList.contains("expanded")) {
-        textElement.textContent = words.slice(0, wordLimit).join(" ") + ".....";
-        button.textContent = "more";
-        description.classList.remove("expanded");
-    } else {
-        textElement.textContent = fullText;
-        button.textContent = "less";
-        description.classList.add("expanded");
     }
-}
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".product-carousel").forEach(function (carousel) {
+            const viewport = carousel.querySelector(".product-carousel-viewport");
+            const prev = carousel.querySelector(".product-carousel-prev");
+            const next = carousel.querySelector(".product-carousel-next");
+            let dragging = false;
+            let moved = false;
+            let startX = 0;
+            let startScroll = 0;
+
+            function scrollAmount() {
+                const card = carousel.querySelector(".product-carousel-card");
+                return card ? card.getBoundingClientRect().width + 18 : viewport.clientWidth * 0.85;
+            }
+
+            prev.addEventListener("click", function () {
+                viewport.scrollBy({ left: -scrollAmount(), behavior: "smooth" });
+            });
+
+            next.addEventListener("click", function () {
+                viewport.scrollBy({ left: scrollAmount(), behavior: "smooth" });
+            });
+
+            viewport.addEventListener("pointerdown", function (event) {
+                if (event.button !== undefined && event.button !== 0) return;
+                dragging = true;
+                moved = false;
+                startX = event.clientX;
+                startScroll = viewport.scrollLeft;
+                viewport.classList.add("is-dragging");
+            });
+
+            viewport.addEventListener("pointermove", function (event) {
+                if (!dragging) return;
+                const distance = event.clientX - startX;
+                if (Math.abs(distance) > 5) moved = true;
+                if (moved) viewport.scrollLeft = startScroll - distance;
+            });
+
+            viewport.addEventListener("pointerup", function () {
+                dragging = false;
+                viewport.classList.remove("is-dragging");
+            });
+
+            viewport.addEventListener("pointercancel", function () {
+                dragging = false;
+                viewport.classList.remove("is-dragging");
+            });
+
+            viewport.addEventListener("click", function (event) {
+                if (!moved) return;
+                event.preventDefault();
+                event.stopPropagation();
+                moved = false;
+            }, true);
+        });
+    });
 </script>
 {% endblock %}

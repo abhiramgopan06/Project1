@@ -1,18 +1,24 @@
-BEGINNER SETUP
+PROJECT 1 - BEGINNER START GUIDE
 
-1. Open this project folder in VS Code.
-2. Open a terminal in this folder.
-3. Create a fresh virtual environment:
+1. Open PowerShell in this project folder.
+2. Create a fresh virtual environment:
    python -m venv env
-4. Activate it on Windows:
-   env\Scripts\activate
-5. Install the project packages:
+3. Activate it:
+   .\env\Scripts\Activate.ps1
+4. Install packages:
    pip install -r requirements.txt
-6. Start the server:
+5. Apply database migrations:
+   python manage.py migrate
+6. Start Django:
    python manage.py runserver
-7. Open:
-   http://127.0.0.1:8000/
+7. Open http://127.0.0.1:8000/
 
 IMPORTANT:
-The old bundled virtual environment was removed because it contained mixed Django package files.
-Always create a fresh environment using requirements.txt.
+Do not copy an old env folder into this project. The old environment had mixed Django files.
+If PowerShell blocks activation, run:
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+then activate again.
+
+LATEST FIX:
+The home page had a missing {% endif %} after the Featured Products carousel.
+This has been corrected.

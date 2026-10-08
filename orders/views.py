@@ -1,8 +1,3 @@
-# orders/views.py
-# ----------------------------------------------------
-# This file handles the checkout flow: turning a cart into a
-# real order, and showing order history / order details.
-# ----------------------------------------------------
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,14 +7,12 @@ from django.db.models import Avg, F
 
 from cart.models import Cart
 from products.models import Product, ProductReview
+from products.recommendations import record_product_history
 from products.forms import ProductReviewForm
 from accounts.checkout_helpers import resolve_checkout_address
 from .models import Order, OrderItem, ReturnReplaceRequest
 
 
-# The checkout page. On a normal visit it just shows the order
-# summary and the form. When the form is submitted (POST), it
-# creates the real Order and empties the cart.
 @login_required
 def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
@@ -42,7 +35,6 @@ def checkout(request):
             })
 
         if payment == 'online':
-            # Online payment is finalized by payments.verify_payment.
             return render(request, 'orders/checkout.html', {
                 'cart_items': cart_items, 'total': total, 'addresses': addresses,
                 'error': 'Please use the Online Payment button to complete payment.'
@@ -50,9 +42,6 @@ def checkout(request):
 
         try:
             with transaction.atomic():
-                # We "lock" the cart items and products here so that if two
-                # people check out the same product at the exact same time,
-                # we don't accidentally sell more than we have in stock.
                 locked_items = list(
                     cart.items.select_related('product').select_for_update()
                 )
@@ -101,6 +90,7 @@ def checkout(request):
                         quantity=item.quantity,
                         price=product.price
                     )
+                    record_product_history(request.user, product, 'order')
                     product.stock -= item.quantity
                     product.save(update_fields=['stock'])
 
@@ -120,23 +110,17 @@ def checkout(request):
     return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': total, 'addresses': addresses})
 
 
-# Simple "thank you, your order was placed" page.
 @login_required
 def order_success(request):
     return render(request, 'orders/order_success.html')
 
 
-# Shows a list of every order this user has made in the past,
-# newest first.
 @login_required
 def order_history(request):
     orders = Order.objects.filter(
         user=request.user
     ).order_by('-created_at')
 
-    # Every product this user has ever ordered (one row per product),
-    # newest order first. select_related fetches the product and the
-    # order in the same database query so the page stays fast.
     order_items = OrderItem.objects.filter(
         order__user=request.user
     ).select_related('product', 'order').order_by('-order__created_at', '-id')
@@ -148,8 +132,6 @@ def order_history(request):
     )
 
 
-# Shows everything about one single order: the items, the
-# address, and a little step-by-step delivery tracker.
 @login_required
 def order_detail(request, order_id):
     order = get_object_or_404(
@@ -158,8 +140,6 @@ def order_detail(request, order_id):
         user=request.user
     )
 
-    # Build the little "Pending -> Confirmed -> Shipped -> Delivered"
-    # tracker so the template can show which steps are already done.
     status_steps = None
 
     if order.status != Order.STATUS_CANCELLED:
@@ -178,9 +158,6 @@ def order_detail(request, order_id):
 
     order_items = order.items.select_related('product', 'return_request')
 
-    # For a delivered order, work out which items the user has
-    # already rated, so the template can show their stars instead
-    # of the "rate this" form for those.
     existing_reviews = {}
     if order.status == Order.STATUS_DELIVERED:
         product_ids = [item.product_id for item in order_items]
@@ -189,18 +166,13 @@ def order_detail(request, order_id):
 
     for item in order_items:
         item.existing_review = existing_reviews.get(item.product_id)
-        # OneToOneField reverse access raises if there's no request yet -
-        # turn that into a plain None so the template can just check it.
         try:
             item.return_request_obj = item.return_request
         except ReturnReplaceRequest.DoesNotExist:
             item.return_request_obj = None
 
-    # The user can cancel their own order any time before it has
-    # shipped out for delivery (or already been delivered/cancelled).
     can_cancel = order.status in (Order.STATUS_PENDING, Order.STATUS_CONFIRMED, Order.STATUS_SHIPPED)
 
-    # Each product row gets its own cancel button (only if it is not cancelled yet).
     for item in order_items:
         item.can_cancel_item = can_cancel and not item.is_cancelled
 
@@ -216,9 +188,6 @@ def order_detail(request, order_id):
     )
 
 
-# Lets a customer cancel their own order, but only while it hasn't
-# been delivered yet. Puts the stock back since the sale never
-# actually went through.
 @login_required
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -228,8 +197,6 @@ def cancel_order(request, order_id):
 
         if order.status in cancellable:
             with transaction.atomic():
-                # Only put back the products that were NOT already cancelled
-                # one-by-one, so the stock is never added twice.
                 for item in order.items.filter(is_cancelled=False):
                     Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
                 order.status = Order.STATUS_CANCELLED
@@ -241,9 +208,6 @@ def cancel_order(request, order_id):
     return redirect('order_detail', order_id=order.id)
 
 
-# Lets a customer cancel ONE product from an order (not the whole order).
-# The product goes back into stock and the order total goes down.
-# If every product in the order is cancelled, the order is cancelled too.
 @login_required
 def cancel_order_item(request, order_id, item_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -258,17 +222,13 @@ def cancel_order_item(request, order_id, item_id):
             messages.error(request, 'This product can no longer be cancelled.')
         else:
             with transaction.atomic():
-                # 1. Put the stock back
                 Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
 
-                # 2. Mark this one product as cancelled
                 item.is_cancelled = True
                 item.save(update_fields=['is_cancelled'])
 
-                # 3. Take its price out of the order total
                 order.total_amount = order.total_amount - item.line_total
 
-                # 4. If nothing is left un-cancelled, cancel the whole order
                 if not order.items.filter(is_cancelled=False).exists():
                     order.status = Order.STATUS_CANCELLED
 
@@ -279,9 +239,6 @@ def cancel_order_item(request, order_id, item_id):
     return redirect('order_detail', order_id=order.id)
 
 
-# Lets a customer request a return or a replace for one item from
-# a Delivered order - but only for products that are actually
-# marked as returnable/replaceable, and only once per item.
 @login_required
 def request_return_replace(request, order_id, item_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -299,7 +256,6 @@ def request_return_replace(request, order_id, item_id):
         request_type = request.POST.get('request_type')
         reason = request.POST.get('reason', '').strip()
 
-        # Only allow the type(s) this specific product supports.
         allowed_types = []
         if item.product.is_returnable:
             allowed_types.append(ReturnReplaceRequest.REQUEST_RETURN)
@@ -319,9 +275,6 @@ def request_return_replace(request, order_id, item_id):
     return redirect('order_detail', order_id=order.id)
 
 
-# Lets a customer rate + review one product from a Delivered order.
-# Only allowed once the order has actually reached the Delivered
-# status - this is the only place a rating can be submitted from.
 @login_required
 def rate_product(request, order_id, item_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)

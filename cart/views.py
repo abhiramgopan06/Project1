@@ -1,10 +1,3 @@
-# cart/views.py
-# ----------------------------------------------------
-# This file has all the simple functions ("views") for the
-# shopping cart: adding a product, showing the cart page,
-# removing a product, and changing how many of a product
-# the user wants. Each function below does ONE small job.
-# ----------------------------------------------------
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Cart, CartItem
 from products.models import Product
+from products.recommendations import record_product_history
 
 
 @login_required
@@ -50,17 +44,15 @@ def add_to_cart(request, id):
                 return redirect(next_url)
             return redirect('products:product_detail', id=id)
 
+    record_product_history(request.user, product, 'cart')
     messages.success(request, f'{product.name} added to cart.')
 
-    # Stay on the current product/shop page after adding. The template
-    # will now show a "Go to Cart" button because the product is in the cart.
     next_url = request.POST.get('next')
     if next_url and next_url.startswith('/') and not next_url.startswith('//'):
         return redirect(next_url)
     return redirect('products:product_detail', id=id)
 
 
-# Shows the cart page: every item in the cart plus the total price.
 @login_required
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
@@ -78,7 +70,6 @@ def cart(request):
     return render(request, 'products/cart.html', context)
 
 
-# Deletes one product from the cart completely.
 @login_required
 @require_POST
 def remove_from_cart(request, id):
@@ -94,7 +85,6 @@ def remove_from_cart(request, id):
     return redirect('cart:cart')
 
 
-# The "+" button: adds one more of this product to the cart.
 @login_required
 @require_POST
 def increase_quantity(request, id):
@@ -117,8 +107,6 @@ def increase_quantity(request, id):
     return redirect('cart:cart')
 
 
-# The "-" button: removes one of this product. If we're already
-# down to 1, remove the whole item instead of going to 0.
 @login_required
 @require_POST
 def decrease_quantity(request, id):
@@ -138,8 +126,6 @@ def decrease_quantity(request, id):
     return redirect('cart:cart')
 
 
-# Used when the user types a new quantity into the box and
-# clicks "Update" (instead of using the + / - buttons).
 @login_required
 @require_POST
 def update_cart(request, id):

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Verify Email | E-Commerce Shop{% endblock %}
+{% block content %}
+
+<section class="login-page verification-page" aria-labelledby="verify-title">
+    <div class="login-card verification-card">
+        <div class="login-header">
+            <div class="login-icon verification-icon" aria-hidden="true">
+                <i class="fa-solid fa-envelope"></i>
+            </div>
+            <h1 id="verify-title">Verify your email</h1>
+            <p>We sent a 6-digit verification code to <strong>{{ pending.email }}</strong>.</p>
+        </div>
+
+        <div class="verification-info">
+            <div class="verification-info-icon">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            </div>
+            <div>
+                <strong>Check your inbox</strong>
+                <p>The code is valid for 10 minutes. Enter it below to finish creating your account.</p>
+            </div>
+        </div>
+
+
+        <form method="post" class="otp-form" novalidate>
+            {% csrf_token %}
+            <label for="id_otp">Verification code</label>
+            <input
+                id="id_otp"
+                name="otp"
+                class="otp-input"
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                placeholder="000000"
+                {% if not expired %}autofocus{% endif %}
+                required
+            >
+            <p class="otp-help">Enter the 6 numbers from the email.</p>
+
+            <button class="login-submit" type="submit" {% if expired %}disabled{% endif %}>
+                <span>Verify email</span>
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
+        </form>
+
+        <div class="resend-area">
+            <p>Didn't receive the code?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button class="resend-button" type="submit" name="action" value="resend">
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                    Send code again
+                </button>
+            </form>
+        </div>
+
+        <a class="back-login-link" href="{% url 'register' %}">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Start registration again
+        </a>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const otp = document.getElementById('id_otp');
+    if (otp) {
+        otp.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+    }
+});
+</script>
+{% endblock %}

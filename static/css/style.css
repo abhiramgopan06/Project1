@@ -602,8 +602,6 @@
 }
 
 /* ---------- Featured Products Carousel ---------- */
-/* Simple, beginner-friendly slider that shows product cards
-   and automatically swipes to the next set every 8 seconds. */
 .carousel {
     position: relative;
     display: flex;
@@ -906,12 +904,6 @@
     flex-shrink: 0;
 }
 
-/* ---------- Product Cards (compact Amazon / Flipkart style) ---------- */
-/* This grid holds all the product cards on the shop page.
-   "auto-fill" + "minmax" just means: "fit as many 200px-ish cards
-   as will comfortably fit in a row" - more cards on a wide screen,
-   fewer on a narrow one. This gives the tighter, many-cards-per-row
-   look of a real shopping site instead of only 3 big cards. */
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -940,13 +932,6 @@
 
 /* The product photo. Kept shorter and square-ish (not a tall
    banner) so more cards fit on screen at once, just like the
-   compact tiles on Amazon/Flipkart. We use "object-fit: cover"
-   (not "contain") so the photo fills the whole box - many product
-   photos already have their own built-in white padding around the
-   product, and "contain" would keep that padding too, making the
-   product look tiny inside a mostly-empty box. "cover" zooms in
-   just enough to fill the frame, the same way real shopping sites
-   crop their thumbnails. */
 .product-image {
     position: relative;
     display: flex;
@@ -2916,12 +2901,6 @@ main {
 }
 
 /* ================================================================
-   BEGINNER-FRIENDLY RESPONSIVE DESIGN
-   ---------------------------------------------------------------
-   These rules keep the existing desktop design, then make the
-   important parts smaller and easier to use on phones and tablets.
-   Product cards intentionally use TWO columns on small screens.
-   ================================================================ */
 
 /* Tablet: give the page a little more breathing room. */
 @media (max-width: 900px) {
@@ -3548,8 +3527,6 @@ main {
 
 
 /* ================================================================
-   Professional beginner-friendly login page
-   ================================================================ */
 .login-page {
     min-height: calc(100vh - 145px);
     display: flex;
@@ -3921,126 +3898,303 @@ main {
     }
 }
 
-
-/* Home page image */
-.hero-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 220px;
+/* Product carousels */
+html, body {
+    overflow-x: hidden;
 }
 
-.hero-image img {
+.product-carousel {
     width: 100%;
-    max-width: 260px;
-    height: 220px;
-    object-fit: contain;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12);
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-.product-image-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 50px;
+.product-carousel-viewport {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    user-select: none;
 }
 
-.filter-button {
+.product-carousel-viewport::-webkit-scrollbar {
+    display: none;
+}
+
+.product-carousel-viewport.is-dragging {
+    cursor: grabbing;
+}
+
+.product-carousel-track {
+    width: max-content;
+    padding-right: 4px;
+}
+
+.product-carousel-card {
+    flex: 0 0 280px;
+    width: 280px;
+    min-width: 280px;
+}
+
+.product-carousel-card .product-image {
     display: block;
-    width: 100%;
-    margin-top: 8px;
+    height: 240px;
 }
 
-.filter-button:first-of-type {
-    margin-top: 18px;
-}
-
-.filter-error {
-    margin-bottom: 20px;
-}
-
-.no-products {
-    min-height: 260px;
+.product-carousel-card .product-info {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    min-height: 190px;
+}
+
+.product-carousel-card .product-actions {
+    margin-top: auto;
+}
+
+.product-carousel-card .carousel-view-btn {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+    .product-carousel-card {
+        flex-basis: min(82vw, 280px);
+        width: min(82vw, 280px);
+        min-width: min(82vw, 280px);
+    }
+
+    .product-carousel-card .product-image {
+        height: 220px;
+    }
+}
+
+
+/* Login additions */
+.google-login-button {
+    width: 100%;
+    min-height: 46px;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 11px;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: .2s ease;
 }
 
-.empty-icon {
-    margin-bottom: 8px;
-    font-size: 45px;
+.google-login-button:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+    text-decoration: none;
+    transform: translateY(-1px);
 }
 
-.category-empty {
-    margin-bottom: 45px;
+.google-logo {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #4285f4;
+    font-size: 17px;
 }
 
-.stock-out {
-    color: #dc2626;
+.login-divider-google {
+    margin-top: 22px;
+    margin-bottom: 16px;
 }
 
-@media (max-width: 860px) {
-    .hero-image {
-        min-height: 180px;
-    }
-
-    .hero-image img {
-        height: 180px;
-    }
-}
-
-@media (max-width: 600px) {
-    .hero-image img {
-        max-width: 210px;
-        height: 170px;
-    }
-
-    .no-products {
-        padding: 40px 18px;
-    }
-}
-
-/* Carousel position dots are created automatically from the number of cards. */
-.product-carousel {
-    flex-wrap: wrap;
-}
-
-.product-carousel-dots {
-    flex: 0 0 100%;
+.login-security-note {
+    margin: 14px 0 0;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 7px;
-    width: 100%;
-    margin-top: -34px;
-    margin-bottom: 34px;
+    color: #94a3b8;
+    font-size: 12px;
 }
 
-.product-carousel-dot {
-    width: 8px;
-    height: 8px;
-    padding: 0;
+.login-security-note i {
+    color: #64748b;
+}
+
+.verification-page {
+    padding-top: 58px;
+}
+
+.verification-card {
+    max-width: 470px;
+}
+
+.verification-icon {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.verification-info {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0 0 22px;
+    padding: 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #f8fbff;
+    color: #475569;
+}
+
+.verification-info-icon {
+    color: #2563eb;
+    padding-top: 2px;
+}
+
+.verification-info strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.verification-info p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.verification-messages {
+    margin-bottom: 18px;
+}
+
+.verification-message {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    padding: 11px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.verification-message.success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.verification-message.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.verification-message.warning,
+.verification-message.info {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+
+.otp-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.otp-input {
+    width: 100%;
+    min-height: 58px;
+    box-sizing: border-box;
+    padding: 10px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    background: #ffffff;
+    color: #0f172a;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: 9px;
+    transition: .2s ease;
+}
+
+.otp-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.otp-help {
+    margin: 7px 0 17px;
+    color: #94a3b8;
+    font-size: 12px;
+    text-align: center;
+}
+
+.otp-form .login-submit:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.resend-area {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.resend-area p {
+    margin: 0 0 9px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.resend-button {
     border: 0;
-    border-radius: 50%;
-    background: #cbd5e1;
+    padding: 6px 10px;
+    background: transparent;
+    color: #2563eb;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
 }
 
-.product-carousel-dot.active {
-    width: 22px;
-    border-radius: 10px;
-    background: #111827;
+.resend-button:hover {
+    text-decoration: underline;
 }
 
-@media (max-width: 700px) {
-    .product-carousel-dots {
-        margin-top: -28px;
-        margin-bottom: 28px;
+.back-login-link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.back-login-link:hover {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .otp-input {
+        font-size: 22px;
+        letter-spacing: 6px;
     }
 }

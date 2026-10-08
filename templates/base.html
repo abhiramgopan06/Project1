@@ -139,10 +139,6 @@
 </footer>
 <script>
 /*
- * Beginner-friendly form protection:
- * phone fields accept digits only. This also handles pasted text,
- * while the Django form performs the final server-side validation.
- */
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('input[type="tel"], input[name="phone"]').forEach(function (input) {
         input.addEventListener('input', function () {

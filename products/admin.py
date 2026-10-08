@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductReview, SearchHistory
+from .models import Category, Product, ProductReview, SearchHistory, ProductHistory
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -23,3 +23,10 @@ class SearchHistoryAdmin(admin.ModelAdmin):
     list_display = ('user', 'query', 'category', 'created_at')
     list_filter = ('category',)
     search_fields = ('user__username', 'query')
+
+
+@admin.register(ProductHistory)
+class ProductHistoryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'product', 'viewed_count', 'search_count', 'cart_count', 'ordered_count', 'last_interacted')
+    list_filter = ('last_interacted',)
+    search_fields = ('user__username', 'product__name')

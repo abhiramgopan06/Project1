@@ -21,10 +21,6 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
 
-    # Whether this particular product can be returned or replaced
-    # after delivery. Set per-product by staff in the dashboard - a
-    # customer only sees a "Return"/"Replace" option on products
-    # that have one (or both) of these turned on.
     is_returnable = models.BooleanField(default=False)
     is_replaceable = models.BooleanField(default=False)
 
@@ -120,3 +116,38 @@ class SearchHistory(models.Model):
 
     def __str__(self):
         return f'{self.user.username}: {self.query}'
+
+
+class ProductHistory(models.Model):
+    ACTION_VIEW = 'view'
+    ACTION_CART = 'cart'
+    ACTION_ORDER = 'order'
+
+    user = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='product_history'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='user_history'
+    )
+    viewed_count = models.PositiveIntegerField(default=0)
+    cart_count = models.PositiveIntegerField(default=0)
+    ordered_count = models.PositiveIntegerField(default=0)
+    search_count = models.PositiveIntegerField(default=0)
+    last_viewed = models.DateTimeField(null=True, blank=True)
+    last_interacted = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'],
+                name='unique_product_history_per_user'
+            )
+        ]
+        ordering = ['-last_interacted']
+
+    def __str__(self):
+        return f'{self.user.username}: {self.product.name}'

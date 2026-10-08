@@ -1,28 +1,13 @@
-# products/views.py
-# ----------------------------------------------------
-# This file controls the two main pages people see for products:
-#   1. home()           -> the shop page with search, filters and cards
-#   2. product_detail()  -> one single product's page with reviews
-# There is also one small helper function, _record_search(), that
-# just remembers what a logged-in user searched for.
-#
-# Ratings & reviews are NOT written from this page any more - a
-# customer can only rate a product from their Order Detail page,
-# and only once that order has actually been Delivered. See
-# orders/views.py -> rate_product().
-# ----------------------------------------------------
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 
 from .models import Product, Category
-from .recommendations import add_to_user_vector, recommended_products
+from .recommendations import add_to_user_vector, recommended_products, record_product_history
 from accounts.models import UserProfile
 
 
-# Helper function (starts with "_" so we know it's just for this file).
-# Saves what the user searched for, so we can recommend products later.
 def _record_search(request, q, category, min_price, max_price):
     if not request.user.is_authenticated:
         return
@@ -33,11 +18,20 @@ def _record_search(request, q, category, min_price, max_price):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         add_to_user_vector(profile, query_text, weight=2)
 
+        if q:
+            from .models import ProductHistory
+            matches = Product.objects.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q) |
+                Q(category__name__icontains=q)
+            )
+            for product in matches[:30]:
+                history, _ = ProductHistory.objects.get_or_create(user=request.user, product=product)
+                history.search_count += 1
+                history.save(update_fields=['search_count', 'last_interacted'])
 
-# The shop / home page: shows all products, and lets the user
-# search by name, filter by category, and filter by price.
+
 def home(request):
-    # Start with every product that is available to buy.
     products = Product.objects.filter(is_available=True).select_related('category')
     q = request.GET.get('q', '').strip()
     category_id = request.GET.get('category', '').strip()
@@ -80,14 +74,17 @@ def home(request):
 
     _record_search(request, q, category, min_price, max_price)
     categories = Category.objects.all()
+    featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('-created_at')[:20]
     recommendations = recommended_products(request.user, limit=12) if request.user.is_authenticated else []
-    return render(request, 'products/home.html', {'products': products, 'categories': categories, 'recommendations': recommendations, 'price_error': price_error})
+    return render(request, 'products/home.html', {
+        'products': products,
+        'featured_products': featured_products,
+        'categories': categories,
+        'recommendations': recommendations,
+        'price_error': price_error,
+    })
 
 
-# The single product page: shows the product's details, its
-# average rating and existing reviews, and a few similar products.
-# (Writing a rating/review happens from the Order Detail page after
-# delivery, not here - see orders/views.py -> rate_product().)
 def product_detail(request, id):
     product = get_object_or_404(Product.objects.select_related('category'), id=id)
     if not product.vector_data:
@@ -97,7 +94,8 @@ def product_detail(request, id):
     if request.user.is_authenticated:
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         add_to_user_vector(profile, f'{product.name} {product.category.name}', weight=0.25)
+        record_product_history(request.user, product, 'view')
 
     reviews = product.reviews.select_related('user').all()
-    recommendations = recommended_products(request.user, exclude_id=product.id, limit=4) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
+    recommendations = recommended_products(request.user, exclude_id=product.id, limit=12) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
     return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations})

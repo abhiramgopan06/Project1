@@ -11,6 +11,12 @@ urlpatterns = [
         name='register'
     ),
 
+    path('verify-registration/', views.verify_registration, name='verify_registration'),
+
+    path('google/login/', views.google_login, name='google_login'),
+
+    path('google/callback/', views.google_callback, name='google_callback'),
+
     path(
         'login/',
         auth_views.LoginView.as_view(

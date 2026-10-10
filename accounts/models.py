@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -53,17 +54,28 @@ class Address(models.Model):
     def __str__(self):
         return f'{self.label} - {self.user.username}'
 
-class PendingRegistration(models.Model):
-    username = models.CharField(max_length=150, unique=True)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15)
-    password_hash = models.CharField(max_length=128)
-    otp_hash = models.CharField(max_length=128)
-    otp_created_at = models.DateTimeField(auto_now=True)
-    attempts = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+# ----------------------------------------------------
+# A one-time password (OTP) used to verify a new user's email.
+# There is only ONE row per user. Asking for a new OTP simply
+# replaces the old code, so old codes stop working.
+# The code itself is saved hashed (like a password), never as
+# plain text.
+# ----------------------------------------------------
+class EmailOTP(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='email_otp'
+    )
+
+    code_hash = models.CharField(max_length=128)
+
+    # When the current code was sent (used for expiry + resend wait).
+    created_at = models.DateTimeField(default=timezone.now)
+
+    # How many wrong codes were typed for the current code.
+    attempts = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
-        return f'{self.username} - pending registration'
+        return f'OTP for {self.user.username}'

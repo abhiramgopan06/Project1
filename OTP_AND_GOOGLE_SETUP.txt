@@ -1,0 +1,85 @@
+EMAIL OTP + GOOGLE SIGN-IN - SETUP GUIDE
+=========================================
+
+HOW REGISTRATION WORKS NOW
+--------------------------
+1. User fills the Create Account form.
+2. The account is saved but stays INACTIVE, and a 6-digit code is emailed.
+3. The user types the code on the "Verify your email" page.
+   - Wrong code      -> error message with attempts left (5 tries per code)
+   - Code expired    -> after 10 minutes, ask for a new one
+   - Not received    -> small "Resend code" button (30 second wait between sends)
+4. Correct code -> account becomes active -> user goes to the Login page.
+5. If someone tries to login before verifying, they are sent back to the
+   OTP page automatically.
+
+You can change the numbers in ecommerce/settings.py:
+   OTP_EXPIRY_MINUTES, OTP_RESEND_SECONDS, OTP_MAX_ATTEMPTS
+
+
+STEP 0 - AFTER COPYING THIS PROJECT
+-----------------------------------
+   pip install -r requirements.txt
+   python manage.py migrate        <-- needed once (creates the OTP table)
+   python manage.py runserver
+
+
+TESTING WITHOUT REAL EMAIL (default)
+------------------------------------
+If you do nothing, the OTP email is PRINTED in the terminal where
+"runserver" is running. Look for the 6-digit number in the printed email.
+
+
+SENDING REAL EMAILS (Gmail)
+---------------------------
+1. Use a Gmail account and turn on 2-Step Verification.
+2. Create an "App password" for it (Google Account -> Security -> App passwords).
+3. Copy .env.example to a new file named .env  (same folder as manage.py)
+4. Fill in:
+      EMAIL_HOST_USER=yourgmail@gmail.com
+      EMAIL_HOST_PASSWORD=your16letterapppassword
+5. Restart runserver. OTP emails now go to the address the user registered with.
+
+NEVER upload the .env file to GitHub (it is already listed in .gitignore).
+
+
+CONTINUE WITH GOOGLE
+--------------------
+The button is always visible. Until you add the keys below, pressing it shows
+"Google sign-in is not set up yet".
+
+1. Open https://console.cloud.google.com and create a project.
+2. Set up the "OAuth consent screen" (External). While testing, add your own
+   Gmail address under "Test users".
+3. Go to Credentials -> Create credentials -> OAuth client ID -> "Web application".
+4. Under "Authorized redirect URIs" add BOTH:
+      http://127.0.0.1:8000/accounts/google/callback/
+      http://localhost:8000/accounts/google/callback/
+5. Copy the Client ID and Client secret into your .env file:
+      GOOGLE_CLIENT_ID=...
+      GOOGLE_CLIENT_SECRET=...
+6. Restart runserver, open the login page and press "Continue with Google".
+   Google shows the "Choose an account" screen.
+
+What happens after choosing an account:
+   - New email      -> an account is created automatically and logged in.
+   - Existing email -> that account is logged in.
+
+
+RUN THE TESTS
+-------------
+   python manage.py test accounts
+
+
+IMPORTANT - TWO THINGS ONLY YOU CAN SET UP
+------------------------------------------
+The code for both features is finished, but they need YOUR keys:
+
+  1. Real OTP emails  -> fill EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env
+     (until then the OTP page shows an orange "Test mode" note and the code
+      is printed in the runserver terminal).
+  2. Google account chooser -> fill GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+     in .env (until then the Google button shows "not set up yet").
+
+After editing .env, stop and restart runserver.
+After copying this project run:  python manage.py migrate

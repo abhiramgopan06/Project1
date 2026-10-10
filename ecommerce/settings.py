@@ -12,6 +12,29 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# ----------------------------------------------------
+# Read secret values (email password, Google keys...) from a
+# file called ".env" in the project folder, so they are never
+# written inside the code. Each line looks like:  NAME=value
+# ----------------------------------------------------
+def load_env_file():
+    env_path = BASE_DIR / '.env'
+    if not env_path.exists():
+        return
+
+    for line in env_path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        name, value = line.split('=', 1)
+        value = value.strip().strip('"').strip("'")
+        # A value already set in the system wins over the .env file.
+        os.environ.setdefault(name.strip(), value)
+
+
+load_env_file()
+
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-local-development-key-change-me'
@@ -116,27 +139,41 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 
+# ----------------------------------------------------
+# Email (used to send the OTP code)
+# If EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in the .env file,
+# real emails are sent through Gmail. If they are empty, the email is
+# only PRINTED in the terminal - handy while testing.
+# ----------------------------------------------------
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@ecommerce.local')
+# Gmail shows app passwords with spaces; we remove them to be safe.
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_TIMEOUT = 15
+    DEFAULT_FROM_EMAIL = f'E-Commerce Shop <{EMAIL_HOST_USER}>'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'E-Commerce Shop <noreply@ecommerce.local>'
 
+# OTP rules
+OTP_EXPIRY_MINUTES = 10     # how long a code stays valid
+OTP_RESEND_SECONDS = 30     # wait time before a new code can be requested
+OTP_MAX_ATTEMPTS = 5        # wrong tries allowed per code
+
+# ----------------------------------------------------
+# "Continue with Google" (get these from Google Cloud Console)
+# ----------------------------------------------------
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
-GOOGLE_REDIRECT_URI = os.environ.get(
-    'GOOGLE_REDIRECT_URI',
-    'http://127.0.0.1:8000/accounts/google/callback/'
-)
 
 
 
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 
 LOGOUT_REDIRECT_URL = '/'

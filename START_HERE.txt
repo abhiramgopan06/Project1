@@ -8,7 +8,7 @@ PROJECT 1 - BEGINNER START GUIDE
 4. Install packages:
    pip install -r requirements.txt
 5. Apply database migrations:
-   python manage.py migrate
+   python manage.py migrate   (run this again - it adds the new OTP table)
 6. Start Django:
    python manage.py runserver
 7. Open http://127.0.0.1:8000/
@@ -22,3 +22,7 @@ then activate again.
 LATEST FIX:
 The home page had a missing {% endif %} after the Featured Products carousel.
 This has been corrected.
+
+NEW: EMAIL OTP + GOOGLE SIGN-IN
+Read OTP_AND_GOOGLE_SETUP.txt for how to turn on real emails and the Google button.
+Without any setup, the OTP email is printed in the terminal while testing.

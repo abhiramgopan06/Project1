@@ -5,249 +5,344 @@
 # and editing your profile info (profile).
 # ----------------------------------------------------
 
-from django.shortcuts import render, redirect
-from .forms import RegistrationForm
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+import re
+import secrets
+from urllib.parse import urlencode
 
-from django.shortcuts import get_object_or_404
+import requests
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from orders.models import OrderItem
-from .models import UserProfile, Address, PendingRegistration
+from .forms import RegistrationForm, LoginForm
 from .forms import UserForm, UserProfileForm, AddressForm
-from django.contrib.auth import login
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password, check_password
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from datetime import timedelta
-import random
-import secrets
-import string
-import requests
-from urllib.parse import urlencode
-import re
+from .models import UserProfile, Address
+from .otp_helpers import (
+    send_new_otp, check_otp, mask_email, resend_wait_seconds,
+)
 
 
-# Sign-up page.
+# ----------------------------------------------------
+# REGISTRATION WITH EMAIL OTP
+#
+#   1. register()    - user fills the form. The account is created
+#                      but kept INACTIVE, and an OTP is emailed.
+#   2. verify_otp()  - user types the code. If it is right the
+#                      account becomes active.
+#   3. resend_otp()  - sends a fresh code if the first one did not
+#                      arrive or expired.
+#   4. The user is sent to the login page and logs in normally.
+# ----------------------------------------------------
+
+# Sign-up page: creates a new Django User (inactive) plus an empty
+# UserProfile to go with it, then emails the OTP.
 def register(request):
     if request.method == 'POST':
+
+        # If someone registered earlier but never entered the OTP, their
+        # half-finished account would block the same username/email.
+        # Remove only those unverified leftovers so they can try again.
+        typed_username = request.POST.get('username', '').strip()
+        typed_email = request.POST.get('email', '').strip()
+        if typed_username or typed_email:
+            User.objects.filter(
+                is_active=False,
+                email_otp__isnull=False
+            ).filter(
+                Q(username__iexact=typed_username) | Q(email__iexact=typed_email)
+            ).delete()
+
         form = RegistrationForm(request.POST)
 
         if form.is_valid():
-            cleaned = form.cleaned_data
-            PendingRegistration.objects.filter(username__iexact=cleaned['username']).delete()
-            PendingRegistration.objects.filter(email__iexact=cleaned['email']).delete()
+            user = form.save(commit=False)
+            user.is_active = False      # cannot log in until the OTP is verified
+            user.save()
 
-            otp = str(random.randint(100000, 999999))
-            pending = PendingRegistration.objects.create(
-                username=cleaned['username'],
-                first_name=cleaned['first_name'],
-                last_name=cleaned['last_name'],
-                email=cleaned['email'],
-                phone=cleaned['phone'],
-                password_hash=make_password(cleaned['password1']),
-                otp_hash=make_password(otp),
-                attempts=0,
+            UserProfile.objects.create(
+                user=user,
+                phone=form.cleaned_data['phone']
             )
 
-            send_otp_email(pending, otp)
-            request.session['pending_registration_id'] = pending.id
-            messages.success(request, 'We sent a 6-digit verification code to your email.')
-            return redirect('verify_registration')
+            email_sent = send_new_otp(user)
+
+            # Remember who is verifying (stored in the session, not the URL).
+            request.session['otp_user_id'] = user.id
+
+            if email_sent:
+                messages.success(
+                    request,
+                    'Account created! We have sent a 6-digit code to your email.'
+                )
+            else:
+                messages.error(
+                    request,
+                    'Account created, but we could not send the email. '
+                    'Please press "Resend code".'
+                )
+
+            return redirect('verify_otp')
     else:
         form = RegistrationForm()
 
-    return render(request, 'accounts/register.html', {'form': form})
-
-
-def send_otp_email(pending, otp):
-    subject = 'Verify your E-Commerce Shop account'
-    text = (
-        f'Hello {pending.first_name},\n\n'
-        f'Your E-Commerce Shop verification code is {otp}.\n'
-        f'This code expires in 10 minutes.\n\n'
-        'If you did not start this registration, you can ignore this email.'
+    return render(
+        request,
+        'accounts/register.html',
+        {'form': form}
     )
-    html = f'''
-        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;background:#f8fafc;">
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
-                <h2 style="margin:0 0 10px;color:#111827;">Verify your E-Commerce Shop account</h2>
-                <p style="color:#64748b;line-height:1.6;">Hello {pending.first_name}, use the verification code below to finish creating your account.</p>
-                <div style="margin:26px 0;padding:18px;text-align:center;border-radius:12px;background:#eef4ff;">
-                    <strong style="font-size:32px;letter-spacing:8px;color:#2563eb;">{otp}</strong>
-                </div>
-                <p style="color:#64748b;">This code expires in <strong>10 minutes</strong>.</p>
-                <p style="color:#94a3b8;font-size:13px;">If you did not request this code, you can safely ignore this email.</p>
-            </div>
-        </div>
-    '''
-    send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [pending.email], html_message=html)
 
 
-def verify_registration(request):
-    pending_id = request.session.get('pending_registration_id')
-    if not pending_id:
-        messages.info(request, 'Please start registration again.')
+# Find the user who is currently verifying (from the session).
+# Returns (user, otp) or (None, None) if there is nothing to verify.
+def get_pending_user(request):
+    user_id = request.session.get('otp_user_id')
+    if not user_id:
+        return None, None
+
+    user = User.objects.filter(id=user_id, is_active=False).first()
+    if user is None or not hasattr(user, 'email_otp'):
+        request.session.pop('otp_user_id', None)
+        return None, None
+
+    return user, user.email_otp
+
+
+# The page where the user types the OTP.
+def verify_otp(request):
+    user, otp = get_pending_user(request)
+
+    if user is None:
+        messages.info(request, 'Please register or login first.')
         return redirect('register')
 
-    pending = PendingRegistration.objects.filter(id=pending_id).first()
-    if not pending:
-        request.session.pop('pending_registration_id', None)
-        messages.error(request, 'This registration session has expired. Please register again.')
-        return redirect('register')
-
-    expired = timezone.now() > pending.otp_created_at + timedelta(minutes=10)
+    error = ''
 
     if request.method == 'POST':
-        action = request.POST.get('action')
+        typed_code = request.POST.get('otp', '').strip()
 
-        if action == 'resend':
-            seconds_left = int((pending.otp_created_at + timedelta(seconds=60) - timezone.now()).total_seconds())
-            if seconds_left > 0:
-                messages.warning(request, f'Please wait {seconds_left} seconds before requesting another code.')
-                return redirect('verify_registration')
-
-            otp = str(random.randint(100000, 999999))
-            pending.otp_hash = make_password(otp)
-            pending.otp_created_at = timezone.now()
-            pending.attempts = 0
-            pending.save(update_fields=['otp_hash', 'otp_created_at', 'attempts'])
-            send_otp_email(pending, otp)
-            messages.success(request, 'A new verification code has been sent.')
-            return redirect('verify_registration')
-
-        otp = request.POST.get('otp', '').strip()
-
-        if expired:
-            messages.error(request, 'This code has expired. Please request a new code.')
-        elif not otp.isdigit() or len(otp) != 6:
-            messages.error(request, 'Enter the 6-digit verification code.')
-        elif pending.attempts >= 5:
-            messages.error(request, 'Too many incorrect attempts. Please request a new code.')
-        elif not check_password(otp, pending.otp_hash):
-            pending.attempts += 1
-            pending.save(update_fields=['attempts'])
-            remaining = max(0, 5 - pending.attempts)
-            messages.error(request, f'Incorrect verification code. You have {remaining} attempt(s) remaining.')
+        if not re.fullmatch(r'[0-9]{6}', typed_code):
+            error = 'Please enter the 6-digit code.'
         else:
-            if User.objects.filter(username__iexact=pending.username).exists() or User.objects.filter(email__iexact=pending.email).exists():
-                messages.error(request, 'This username or email is already registered. Please use different details.')
-                pending.delete()
-                request.session.pop('pending_registration_id', None)
-                return redirect('register')
+            is_ok, error = check_otp(otp, typed_code)
 
-            user = User.objects.create(
-                username=pending.username,
-                first_name=pending.first_name,
-                last_name=pending.last_name,
-                email=pending.email,
-                password=pending.password_hash,
-            )
-            UserProfile.objects.create(user=user, phone=pending.phone)
-            pending.delete()
-            request.session.pop('pending_registration_id', None)
-            messages.success(request, 'Your email is verified. Your account is ready. Please log in.')
-            return redirect('login')
+            if is_ok:
+                user.is_active = True
+                user.save(update_fields=['is_active'])
+                otp.delete()                       # the code is used up
+                request.session.pop('otp_user_id', None)
 
-    return render(request, 'accounts/verify_registration.html', {
-        'pending': pending,
-        'expired': expired,
+                messages.success(
+                    request,
+                    'Email verified successfully! You can now login.'
+                )
+                return redirect('login')
+
+    return render(request, 'accounts/verify_otp.html', {
+        'masked_email': mask_email(user.email),
+        'error': error,
+        'resend_wait': resend_wait_seconds(otp),
+        'expiry_minutes': settings.OTP_EXPIRY_MINUTES,
+        # True while real email is not set up: the code is only printed in
+        # the terminal, so we tell the developer where to look.
+        'email_is_test_mode': settings.EMAIL_BACKEND.endswith('console.EmailBackend') and settings.DEBUG,
     })
 
 
+# "Resend code" button. Only accepts POST (a button press, not a link).
+@require_POST
+def resend_otp(request):
+    user, otp = get_pending_user(request)
+
+    if user is None:
+        messages.info(request, 'Please register or login first.')
+        return redirect('register')
+
+    wait = resend_wait_seconds(otp)
+    if wait > 0:
+        messages.warning(
+            request,
+            f'Please wait {wait} seconds before asking for a new code.'
+        )
+        return redirect('verify_otp')
+
+    if send_new_otp(user):
+        messages.success(request, 'A new code has been sent to your email.')
+    else:
+        messages.error(
+            request,
+            'We could not send the email. Please try again in a moment.'
+        )
+
+    return redirect('verify_otp')
+
+
+# Login page. Same as Django's login, but if the user never verified
+# their email we send them to the OTP page instead of showing an error.
+class CustomLoginView(auth_views.LoginView):
+    template_name = 'accounts/login.html'
+    authentication_form = LoginForm
+
+    def form_invalid(self, form):
+        if form.unverified_user is not None:
+            self.request.session['otp_user_id'] = form.unverified_user.id
+            messages.info(
+                self.request,
+                'Please verify your email first. Enter the code we sent you, '
+                'or press "Resend code".'
+            )
+            return redirect('verify_otp')
+
+        return super().form_invalid(form)
+
+
+# ----------------------------------------------------
+# CONTINUE WITH GOOGLE
+#
+#   1. google_login()    - sends the user to Google's account chooser.
+#   2. google_callback() - Google sends the user back here with a code.
+#                          We swap the code for the user's email + name,
+#                          then log them in (creating the account if new).
+# ----------------------------------------------------
+
+GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
+
+
+def google_is_configured():
+    return bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
+
+
+def google_redirect_uri(request):
+    return request.build_absolute_uri(reverse('google_callback'))
+
+
+# Step 1: open the Google "choose an account" screen.
 def google_login(request):
-    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
-        messages.info(request, 'Google Sign-In is not configured yet. Add the Google OAuth keys to your environment settings.')
+    if not google_is_configured():
+        messages.error(
+            request,
+            'Google sign-in is not set up yet. Add GOOGLE_CLIENT_ID and '
+            'GOOGLE_CLIENT_SECRET to the .env file (see README).'
+        )
         return redirect('login')
 
-    state = secrets.token_urlsafe(32)
-    request.session['google_oauth_state'] = state
+    # "state" is a random value we check later to be sure the answer
+    # really came from the sign-in we started.
+    state = secrets.token_urlsafe(24)
+    request.session['google_state'] = state
 
-    params = {
+    query = urlencode({
         'client_id': settings.GOOGLE_CLIENT_ID,
-        'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+        'redirect_uri': google_redirect_uri(request),
         'response_type': 'code',
         'scope': 'openid email profile',
         'state': state,
-        'access_type': 'online',
-        'prompt': 'select_account',
-    }
-    return redirect('https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params))
+        'prompt': 'select_account',    # always show the account chooser
+    })
+    return redirect(f'{GOOGLE_AUTH_URL}?{query}')
 
 
+# Make a username from an email, e.g. "abhi.ram@gmail.com" -> "abhi.ram"
+# and add a number if somebody already has it.
+def make_unique_username(email):
+    base = re.sub(r'[^A-Za-z0-9._]', '', email.split('@')[0]) or 'user'
+    base = base[:140]
+
+    username = base
+    number = 1
+    while User.objects.filter(username__iexact=username).exists():
+        number += 1
+        username = f'{base}{number}'
+    return username
+
+
+# Step 2: Google sends the user back here.
 def google_callback(request):
-    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+    if not google_is_configured():
         return redirect('login')
 
-    state = request.GET.get('state')
-    saved_state = request.session.pop('google_oauth_state', None)
-    if not state or state != saved_state:
-        messages.error(request, 'Google sign-in could not be verified. Please try again.')
+    # The user pressed "Cancel" on the Google screen.
+    if request.GET.get('error'):
+        messages.info(request, 'Google sign-in was cancelled.')
+        return redirect('login')
+
+    saved_state = request.session.pop('google_state', None)
+    if not saved_state or saved_state != request.GET.get('state'):
+        messages.error(request, 'Google sign-in failed. Please try again.')
         return redirect('login')
 
     code = request.GET.get('code')
     if not code:
-        messages.error(request, 'Google sign-in was cancelled.')
-        return redirect('login')
-
-    token_response = requests.post(
-        'https://oauth2.googleapis.com/token',
-        data={
-            'code': code,
-            'client_id': settings.GOOGLE_CLIENT_ID,
-            'client_secret': settings.GOOGLE_CLIENT_SECRET,
-            'redirect_uri': settings.GOOGLE_REDIRECT_URI,
-            'grant_type': 'authorization_code',
-        },
-        timeout=10,
-    )
-    if token_response.status_code != 200:
         messages.error(request, 'Google sign-in failed. Please try again.')
         return redirect('login')
 
-    token_data = token_response.json()
-    access_token = token_data.get('access_token')
-    if not access_token:
-        messages.error(request, 'Google did not return a valid sign-in token.')
+    try:
+        # Swap the code for an access token.
+        token_response = requests.post(GOOGLE_TOKEN_URL, data={
+            'code': code,
+            'client_id': settings.GOOGLE_CLIENT_ID,
+            'client_secret': settings.GOOGLE_CLIENT_SECRET,
+            'redirect_uri': google_redirect_uri(request),
+            'grant_type': 'authorization_code',
+        }, timeout=10)
+        access_token = token_response.json().get('access_token')
+
+        if not access_token:
+            raise ValueError('No access token received')
+
+        # Ask Google who the user is.
+        info_response = requests.get(
+            GOOGLE_USERINFO_URL,
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        info = info_response.json()
+    except (requests.RequestException, ValueError):
+        messages.error(request, 'Could not connect to Google. Please try again.')
         return redirect('login')
 
-    userinfo_response = requests.get(
-        'https://openidconnect.googleapis.com/v1/userinfo',
-        headers={'Authorization': f'Bearer {access_token}'},
-        timeout=10,
-    )
-    if userinfo_response.status_code != 200:
-        messages.error(request, 'Could not read your Google account details.')
-        return redirect('login')
-
-    info = userinfo_response.json()
-    email = info.get('email', '').strip().lower()
+    email = (info.get('email') or '').strip().lower()
     if not email or not info.get('email_verified'):
-        messages.error(request, 'Google did not provide a verified email address.')
+        messages.error(request, 'Your Google email is not verified.')
         return redirect('login')
 
     user = User.objects.filter(email__iexact=email).first()
 
-    if not user:
-        base_username = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0]) or 'googleuser'
-        username = base_username[:140]
-        counter = 1
-        while User.objects.filter(username__iexact=username).exists():
-            username = f'{base_username[:130]}{counter}'
-            counter += 1
-
-        user = User.objects.create_user(
-            username=username,
+    if user is None:
+        # First time with this email: create the account.
+        user = User(
+            username=make_unique_username(email),
             email=email,
-            first_name=info.get('given_name', ''),
-            last_name=info.get('family_name', ''),
+            first_name=(info.get('given_name') or '')[:150],
+            last_name=(info.get('family_name') or '')[:150],
         )
+        user.set_unusable_password()   # they sign in with Google, no password
+        user.save()
         UserProfile.objects.create(user=user)
 
-    login(request, user)
-    messages.success(request, 'Welcome back. You signed in with Google.')
+    elif not user.is_active:
+        # Registered with the form but never typed the OTP. Google has
+        # just proved the email is theirs, so we can activate it.
+        if hasattr(user, 'email_otp'):
+            user.is_active = True
+            user.save(update_fields=['is_active'])
+            user.email_otp.delete()
+        else:
+            messages.error(request, 'This account has been disabled.')
+            return redirect('login')
+
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    messages.success(request, f'Welcome, {user.first_name or user.username}!')
     return redirect(settings.LOGIN_REDIRECT_URL)
 
 

@@ -85,17 +85,9 @@
 
         <a class="login-create" href="{% url 'register' %}">Create an account</a>
 
-        <div class="login-divider login-divider-google"><span>or continue with</span></div>
+        <div class="login-divider"><span>or</span></div>
 
-        <a class="google-login-button" href="{% url 'google_login' %}">
-            <i class="fa-brands fa-google google-logo" aria-hidden="true"></i>
-            <span>Continue with Google</span>
-        </a>
-
-        <p class="login-security-note">
-            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-            Secure sign-in with your account credentials or Google.
-        </p>
+        {% include "accounts/_google_button.html" %}
 
     </div>
 </section>

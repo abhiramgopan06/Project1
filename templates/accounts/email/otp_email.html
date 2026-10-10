@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; padding:0; background:#f1f5f9; font-family:Arial, Helvetica, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9; padding:30px 12px;">
+    <tr>
+      <td align="center">
+        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px;">
+          <tr>
+            <td style="padding:28px 32px 8px; font-size:20px; font-weight:bold; color:#111827;">
+              E-Commerce Shop
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 0; font-size:15px; color:#334155; line-height:1.6;">
+              Hi {{ name }},<br><br>
+              Use the code below to verify your email address and finish creating your account.
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:22px 32px;">
+              <div style="display:inline-block; padding:14px 26px; background:#eef4ff; border-radius:10px; font-size:32px; letter-spacing:8px; font-weight:bold; color:#1d4ed8;">
+                {{ code }}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 26px; font-size:13px; color:#64748b; line-height:1.6;">
+              This code is valid for {{ minutes }} minutes. Please do not share it with anyone.<br>
+              If you did not create an account, you can safely ignore this email.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

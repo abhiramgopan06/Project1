@@ -15,7 +15,7 @@ from .models import Order, OrderItem, ReturnReplaceRequest
 
 @login_required
 def checkout(request):
-    cart = get_object_or_404(Cart, user=request.user)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.select_related('product')
     addresses = request.user.addresses.all()
 

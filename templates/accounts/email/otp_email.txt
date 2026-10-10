@@ -1,0 +1,11 @@
+Hi {{ name }},
+
+Your E-Commerce Shop verification code is:
+
+    {{ code }}
+
+This code is valid for {{ minutes }} minutes. Please do not share it with anyone.
+
+If you did not create an account, you can safely ignore this email.
+
+- E-Commerce Shop

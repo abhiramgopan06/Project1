@@ -341,3 +341,31 @@ class RegistrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+
+class RegistrationPhoneValidationTests(TestCase):
+    def registration_data(self, phone):
+        return {
+            'username': 'phoneuser',
+            'email': 'phoneuser@example.com',
+            'first_name': 'Phone',
+            'last_name': 'User',
+            'phone': phone,
+            'password1': 'StrongPhonePass!2026',
+            'password2': 'StrongPhonePass!2026',
+        }
+
+    def test_registration_accepts_exactly_ten_phone_digits(self):
+        response = self.client.post(reverse('register'), self.registration_data('9876543210'))
+        self.assertRedirects(response, reverse('verify_otp'))
+        self.assertEqual(UserProfile.objects.get(user__username='phoneuser').phone, '9876543210')
+
+    def test_registration_rejects_phone_with_less_than_ten_digits(self):
+        response = self.client.post(reverse('register'), self.registration_data('987654321'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Enter exactly 10 digits for an Indian mobile number.')
+
+    def test_registration_rejects_phone_with_more_than_ten_digits(self):
+        response = self.client.post(reverse('register'), self.registration_data('98765432101'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Enter exactly 10 digits for an Indian mobile number.')

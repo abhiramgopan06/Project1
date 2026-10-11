@@ -12,12 +12,12 @@ class RegistrationForm(UserCreationForm):
     last_name = forms.CharField(required=True, max_length=150)
     phone = forms.CharField(
         required=True,
-        max_length=15,
+        max_length=10,
         widget=forms.TextInput(attrs={
             'type': 'tel',
             'inputmode': 'numeric',
-            'pattern': '[0-9]{10,15}',
-            'maxlength': '15',
+            'pattern': '[0-9]{10}',
+            'maxlength': '10',
             'autocomplete': 'tel',
         })
     )
@@ -46,7 +46,7 @@ class RegistrationForm(UserCreationForm):
         self.fields['email'].widget.attrs.update({
             'placeholder': 'you@example.com', 'autocomplete': 'email'})
         self.fields['phone'].widget.attrs.update({
-            'placeholder': '10 digit mobile number'})
+            'placeholder': '10 digit mobile number', 'minlength': '10'})
         self.fields['password1'].widget.attrs.update({
             'placeholder': 'Create a password', 'autocomplete': 'new-password'})
         self.fields['password2'].widget.attrs.update({
@@ -60,8 +60,8 @@ class RegistrationForm(UserCreationForm):
 
     def clean_phone(self):
         phone = self.cleaned_data['phone'].strip()
-        if not phone.isdigit() or not 10 <= len(phone) <= 15:
-            raise forms.ValidationError('Phone number must contain 10 to 15 digits.')
+        if not phone.isascii() or not phone.isdigit() or len(phone) != 10:
+            raise forms.ValidationError('Enter exactly 10 digits for an Indian mobile number.')
         return phone
 
 

@@ -31,7 +31,20 @@
 
             {% include "accounts/_field.html" with field=form.username icon="fa-solid fa-at" %}
             {% include "accounts/_field.html" with field=form.email icon="fa-regular fa-envelope" %}
-            {% include "accounts/_field.html" with field=form.phone icon="fa-solid fa-phone" %}
+            <div class="login-field {% if form.phone.errors %}has-error{% endif %}">
+                <label for="{{ form.phone.id_for_label }}">Phone</label>
+                <div class="login-input-wrap phone-input-wrap">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                    <span class="phone-country-code" aria-label="India country code">+91</span>
+                    {{ form.phone }}
+                </div>
+                <small class="field-help">Enter your 10-digit Indian mobile number.</small>
+                {% if form.phone.errors %}
+                    <div class="login-field-error" role="alert">
+                        {% for error in form.phone.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
             {% include "accounts/_field.html" with field=form.password1 icon="fa-solid fa-lock" password=True show_help=True %}
             {% include "accounts/_field.html" with field=form.password2 icon="fa-solid fa-lock" password=True %}
 

@@ -26,3 +26,12 @@ This has been corrected.
 NEW: EMAIL OTP + GOOGLE SIGN-IN
 Read OTP_AND_GOOGLE_SETUP.txt for how to turn on real emails and the Google button.
 Without any setup, the OTP email is printed in the terminal while testing.
+
+PRODUCT OFFER FEATURE (added)
+1. Start the Django project as usual.
+2. Run: python manage.py migrate
+   This adds the discount_percent field to products.
+3. Sign in with a staff/admin account and open Admin Dashboard > Offer for Products.
+4. Select a product, enter a percentage from 1 to 90, and click Save Offer.
+   Enter 0% to remove the offer. Offers appear on product cards, product details,
+   and the cart; discounted prices are also used for checkout and orders.

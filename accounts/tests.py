@@ -162,6 +162,12 @@ class RegistrationOtpTests(TestCase):
         response = self.register(username='other')
         self.assertContains(response, 'already exists')
 
+    def test_email_backend_returning_zero_is_reported_as_failure(self):
+        with mock.patch('django.core.mail.EmailMultiAlternatives.send', return_value=0):
+            response = self.register()
+        self.assertRedirects(response, reverse('verify_otp'))
+        self.assertTrue(EmailOTP.objects.exists())
+
     def test_email_failure_still_lets_user_resend(self):
         with mock.patch('django.core.mail.EmailMultiAlternatives.send',
                         side_effect=OSError('no internet')):

@@ -22,7 +22,7 @@ def checkout(request):
     if not cart_items.exists():
         return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': 0, 'addresses': addresses})
 
-    total = sum(item.product.price * item.quantity for item in cart_items)
+    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
 
     if request.method == 'POST':
         payment = request.POST.get('payment', 'cod')
@@ -66,7 +66,7 @@ def checkout(request):
                         )
 
                 current_total = sum(
-                    locked_products[item.product_id].price * item.quantity
+                    locked_products[item.product_id].discounted_price * item.quantity
                     for item in locked_items
                 )
 
@@ -88,7 +88,7 @@ def checkout(request):
                         order=order,
                         product=product,
                         quantity=item.quantity,
-                        price=product.price
+                        price=product.discounted_price
                     )
                     record_product_history(request.user, product, 'order')
                     product.stock -= item.quantity

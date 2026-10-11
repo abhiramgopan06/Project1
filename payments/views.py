@@ -17,7 +17,7 @@ from accounts.checkout_helpers import resolve_checkout_address
 
 def _cart_total(cart_items):
     return sum(
-        (item.product.price * item.quantity for item in cart_items),
+        (item.product.discounted_price * item.quantity for item in cart_items),
         Decimal('0.00')
     )
 
@@ -122,7 +122,7 @@ def verify_payment(request):
                             f'{product.name} are available.'
                         )
                     }, status=400)
-                total += product.price * item.quantity
+                total += product.discounted_price * item.quantity
 
             order = Order.objects.create(
                 user=request.user,
@@ -144,7 +144,7 @@ def verify_payment(request):
                     order=order,
                     product=product,
                     quantity=item.quantity,
-                    price=product.price,
+                    price=product.discounted_price,
                 )
                 record_product_history(request.user, product, 'order')
                 product.stock -= item.quantity

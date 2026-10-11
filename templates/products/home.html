@@ -55,6 +55,7 @@
                             <span class="badge-bestseller">Bestseller</span>
                         {% endif %}
 
+                        {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
 
                         {% if product.image %}
@@ -79,7 +80,7 @@
                             </span>
                         {% endif %}
 
-                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
@@ -184,6 +185,7 @@
                             <span class="badge-bestseller">Bestseller</span>
                         {% endif %}
 
+                        {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
 
                         {% if product.image %}
@@ -208,7 +210,7 @@
                             </span>
                         {% endif %}
 
-                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
@@ -330,7 +332,8 @@
                                 <span class="badge-bestseller">Bestseller</span>
                             {% endif %}
 
-                            <span class="product-image-badge">{{ product.category.name }}</span>
+                            {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
+                        <span class="product-image-badge">{{ product.category.name }}</span>
 
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -364,7 +367,7 @@
                                 </button>
                             </div>
 
-                            <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                            <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                             <div class="product-delivery">🚚 Free delivery</div>
 
                             {% if product.stock > 0 and product.is_available %}

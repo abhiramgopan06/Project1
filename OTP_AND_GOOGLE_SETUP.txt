@@ -35,9 +35,11 @@ SENDING REAL EMAILS (Gmail)
 1. Use a Gmail account and turn on 2-Step Verification.
 2. Create an "App password" for it (Google Account -> Security -> App passwords).
 3. Copy .env.example to a new file named .env  (same folder as manage.py)
-4. Fill in:
+4. Open the new .env file in a text editor and fill in:
       EMAIL_HOST_USER=yourgmail@gmail.com
       EMAIL_HOST_PASSWORD=your16letterapppassword
+   Use Google's 16-character App Password, NOT your normal Gmail password.
+   Remove spaces from the App Password if you copied them from Google.
 5. Restart runserver. OTP emails now go to the address the user registered with.
 
 NEVER upload the .env file to GitHub (it is already listed in .gitignore).
@@ -83,3 +85,19 @@ The code for both features is finished, but they need YOUR keys:
 
 After editing .env, stop and restart runserver.
 After copying this project run:  python manage.py migrate
+
+TROUBLESHOOTING OTP EMAILS
+--------------------------
+- If the OTP page says Test mode, real email is not configured. In that mode,
+  use the code printed in the terminal running runserver.
+- If a real email is not received, check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+  in .env, ensure 2-Step Verification and an App Password are enabled, check
+  spam/junk, then stop and restart runserver.
+- Check the terminal for 'Could not send OTP email' if SMTP fails.
+- Each code is valid for 10 minutes. The resend button waits 30 seconds.
+- After changing settings or .env, restart the server. Run migrations after
+  receiving a project update: python manage.py migrate
+- Never share .env or commit it to GitHub. .env.example contains blank values.
+- The included automated tests use Django's test email backend; they do not
+  prove that Gmail credentials work. Send a real test registration to confirm
+  delivery after configuring Gmail.

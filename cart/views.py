@@ -58,7 +58,7 @@ def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
     cart_items = cart.items.select_related('product')
-    total = sum(item.product.price * item.quantity for item in cart_items)
+    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
 
     context = {
         'cart': cart,

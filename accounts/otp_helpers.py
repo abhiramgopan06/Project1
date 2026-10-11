@@ -82,7 +82,12 @@ def send_new_otp(user):
     message.attach_alternative(html_body, 'text/html')
 
     try:
-        message.send()
+        # Django returns the number of successfully sent messages. A return
+        # value of 0 means the backend did not send the email.
+        sent_count = message.send(fail_silently=False)
+        if sent_count != 1:
+            print('Could not send OTP email: the email backend sent 0 messages.')
+            return False
     except Exception as error:
         # Wrong email settings, no internet, etc. We print the reason in the
         # terminal so it is easy to debug, and tell the caller it failed.

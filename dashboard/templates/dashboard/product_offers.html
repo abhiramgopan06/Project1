@@ -1,0 +1,27 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Offer for Products | E-Commerce Store{% endblock %}
+{% block dashboard_content %}
+<div class="section-head"><div><h2>Offer for Products</h2><p>Select a product and set the discount percentage shown on the customer storefront.</p></div><a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a></div>
+<div class="profile-card" style="max-width:720px;margin:20px 0;padding:24px">
+<form method="post">{% csrf_token %}
+<label for="product-select" style="display:block;font-weight:700;margin-bottom:8px">Select product</label>
+<select class="select" id="product-select" name="product" required style="width:100%;margin-bottom:18px" onchange="if(this.value){window.location.href='?product='+this.value}">
+<option value="">Choose a product...</option>
+{% for product in products %}<option value="{{ product.id }}" {% if selected_product.id == product.id %}selected{% endif %}>{{ product.name }} — ₹{{ product.price|floatformat:2 }}{% if product.discount_percent %} ({{ product.discount_percent }}% off){% endif %}</option>{% endfor %}
+</select>
+{% if selected_product %}
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:18px">
+<strong>{{ selected_product.name }}</strong><p style="margin:8px 0;color:#64748b">Original price: ₹{{ selected_product.price|floatformat:2 }}</p>
+<label for="discount-percent" style="display:block;font-weight:700;margin-bottom:8px">Offer percentage (%)</label>
+<input class="input" type="number" id="discount-percent" name="discount_percent" min="0" max="90" step="1" required value="{{ selected_product.discount_percent }}" style="max-width:220px">
+<p style="font-size:13px;color:#64748b;margin-top:8px">Enter 10 for 10% off or 30 for 30% off. Enter 0 to remove the offer.</p>
+<div id="offer-preview" style="margin-top:12px;font-weight:700;color:#15803d"></div>
+</div>
+<button class="btn btn-primary" type="submit">Save Offer</button>
+{% else %}<p style="color:#64748b">Choose a product from the list to enter its offer.</p>{% endif %}
+</form></div>
+<div class="checkout-card" style="margin-top:22px"><h3>Current product offers</h3><div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Original price</th><th>Offer</th><th>Offer price</th></tr></thead><tbody>{% for product in products %}<tr><td>{{ product.name }}</td><td>₹{{ product.price|floatformat:2 }}</td><td>{% if product.discount_percent %}<span class="offer-percent">{{ product.discount_percent }}% OFF</span>{% else %}No offer{% endif %}</td><td>₹{{ product.discounted_price|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">No products available yet.</td></tr>{% endfor %}</tbody></table></div></div>
+<script>
+(function(){const input=document.getElementById('discount-percent');const preview=document.getElementById('offer-preview');if(!input||!preview)return;const price={{ selected_product.price|default:0 }};function update(){const p=Math.max(0,Math.min(90,Number(input.value)||0));preview.textContent=p? p+'% off — new price: ₹'+(price*(100-p)/100).toFixed(2):'No offer — price stays ₹'+price.toFixed(2)}input.addEventListener('input',update);update();})();
+</script>
+{% endblock %}

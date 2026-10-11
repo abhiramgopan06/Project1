@@ -17,6 +17,8 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    # Percentage discount set by staff from the Offer for Products page.
+    discount_percent = models.PositiveSmallIntegerField(default=0)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
@@ -29,6 +31,12 @@ class Product(models.Model):
     vector_data = models.JSONField(default=dict, blank=True)
     rating_average = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     rating_count = models.PositiveIntegerField(default=0)
+
+    @property
+    def discounted_price(self):
+        if self.discount_percent:
+            return self.price * (100 - self.discount_percent) / 100
+        return self.price
 
     def refresh_vector(self):
         from .recommendations import build_product_vector

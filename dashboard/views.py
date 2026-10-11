@@ -213,3 +213,38 @@ def dashboard_product_toggle(request, product_id):
         messages.success(request, f'"{product.name}" was {state}.')
 
     return redirect('dashboard:products')
+
+
+# Staff can select any catalog product and set (or remove) its discount.
+@staff_member_required
+def dashboard_product_offers(request):
+    products = Product.objects.select_related('category').order_by('name')
+    selected_id = request.POST.get('product') or request.GET.get('product')
+    selected_product = None
+    if selected_id:
+        selected_product = Product.objects.filter(id=selected_id).first()
+
+    if request.method == 'POST':
+        if not selected_product:
+            messages.error(request, 'Please select a product.')
+        else:
+            try:
+                percent = int(request.POST.get('discount_percent', ''))
+            except (TypeError, ValueError):
+                percent = -1
+            if percent < 0 or percent > 90:
+                messages.error(request, 'Enter an offer from 0% to 90%. Use 0% to remove an offer.')
+            else:
+                selected_product.discount_percent = percent
+                selected_product.save(update_fields=['discount_percent'])
+                if percent:
+                    messages.success(request, f'{percent}% offer saved for "{selected_product.name}".')
+                else:
+                    messages.success(request, f'Offer removed from "{selected_product.name}".')
+                return redirect('dashboard:product_offers')
+
+    return render(request, 'dashboard/product_offers.html', {
+        'active': 'offers',
+        'products': products,
+        'selected_product': selected_product,
+    })

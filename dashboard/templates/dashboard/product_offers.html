@@ -1,27 +1,149 @@
 {% extends "dashboard/base_dashboard.html" %}
 {% block title %}Offer for Products | E-Commerce Store{% endblock %}
 {% block dashboard_content %}
-<div class="section-head"><div><h2>Offer for Products</h2><p>Select a product and set the discount percentage shown on the customer storefront.</p></div><a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a></div>
-<div class="profile-card" style="max-width:720px;margin:20px 0;padding:24px">
-<form method="post">{% csrf_token %}
-<label for="product-select" style="display:block;font-weight:700;margin-bottom:8px">Select product</label>
-<select class="select" id="product-select" name="product" required style="width:100%;margin-bottom:18px" onchange="if(this.value){window.location.href='?product='+this.value}">
-<option value="">Choose a product...</option>
-{% for product in products %}<option value="{{ product.id }}" {% if selected_product.id == product.id %}selected{% endif %}>{{ product.name }} — ₹{{ product.price|floatformat:2 }}{% if product.discount_percent %} ({{ product.discount_percent }}% off){% endif %}</option>{% endfor %}
-</select>
-{% if selected_product %}
-<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:18px">
-<strong>{{ selected_product.name }}</strong><p style="margin:8px 0;color:#64748b">Original price: ₹{{ selected_product.price|floatformat:2 }}</p>
-<label for="discount-percent" style="display:block;font-weight:700;margin-bottom:8px">Offer percentage (%)</label>
-<input class="input" type="number" id="discount-percent" name="discount_percent" min="0" max="90" step="1" required value="{{ selected_product.discount_percent }}" style="max-width:220px">
-<p style="font-size:13px;color:#64748b;margin-top:8px">Enter 10 for 10% off or 30 for 30% off. Enter 0 to remove the offer.</p>
-<div id="offer-preview" style="margin-top:12px;font-weight:700;color:#15803d"></div>
+<div class="section-head">
+    <div>
+        <h2>Offer for Products</h2>
+        <p>Select a product, check its details, and set the discount percentage shown on the customer storefront.</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a>
 </div>
-<button class="btn btn-primary" type="submit">Save Offer</button>
-{% else %}<p style="color:#64748b">Choose a product from the list to enter its offer.</p>{% endif %}
-</form></div>
-<div class="checkout-card" style="margin-top:22px"><h3>Current product offers</h3><div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Original price</th><th>Offer</th><th>Offer price</th></tr></thead><tbody>{% for product in products %}<tr><td>{{ product.name }}</td><td>₹{{ product.price|floatformat:2 }}</td><td>{% if product.discount_percent %}<span class="offer-percent">{{ product.discount_percent }}% OFF</span>{% else %}No offer{% endif %}</td><td>₹{{ product.discounted_price|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">No products available yet.</td></tr>{% endfor %}</tbody></table></div></div>
+
+<style>
+    /* Simple, reusable styles for the product-offer page */
+    .offer-page-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 18px; padding: 28px; margin: 22px 0; box-shadow: 0 8px 24px rgba(15,23,42,.045); }
+    .offer-page-card h3, .checkout-card h3 { color: var(--text-color, #172033); letter-spacing: -.25px; }
+    .offer-muted { color: var(--muted-text, #64748b); font-size: 13px; line-height: 1.6; margin: 5px 0; }
+    .offer-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; margin: 18px 0 22px; }
+    .offer-product-option { display: flex; align-items: flex-start; gap: 13px; border: 1px solid var(--border-color, #dbe3ee); border-radius: 15px; padding: 15px; cursor: pointer; min-width: 0; background: var(--card-bg, #fff); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+    .offer-product-option:hover { border-color: #94a3b8; box-shadow: 0 7px 18px rgba(15,23,42,.07); transform: translateY(-2px); }
+    .offer-product-option:has(input:checked) { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); background: rgba(37,99,235,.045); }
+    .offer-product-option input { margin-top: 5px; flex-shrink: 0; accent-color: #2563eb; }
+    .offer-product-thumb { width: 92px; height: 104px; object-fit: contain; background: #f8fafc; border: 1px solid #e8edf4; border-radius: 11px; flex-shrink: 0; padding: 5px; }
+    .offer-product-placeholder { width: 92px; height: 104px; display: flex; align-items: center; justify-content: center; text-align: center; background: #f1f5f9; color: #64748b; border-radius: 11px; font-size: 12px; flex-shrink: 0; }
+    .offer-product-details { min-width: 0; flex: 1; }
+    .offer-product-name { font-weight: 750; overflow-wrap: anywhere; margin-bottom: 7px; color: var(--text-color, #172033); line-height: 1.4; }
+    .offer-product-details .offer-muted { overflow-wrap: anywhere; }
+    .selected-product-info { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 28px; align-items: start; background: var(--soft-bg, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 26px; margin: 20px 0 4px; }
+    .selected-product-image { width: 100%; height: 280px; object-fit: contain; border-radius: 13px; background: #fff; border: 1px solid #e8edf4; padding: 8px; }
+    .selected-product-placeholder { min-height: 280px; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 13px; background: #e2e8f0; color: #64748b; padding: 18px; }
+    .selected-product-info h3 { font-size: 25px !important; line-height: 1.3; margin-bottom: 16px !important; overflow-wrap: anywhere; }
+    .selected-product-info p:not(.offer-muted) { padding: 9px 12px; margin: 7px 0 !important; border: 1px solid var(--border-color, #e2e8f0); border-radius: 9px; background: var(--card-bg, #fff); }
+    .selected-product-info form { border-top: 1px solid var(--border-color, #e2e8f0); margin-top: 20px !important; padding-top: 20px; }
+    #discount-percent { margin-top: 4px; border-radius: 9px; min-height: 42px; padding: 8px 12px; }
+    #offer-preview { display: inline-block; padding: 10px 13px; border-radius: 9px; background: #ecfdf3; color: #15803d !important; }
+    .offer-page-card .btn, .checkout-card .btn { border-radius: 10px; padding: 11px 18px; font-weight: 700; }
+    .checkout-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 18px; box-shadow: 0 8px 24px rgba(15,23,42,.045); }
+    .offer-table-image { width: 76px; height: 76px; object-fit: contain; border: 1px solid #e8edf4; border-radius: 11px; background: #f8fafc; padding: 4px; display: block; }
+    .offer-table-placeholder { width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 11px; background: #f1f5f9; color: #64748b; font-size: 11px; }
+    .checkout-card .dashboard-table th { white-space: nowrap; }
+    .checkout-card .dashboard-table td { vertical-align: middle; padding-top: 15px; padding-bottom: 15px; }
+    .offer-percent { display: inline-block; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 800; padding: 6px 9px; border-radius: 999px; white-space: nowrap; }
+    @media (max-width: 760px) { .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
+    @media (max-width: 420px) { .offer-product-thumb, .offer-product-placeholder { width: 76px; height: 88px; } .offer-page-card { padding: 14px; } .selected-product-info h3 { font-size: 21px !important; } }
+</style>
+
+<section class="offer-page-card">
+    <h3 style="margin:0 0 6px">1. Select a product</h3>
+    <p class="offer-muted">Each option includes a product image, name, price, and current offer. Select the correct product, then press “Choose this product”.</p>
+
+    <form method="get">
+        <div class="offer-product-grid">
+            {% for product in products %}
+            <label class="offer-product-option">
+                <input type="radio" name="product" value="{{ product.id }}" {% if selected_product.id == product.id %}checked{% endif %} required>
+                {% if product.image %}
+                    <img class="offer-product-thumb" src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <div class="offer-product-placeholder">No image</div>
+                {% endif %}
+                <span class="offer-product-details">
+                    <span class="offer-product-name" style="display:block">{{ product.name }}</span>
+                    <span class="offer-muted" style="display:block">Price: ₹{{ product.price|floatformat:2 }}</span>
+                    <span class="offer-muted" style="display:block">Category: {% if product.category %}{{ product.category }}{% else %}Not set{% endif %}</span>
+                    <span class="offer-muted" style="display:block">Current offer: {% if product.discount_percent %}{{ product.discount_percent }}% off{% else %}None{% endif %}</span>
+                </span>
+            </label>
+            {% empty %}
+                <p>No products available yet. Add a product before creating an offer.</p>
+            {% endfor %}
+        </div>
+        {% if products %}<button class="btn btn-primary" type="submit">Choose this product</button>{% endif %}
+    </form>
+
+    {% if selected_product %}
+    <div style="margin-top:26px;border-top:1px solid #e2e8f0;padding-top:22px">
+        <h3 style="margin:0 0 6px">2. Product information and offer</h3>
+        <p class="offer-muted">Check the product below before saving its offer.</p>
+        <div class="selected-product-info">
+            <div>
+                {% if selected_product.image %}
+                    <img class="selected-product-image" src="{{ selected_product.image.url }}" alt="{{ selected_product.name }}">
+                {% else %}
+                    <div class="selected-product-placeholder">No product image has been uploaded.</div>
+                {% endif %}
+            </div>
+            <div>
+                <h3 style="margin:0 0 12px;font-size:22px">{{ selected_product.name }}</h3>
+                <p style="margin:7px 0"><strong>Original price:</strong> ₹{{ selected_product.price|floatformat:2 }}</p>
+                <p style="margin:7px 0"><strong>Category:</strong> {% if selected_product.category %}{{ selected_product.category }}{% else %}Not set{% endif %}</p>
+                <p style="margin:7px 0"><strong>Stock:</strong> {{ selected_product.stock }}</p>
+                <p style="margin:7px 0"><strong>Current offer:</strong> {% if selected_product.discount_percent %}{{ selected_product.discount_percent }}% off{% else %}No offer{% endif %}</p>
+                <form method="post" style="margin-top:18px">
+                    {% csrf_token %}
+                    <input type="hidden" name="product" value="{{ selected_product.id }}">
+                    <label for="discount-percent" style="display:block;font-weight:700;margin-bottom:8px">Offer percentage (%)</label>
+                    <input class="input" type="number" id="discount-percent" name="discount_percent" min="0" max="90" step="1" required value="{{ selected_product.discount_percent }}" style="max-width:220px;width:100%">
+                    <p class="offer-muted">Enter 10 for 10% off or 30 for 30% off. Enter 0 to remove the offer. The allowed range is 0% to 90%.</p>
+                    <div id="offer-preview" style="margin:12px 0;font-weight:700;color:#15803d"></div>
+                    <button class="btn btn-primary" type="submit">Save Offer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="checkout-card" style="margin-top:22px;padding:22px">
+    <h3 style="margin-top:0">Current product offers</h3>
+    <p class="offer-muted">Product images are shown here so you can quickly identify each item and its discount.</p>
+    <div class="table-scroll">
+        <table class="dashboard-table">
+            <thead><tr><th>Image</th><th>Product information</th><th>Original price</th><th>Offer</th><th>Offer price</th></tr></thead>
+            <tbody>
+            {% for product in products %}
+                <tr>
+                    <td>{% if product.image %}<img class="offer-table-image" src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<div class="offer-table-placeholder">No image</div>{% endif %}</td>
+                    <td><strong>{{ product.name }}</strong><div class="offer-muted">Category: {% if product.category %}{{ product.category }}{% else %}Not set{% endif %}</div><div class="offer-muted">Stock: {{ product.stock }}</div></td>
+                    <td>₹{{ product.price|floatformat:2 }}</td>
+                    <td>{% if product.discount_percent %}<span class="offer-percent">{{ product.discount_percent }}% OFF</span>{% else %}No offer{% endif %}</td>
+                    <td>₹{{ product.discounted_price|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">No products available yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
 <script>
-(function(){const input=document.getElementById('discount-percent');const preview=document.getElementById('offer-preview');if(!input||!preview)return;const price={{ selected_product.price|default:0 }};function update(){const p=Math.max(0,Math.min(90,Number(input.value)||0));preview.textContent=p? p+'% off — new price: ₹'+(price*(100-p)/100).toFixed(2):'No offer — price stays ₹'+price.toFixed(2)}input.addEventListener('input',update);update();})();
+(function () {
+    const input = document.getElementById('discount-percent');
+    const preview = document.getElementById('offer-preview');
+    if (!input || !preview) return;
+
+    const price = {{ selected_product.price|default:0 }};
+    function updatePreview() {
+        const percentage = Math.max(0, Math.min(90, Number(input.value) || 0));
+        if (percentage > 0) {
+            preview.textContent = percentage + '% off — new price: ₹' + (price * (100 - percentage) / 100).toFixed(2);
+        } else {
+            preview.textContent = 'No offer — price stays ₹' + price.toFixed(2);
+        }
+    }
+    input.addEventListener('input', updatePreview);
+    updatePreview();
+})();
 </script>
 {% endblock %}

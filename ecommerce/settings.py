@@ -12,11 +12,9 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# ----------------------------------------------------
 # Read secret values (email password, Google keys...) from a
 # file called ".env" in the project folder, so they are never
 # written inside the code. Each line looks like:  NAME=value
-# ----------------------------------------------------
 def load_env_file():
     env_path = BASE_DIR / '.env'
     if not env_path.exists():
@@ -139,12 +137,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 
-# ----------------------------------------------------
 # Email (used to send the OTP code)
 # If EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in the .env file,
 # real emails are sent through Gmail. If they are empty, the email is
 # only PRINTED in the terminal - handy while testing.
-# ----------------------------------------------------
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 # Gmail shows app passwords with spaces; we remove them to be safe.
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
@@ -165,9 +161,7 @@ OTP_EXPIRY_MINUTES = 10     # how long a code stays valid
 OTP_RESEND_SECONDS = 30     # wait time before a new code can be requested
 OTP_MAX_ATTEMPTS = 5        # wrong tries allowed per code
 
-# ----------------------------------------------------
 # "Continue with Google" (get these from Google Cloud Console)
-# ----------------------------------------------------
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 

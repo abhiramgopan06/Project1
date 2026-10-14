@@ -1,4 +1,3 @@
-# accounts/tests.py
 # Tests for registration with email OTP and the Google button.
 # Run them with:  python manage.py test accounts
 
@@ -255,11 +254,9 @@ class PageTests(TestCase):
         self.assertEqual(self.client.get(reverse('verify_otp')).status_code, 200)
 
 
-# ----------------------------------------------------
 # Your original registration tests, updated for the new flow:
 # registering now sends an OTP first, and the account only
 # works after the OTP is verified.
-# ----------------------------------------------------
 class RegistrationTests(TestCase):
     def test_registration_creates_user_profile_and_hashes_password(self):
         response = self.client.post(

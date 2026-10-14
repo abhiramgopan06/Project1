@@ -80,18 +80,37 @@
         <h2>Ratings & Reviews</h2>
         <p style="color:#64748b;font-size:14px;margin-top:-8px">Only customers who bought and received this product can rate it, from their <a href="{% url 'order_history' %}">Order History</a>.</p>
 
-        {% for review in reviews %}
-        <article style="padding:15px 0;border-bottom:1px solid #e2e8f0">
-            <strong>{{ review.user.username }}</strong>
-            <div>
-                {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
-            </div>
-            {% if review.review %}<p>{{ review.review }}</p>{% endif %}
-            <small style="color:#64748b">{{ review.created_at|date:"d M Y" }}</small>
-        </article>
-        {% empty %}
-        <p>No reviews yet.</p>
-        {% endfor %}
+        <div class="review-table-wrap">
+            <table class="review-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td class="review-customer">{{ review.user.username }}</td>
+                        <td>
+                            <span class="review-stars">
+                                {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+                            </span>
+                            <span class="review-rating">{{ review.rating }}/5</span>
+                        </td>
+                        <td class="review-text">{% if review.review %}{{ review.review }}{% else %}<span class="review-muted">No written review</span>{% endif %}</td>
+                        <td class="review-date">{{ review.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="review-empty">No reviews yet. Be the first to review this product after your purchase.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 
     {% if recommendations %}
@@ -99,8 +118,6 @@
         <h2>You May Also Like</h2>
         <div class="product-grid">
         {% for item in recommendations %}
-            <!-- Small "you may also like" card, same compact style as
-                 the shop page cards. -->
             <article class="product-card">
                 <a class="product-image" href="{% url 'products:product_detail' item.id %}">
                     {% if item.rating_count > 0 and item.rating_average >= 4.5 %}

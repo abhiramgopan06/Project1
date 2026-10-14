@@ -1,12 +1,9 @@
-# accounts/otp_helpers.py
-# ----------------------------------------------------
 # Small helper functions for the email OTP (one-time
 # password) step of registration.
 #
 #   make_code()        -> creates a random 6 digit code
 #   send_new_otp(user) -> saves a fresh code and emails it
 #   check_otp(...)     -> checks the code the user typed
-# ----------------------------------------------------
 
 import secrets
 

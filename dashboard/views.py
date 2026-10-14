@@ -1,10 +1,8 @@
 # dashboard/views.py
-# ----------------------------------------------------
 # This is the staff-only admin dashboard: overview numbers,
 # the list of orders (with a way to update their status),
 # and the list of registered users. Only staff members
 # (people with is_staff=True) are allowed to see these pages.
-# ----------------------------------------------------
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -131,11 +129,9 @@ def dashboard_order_detail(request, order_id):
     return render(request, 'dashboard/order_detail.html', context)
 
 
-# ----------------------------------------------------
 # Product management - the "separate admin dashboard" area where
 # staff can add and edit products, without needing to go into the
 # built-in Django /admin/ site.
-# ----------------------------------------------------
 
 # Shows every product (available or not) so staff can see the
 # whole catalog and jump into add/edit.

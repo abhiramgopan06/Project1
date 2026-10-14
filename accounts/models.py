@@ -55,13 +55,11 @@ class Address(models.Model):
         return f'{self.label} - {self.user.username}'
 
 
-# ----------------------------------------------------
 # A one-time password (OTP) used to verify a new user's email.
 # There is only ONE row per user. Asking for a new OTP simply
 # replaces the old code, so old codes stop working.
 # The code itself is saved hashed (like a password), never as
 # plain text.
-# ----------------------------------------------------
 class EmailOTP(models.Model):
     user = models.OneToOneField(
         User,

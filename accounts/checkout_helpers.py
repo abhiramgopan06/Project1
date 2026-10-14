@@ -1,5 +1,3 @@
-# accounts/checkout_helpers.py
-# ----------------------------------------------------
 # One small helper shared by the two checkout flows (Cash on
 # Delivery in orders/views.py, and the demo online payment in
 # payments/views.py). It figures out which name/email/phone/
@@ -7,7 +5,6 @@
 #   - if the user picked one of their saved addresses, use that
 #   - otherwise, save whatever they typed as a brand-new address
 #     (so next time it shows up in their saved address list too)
-# ----------------------------------------------------
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email

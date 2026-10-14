@@ -1,9 +1,6 @@
 
-# accounts/views.py
-# ----------------------------------------------------
 # Handles account pages: creating a new account (register)
 # and editing your profile info (profile).
-# ----------------------------------------------------
 
 import re
 import secrets
@@ -31,7 +28,6 @@ from .otp_helpers import (
 )
 
 
-# ----------------------------------------------------
 # REGISTRATION WITH EMAIL OTP
 #
 #   1. register()    - user fills the form. The account is created
@@ -41,7 +37,6 @@ from .otp_helpers import (
 #   3. resend_otp()  - sends a fresh code if the first one did not
 #                      arrive or expired.
 #   4. The user is sent to the login page and logs in normally.
-# ----------------------------------------------------
 
 # Sign-up page: creates a new Django User (inactive) plus an empty
 # UserProfile to go with it, then emails the OTP.
@@ -204,14 +199,12 @@ class CustomLoginView(auth_views.LoginView):
         return super().form_invalid(form)
 
 
-# ----------------------------------------------------
 # CONTINUE WITH GOOGLE
 #
 #   1. google_login()    - sends the user to Google's account chooser.
 #   2. google_callback() - Google sends the user back here with a code.
 #                          We swap the code for the user's email + name,
 #                          then log them in (creating the account if new).
-# ----------------------------------------------------
 
 GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -405,12 +398,10 @@ def profile(request):
     )
 
 
-# ----------------------------------------------------
 # Saved addresses ("My Addresses"). A user enters their
 # details once and can save more than one address - handy if
 # they move somewhere temporarily and need deliveries sent
 # there for a while.
-# ----------------------------------------------------
 
 # Add a brand-new saved address for the logged-in user.
 @login_required

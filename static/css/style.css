@@ -3,12 +3,7 @@
     padding: 0;
     box-sizing: border-box;
 }
-/* ================================================================
-   Authentication / registration
-   ---------------------------------------------------------------
-   The registration page uses a wider, left-aligned card so the
-   fields are easy to scan and follow in a natural order.
-   ================================================================ */
+
 .auth-wrap {
     min-height: 75vh;
     display: flex;
@@ -571,9 +566,7 @@
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
 }
 
-/* Below this width the two hero columns (text + the little dark
-   badge) no longer have room side by side, so stack them instead -
-   text on top, badge underneath, both centered. */
+
 @media (max-width: 860px) {
     .hero {
         grid-template-columns: 1fr;
@@ -601,9 +594,8 @@
     }
 }
 
-/* ---------- Featured Products Carousel ---------- */
-/* Simple, beginner-friendly slider that shows product cards
-   and automatically swipes to the next set every 8 seconds. */
+
+
 .carousel {
     position: relative;
     display: flex;
@@ -752,11 +744,7 @@
     align-items: start;
 }
 
-/* Same idea as ".dashboard-layout" above: below this width the
-   240px filters column doesn't leave enough room for the product
-   grid, so drop the sidebar above the products instead of beside
-   them, and un-stick it since there's no room to keep it pinned
-   while scrolling a single narrow column. */
+
 @media (max-width: 860px) {
     .shop-layout {
         grid-template-columns: 1fr;
@@ -847,11 +835,7 @@
     border-color: #94a3b8;
 }
 
-/* "Add to Cart" button used on the shop page and the product
-   detail page. Kept the same square-cornered shape as the "View"
-   button (.btn-outline / .btn) next to it - same border-radius,
-   same padding/height - just filled dark instead of outlined, with
-   a small cart icon in front of the text. */
+
 .btn-add-to-cart {
     display: inline-flex;
     align-items: center;
@@ -877,9 +861,7 @@
     transform: translateY(-1px);
 }
 
-/* Shown to admins instead of the real button - looks the same but
-   does nothing when clicked. Admins manage the store, they don't
-   buy products, so this is just for visual consistency. */
+
 .btn-add-to-cart-disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -897,8 +879,7 @@
     transform: none;
 }
 
-/* The little cart icon inside the button (an inline SVG, not an
-   image file, so it stays crisp on any screen). */
+
 .btn-add-to-cart svg {
     width: 16px;
     height: 16px;
@@ -906,21 +887,15 @@
     flex-shrink: 0;
 }
 
-/* ---------- Product Cards (compact Amazon / Flipkart style) ---------- */
-/* This grid holds all the product cards on the shop page.
-   "auto-fill" + "minmax" just means: "fit as many 200px-ish cards
-   as will comfortably fit in a row" - more cards on a wide screen,
-   fewer on a narrow one. This gives the tighter, many-cards-per-row
-   look of a real shopping site instead of only 3 big cards. */
+
+
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
     gap: 22px;
 }
 
-/* One single product card: a compact square-ish picture on top
-   (with little badges sitting on it), then the product info below
-   (name, price, button, etc). */
+
 .product-card {
     display: flex;
     flex-direction: column;
@@ -932,21 +907,13 @@
     transition: all 0.2s ease;
 }
 
-/* Lift the card up a little bit when the mouse is over it. */
+
 .product-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
 }
 
-/* The product photo. Kept shorter and square-ish (not a tall
-   banner) so more cards fit on screen at once, just like the
-   compact tiles on Amazon/Flipkart. We use "object-fit: cover"
-   (not "contain") so the photo fills the whole box - many product
-   photos already have their own built-in white padding around the
-   product, and "contain" would keep that padding too, making the
-   product look tiny inside a mostly-empty box. "cover" zooms in
-   just enough to fill the frame, the same way real shopping sites
-   crop their thumbnails. */
+
 .product-image {
     position: relative;
     display: flex;
@@ -967,15 +934,12 @@
     transition: transform 0.3s ease;
 }
 
-/* Zoom the picture in a tiny bit on hover, like real shopping sites do. */
+
 .product-card:hover .product-image img {
     transform: scale(1.06);
 }
 
-/* "Bestseller" ribbon in the top-left corner of the picture.
-   The template only shows this for highly-rated products.
-   "white-space: nowrap" stops the short label from ever wrapping
-   onto a second line, even on a very narrow card. */
+
 .badge-bestseller {
     position: absolute;
     top: 10px;
@@ -991,11 +955,7 @@
     white-space: nowrap;
 }
 
-/* Small rounded label in the top-right corner of the picture,
-   e.g. to show the category, like "Electronics" or "Shoes".
-   "white-space: nowrap" keeps it on one line, and "max-width"
-   plus "text-overflow: ellipsis" stop a long category name from
-   ever overflowing off the edge of the card. */
+
 .product-image-badge {
     position: absolute;
     top: 10px;
@@ -1014,7 +974,7 @@
     text-overflow: ellipsis;
 }
 
-/* The text area under the picture. */
+
 .product-info {
     display: flex;
     flex-direction: column;
@@ -1036,17 +996,13 @@
     color: #0f172a;
     font-size: 15px;
     line-height: 1.3;
-    /* Keep the product name on a single line, like the compact
-       cards in the screenshot - a long name just gets cut off
-       with "..." instead of growing the card. */
+    
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Star rating pill that sits on the bottom-left corner of the
-   picture itself (not in the text area), the way it does on
-   big shopping sites, e.g. "4.5 ⭐". */
+
 .product-rating {
     position: absolute;
     bottom: 10px;
@@ -1103,8 +1059,7 @@
     font-weight: 800;
 }
 
-/* Little "Free delivery" line, just like on big shopping sites.
-   This is only text, it does not change how delivery works. */
+
 .product-delivery {
     margin-bottom: 8px;
     color: #16a34a;
@@ -1119,9 +1074,7 @@
     font-weight: 600;
 }
 
-/* Stacked, full-width action buttons - the same look as the
-   "Apply Filters" / "Clear" buttons in the sidebar: a solid dark
-   button on top, an outlined button underneath. */
+
 .product-actions {
     display: flex;
     flex-direction: column;
@@ -1178,9 +1131,7 @@
     border-radius: 14px;
 }
 
-/* The product picture and its info are side by side above this
-   width; below it, stack the picture on top and shrink it a bit so
-   it doesn't take up the whole screen. */
+
 @media (max-width: 800px) {
     .detail {
         grid-template-columns: 1fr;
@@ -1314,8 +1265,7 @@
     text-decoration: none;
 }
 
-/* Keep action links readable when they use the dark cart-button style.
-   The general .detail a rule above should not turn button text black. */
+
 .detail a.btn-add-to-cart {
     color: #ffffff;
 }
@@ -1449,10 +1399,7 @@ body {
     margin: 0;
 }
 
-/* On a narrow screen there isn't room for the logo, search box and
-   all the nav links on one line, so let the row wrap. Giving the
-   search box "flex-basis: 100%" makes it drop to its own full-width
-   line first, and the links then wrap to the line under that. */
+
 @media (max-width: 860px) {
     .nav-inner {
         flex-wrap: wrap;
@@ -1467,10 +1414,7 @@ body {
 }
 
 @media (max-width: 600px) {
-    /* base.html already put this class on the "Hi, {{ user.username }}"
-       link, but nothing ever defined it, so it was never actually
-       hidden. Defining it here makes it do what its name says, which
-       frees up space for the links that matter more on a small screen. */
+    
     .hide-mobile {
         display: none;
     }
@@ -1533,7 +1477,7 @@ main {
     min-height: calc(100vh - 150px);
 }
 
-/* ---------- Site Footer ---------- */
+
 .site-footer {
     margin-top: 70px;
     background: #0b0f19;
@@ -1554,8 +1498,7 @@ main {
     letter-spacing: 0.02em;
 }
 
-/* a second heading inside the same column, e.g. "Legal" under the
-   brand links, or "Follow Us" under the app store badges */
+
 .footer-subhead {
     margin-top: 26px;
 }
@@ -1573,20 +1516,12 @@ main {
     color: #ffffff;
 }
 
-/* Column 1 of the footer ("E-Commerce Shop" and "Legal"):
-   the links under both headings are shown in white.
-   base.html gives that column the extra class "footer-white".
 
-   Why ".site-footer" is at the start: further down this file there is an
-   older rule, ".container > div:first-child a", that paints links dark.
-   The footer is also a ".container", so that rule was accidentally hitting
-   this first column and making the links dark on the dark footer.
-   Starting with ".site-footer" makes this rule "stronger" so white wins. */
 .site-footer .footer-col.footer-white a {
     color: #ffffff;
 }
 
-/* white text cannot get "whiter" on hover, so we underline it instead */
+
 .site-footer .footer-col.footer-white a:hover {
     text-decoration: underline;
 }
@@ -1643,8 +1578,7 @@ main {
     color: #ffffff;
 }
 
-/* the small "Support Center" link with two overlapping avatar icons,
-   like a tiny help-desk team badge */
+
 .footer-support {
     display: flex !important;
     align-items: center;
@@ -1790,8 +1724,7 @@ main {
     padding-bottom: 0;
 }
 
-/* These are the small product pictures used on the Checkout and
-   Order Detail pages (a short list of items, not the big shop cards). */
+
 .order-item-image {
     width: 100px;
     height: 100px;
@@ -1910,9 +1843,7 @@ main {
     cursor: pointer;
 }
 
-/* Generic styling for Django's {{ form.as_p }} output (used by the
-   dashboard "Add/Edit Product" form) - same look as .form-group,
-   just matching the <p> wrapper Django generates automatically. */
+
 .checkout-form-card form p {
     margin: 0 0 18px;
 }
@@ -2153,7 +2084,7 @@ main {
     background: #f8fafc;
 }
 
-/* ---------- Order status pills ---------- */
+
 .pill {
     display: inline-block;
     padding: 5px 12px;
@@ -2190,7 +2121,7 @@ main {
     color: #991b1b;
 }
 
-/* ---------- My Orders list ---------- */
+
 .order-list {
     display: flex;
     flex-direction: column;
@@ -2238,7 +2169,7 @@ main {
     color: #0f172a;
 }
 
-/* ---------- Order status tracker ---------- */
+
 .status-tracker {
     display: flex;
     align-items: center;
@@ -2295,9 +2226,8 @@ main {
     color: #0f172a;
 }
 
-/* ---------- Admin dashboard ---------- */
-/* Simple professional dashboard layout. The styles are intentionally
-   straightforward so they are easy to understand and maintain. */
+
+
 .dashboard-layout {
     display: grid;
     grid-template-columns: 230px 1fr;
@@ -2551,10 +2481,7 @@ main {
     }
 }
 
-/* The product cards already wrap themselves nicely on smaller
-   screens thanks to "auto-fill" in .product-grid above, so we
-   only need to nudge the picture height down a little on very
-   small phones so the compact cards don't feel too tall. */
+
 @media (max-width: 560px) {
     .product-grid {
         grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -2565,7 +2492,7 @@ main {
     }
 }
 
-/* ---------- Saved Addresses ("My Addresses" page + checkout) ---------- */
+
 
 .address-list {
     display: grid;
@@ -2644,7 +2571,7 @@ main {
     line-height: 1.5;
 }
 
-/* ---------- "Rate this product" (Order Detail, after Delivered) ---------- */
+
 
 .rate-product-form {
     margin-top: 10px;
@@ -2665,9 +2592,7 @@ main {
     resize: vertical;
 }
 
-/* Pure-CSS star picker: the radios are listed 5..1 in the HTML but
-   laid out reversed, so hovering/checking a star also lights up
-   every star before it (to its left on screen). */
+
 .star-rating {
     display: inline-flex;
     flex-direction: row-reverse;
@@ -2746,7 +2671,7 @@ main {
 }
 
 
-/* ---------- Order History (product list: image, name, value, date) ---------- */
+
 .history-list {
     display: flex;
     flex-direction: column;
@@ -2831,11 +2756,8 @@ main {
     }
 }
 
-/* ---------- "Added to Cart" notification box ---------- */
-/* A small box that pops up in the corner after clicking "Add to
-   Cart", with a "Go to Cart" button. The user stays on the page
-   they were browsing and only goes to the cart if they click it -
-   they are never forced there just for adding one product. */
+
+
 
 .cart-toast {
     position: fixed;
@@ -2870,20 +2792,7 @@ main {
     font-weight: 600;
 }
 
-/* The "Go to Cart" button gets its own complete style here
-   (instead of sharing .btn / .btn-primary) so its look - and its
-   white text - can never be accidentally changed by editing those
-   shared button classes elsewhere.
 
-   Why it starts with ".messages": further down this file there is an
-   older rule, ".container > div:first-child a", that paints links
-   dark (see the note above ".site-footer .footer-col.footer-white a"
-   for the same issue). The toast is the first child div inside
-   ".container.messages", so plain ".cart-toast-btn" was losing that
-   fight and the white text was rendering as dark-on-dark, making it
-   unreadable. Starting the selector with ".messages" makes this rule
-   "stronger" so the white text wins, the same trick used for the
-   footer links. */
 .messages .cart-toast .cart-toast-btn {
     display: block;
     width: 100%;
@@ -2915,15 +2824,9 @@ main {
     }
 }
 
-/* ================================================================
-   BEGINNER-FRIENDLY RESPONSIVE DESIGN
-   ---------------------------------------------------------------
-   These rules keep the existing desktop design, then make the
-   important parts smaller and easier to use on phones and tablets.
-   Product cards intentionally use TWO columns on small screens.
-   ================================================================ */
 
-/* Tablet: give the page a little more breathing room. */
+
+
 @media (max-width: 900px) {
     .container {
         width: min(1200px, 94%);
@@ -2960,7 +2863,7 @@ main {
     }
 }
 
-/* Phones: two compact product cards in every product grid. */
+
 @media (max-width: 600px) {
     body {
         font-size: 14px;
@@ -2970,7 +2873,7 @@ main {
         width: 94%;
     }
 
-    /* ---------------- Registration ---------------- */
+    
     .register-wrap {
         padding: 24px 0 42px;
     }
@@ -3008,7 +2911,7 @@ main {
         min-height: 46px;
     }
 
-    /* ---------------- Navbar ---------------- */
+    
     .nav-inner {
         min-height: auto;
         padding: 12px 0;
@@ -3048,7 +2951,7 @@ main {
         font-size: 13px;
     }
 
-    /* ---------------- Headings / sections ---------------- */
+    
     .section-head {
         margin: 25px 0 16px;
         padding-bottom: 12px;
@@ -3062,7 +2965,7 @@ main {
         font-size: 13px;
     }
 
-    /* ---------------- Hero ---------------- */
+    
     .hero {
         margin: 20px 0 30px;
         padding: 25px 16px;
@@ -3089,7 +2992,7 @@ main {
         height: 65px;
     }
 
-    /* ---------------- Categories ---------------- */
+    
     .category-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -3110,7 +3013,7 @@ main {
         font-size: 24px;
     }
 
-    /* ---------------- Product grid ---------------- */
+    
     .product-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -3198,7 +3101,7 @@ main {
         height: 13px;
     }
 
-    /* ---------------- Featured carousel ---------------- */
+    
     .carousel {
         gap: 0;
     }
@@ -3207,7 +3110,7 @@ main {
         padding: 0 5px;
     }
 
-    /* ---------------- Filters ---------------- */
+    
     .filters {
         position: static;
         padding: 15px;
@@ -3222,7 +3125,7 @@ main {
         margin-top: 11px;
     }
 
-    /* ---------------- Product detail ---------------- */
+    
     .detail {
         margin: 18px 0 35px;
         padding: 15px;
@@ -3273,7 +3176,7 @@ main {
         font-size: 10px;
     }
 
-    /* ---------------- Cart ---------------- */
+    
     .cart-item {
         grid-template-columns: 65px 1fr;
         gap: 10px;
@@ -3311,7 +3214,7 @@ main {
         padding: 16px;
     }
 
-    /* ---------------- Auth / profile ---------------- */
+    
     .auth-wrap:not(.register-wrap) {
         min-height: auto;
         padding: 25px 0;
@@ -3332,7 +3235,7 @@ main {
         margin: 25px auto;
     }
 
-    /* ---------------- Checkout ---------------- */
+    
     .checkout-container {
         margin: 25px auto;
         padding: 0;
@@ -3347,7 +3250,7 @@ main {
         border-radius: 10px;
     }
 
-    /* ---------------- Orders / history ---------------- */
+    
     .order-row {
         padding: 14px;
         flex-direction: column;
@@ -3369,7 +3272,7 @@ main {
         flex-basis: 60px;
     }
 
-    /* ---------------- Footer ---------------- */
+    
     .site-footer {
         margin-top: 45px;
     }
@@ -3400,7 +3303,7 @@ main {
         font-size: 18px;
     }
 
-    /* ---------------- Dashboard ---------------- */
+    
     .dashboard-layout {
         padding: 20px 0 40px;
         gap: 15px;
@@ -3438,13 +3341,13 @@ main {
         font-size: 11px;
     }
 
-    /* Tables scroll horizontally instead of breaking the page. */
+    
     .table-scroll {
         max-width: 100%;
         overflow-x: auto;
     }
 
-    /* Long address/card lists remain two columns where there is room. */
+    
     .address-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
@@ -3456,8 +3359,7 @@ main {
     }
 }
 
-/* Very small phones: keep the two-column product design but make the
-   pictures and text slightly smaller so it still fits comfortably. */
+
 @media (max-width: 380px) {
     .product-grid {
         gap: 7px;
@@ -3484,9 +3386,7 @@ main {
         font-size: 10px;
     }
 
-    /* iPhone SE / very small phones: keep the footer in two compact
-       columns, matching the reference layout instead of stacking every
-       section into one long column. */
+    
     .footer-top {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 22px 14px;
@@ -3523,7 +3423,7 @@ main {
         flex: 0 0 36px;
     }
 
-    /* Keep the copyright and payment methods as two simple rows. */
+    
     .footer-bottom {
         display: block;
         padding: 16px 0;
@@ -3547,9 +3447,7 @@ main {
 }
 
 
-/* ================================================================
-   Professional beginner-friendly login page
-   ================================================================ */
+
 .login-page {
     min-height: calc(100vh - 145px);
     display: flex;
@@ -3660,7 +3558,7 @@ main {
 }
 
 
-/* Registration phone field: fixed India country code and a 10-digit number. */
+
 .phone-input-wrap .phone-country-code {
     position: absolute;
     left: 40px;
@@ -3845,12 +3743,12 @@ main {
     }
 }
 
-/* ---------- Register / OTP / Google sign-in additions ---------- */
+
 .login-card-wide {
     max-width: 560px;
 }
 
-/* First name + last name side by side */
+
 .login-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -3870,7 +3768,7 @@ main {
     font-weight: 600;
 }
 
-/* "Continue with Google" - follows Google's own button look */
+
 .login-google {
     display: flex;
     align-items: center;
@@ -3905,7 +3803,7 @@ main {
     flex-shrink: 0;
 }
 
-/* The big 6-digit code box on the verify page */
+
 .otp-input {
     width: 100%;
     min-height: 58px;
@@ -3937,7 +3835,7 @@ main {
     border-color: #dc2626;
 }
 
-/* "Didn't get the code? Resend code" */
+
 .otp-resend {
     display: flex;
     flex-wrap: wrap;
@@ -3975,7 +3873,7 @@ main {
     cursor: not-allowed;
 }
 
-/* Shown only while testing without a real email set up */
+
 .otp-dev-hint {
     display: flex;
     gap: 10px;
@@ -4006,7 +3904,7 @@ main {
     }
 }
 
-/* ---------- Wide, draggable product carousels ---------- */
+
 .product-carousel {
     display: flex;
     align-items: center;
@@ -4104,7 +4002,7 @@ main {
 }
 
 
-/* Home page image */
+
 .hero-image {
     display: flex;
     align-items: center;
@@ -4187,7 +4085,7 @@ main {
         padding: 40px 18px;
     }
 }
-/* Carousel position dots are created automatically from the number of cards. */
+
 .product-carousel {
     flex-wrap: wrap;
 }
@@ -4227,13 +4125,13 @@ main {
 }
 
 
-/* Product offer labels - simple storefront sale styling */
+
 .offer-percent{display:inline-block;background:#e8f8ed;color:#16803c;font-size:12px;font-weight:800;padding:5px 7px;border-radius:4px;white-space:nowrap}
 .offer-ribbon{position:absolute;z-index:3;top:12px;left:0;background:#e53935;color:#fff;padding:6px 10px 6px 8px;font-size:12px;font-weight:800;letter-spacing:.2px;border-radius:0 5px 5px 0;box-shadow:0 2px 6px #0002}
 .price-old{font-size:.82em;color:#8a8a8a;text-decoration:line-through;font-weight:400;margin-right:4px}
 
 
-/* Consistent button styling: readable labels and no link underlines. */
+
 .btn,
 a.btn,
 a.btn:hover,
@@ -4267,4 +4165,90 @@ a.btn:focus-visible,
 button.btn:focus-visible {
     outline: 3px solid #94a3b8;
     outline-offset: 2px;
+}
+
+
+
+.review-table-wrap {
+    margin-top: 18px;
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.review-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+}
+
+.review-table th {
+    padding: 14px 16px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.review-table td {
+    padding: 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #334155;
+    font-size: 14px;
+    vertical-align: top;
+}
+
+.review-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.review-table tbody tr:hover {
+    background: #fafcff;
+}
+
+.review-customer {
+    min-width: 120px;
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
+.review-stars {
+    color: #f59e0b;
+    white-space: nowrap;
+    letter-spacing: 1px;
+}
+
+.review-rating {
+    display: inline-block;
+    margin-left: 5px;
+    color: #64748b;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.review-text {
+    min-width: 200px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.review-date {
+    min-width: 100px;
+    color: #64748b !important;
+    white-space: nowrap;
+}
+
+.review-muted,
+.review-empty {
+    color: #64748b !important;
+}
+
+.review-empty {
+    padding: 24px !important;
+    text-align: center;
 }

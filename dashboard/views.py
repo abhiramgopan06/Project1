@@ -1,22 +1,24 @@
-                    
-                                                           
-                                                         
-                                                      
-                                                             
+# dashboard/views.py
+# This is the staff-only admin dashboard: overview numbers,
+# the list of orders (with a way to update their status),
+# and the list of registered users. Only staff members
+# (people with is_staff=True) are allowed to see these pages.
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from datetime import timedelta
 
 from orders.models import Order
-from products.models import Product
+from products.models import Product, Category
 from products.forms import ProductForm
 
 
-                                                                 
-                                                                   
+# The dashboard "home" page: a few summary numbers (total orders,
+# revenue, products, users) plus recent orders and low-stock items.
 @staff_member_required
 def dashboard_home(request):
     total_orders = Order.objects.count()
@@ -47,8 +49,8 @@ def dashboard_home(request):
     return render(request, 'dashboard/home.html', context)
 
 
-                                                            
-                                      
+# Shows every order in the store, with an optional filter by
+# status (e.g. only "Pending" orders).
 @staff_member_required
 def dashboard_orders(request):
     orders = Order.objects.select_related('user').order_by('-created_at')
@@ -68,8 +70,8 @@ def dashboard_orders(request):
     return render(request, 'dashboard/orders.html', context)
 
 
-                                                         
-                                                                
+# Lets a staff member change an order's status (e.g. from
+# "Pending" to "Shipped") using the dropdown on the orders page.
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -91,7 +93,7 @@ def update_order_status(request, order_id):
     return redirect('dashboard:orders')
 
 
-                                                                    
+# Shows every registered user and how many orders each one has made.
 @staff_member_required
 def dashboard_users(request):
     users = User.objects.annotate(
@@ -106,10 +108,10 @@ def dashboard_users(request):
     return render(request, 'dashboard/users.html', context)
 
 
-                                                                   
-                                                                   
-                                                                   
-                                                   
+# Shows everything about one single order for staff: the customer's
+# account info, the delivery address they typed in at checkout, the
+# items ordered, and a form to update the order status. This is the
+# page the "View" button on the orders table opens.
 @staff_member_required
 def dashboard_order_detail(request, order_id):
     order = get_object_or_404(
@@ -129,12 +131,12 @@ def dashboard_order_detail(request, order_id):
     return render(request, 'dashboard/order_detail.html', context)
 
 
-                                                                
-                                                                 
-                               
+# Product management - the "separate admin dashboard" area where
+# staff can add and edit products, without needing to go into the
+# built-in Django /admin/ site.
 
-                                                             
-                                       
+# Shows every product (available or not) so staff can see the
+# whole catalog and jump into add/edit.
 @staff_member_required
 def dashboard_products(request):
     products = Product.objects.select_related('category').order_by('-created_at')
@@ -147,7 +149,7 @@ def dashboard_products(request):
     return render(request, 'dashboard/products.html', context)
 
 
-                                         
+# Add a brand-new product to the catalog.
 @staff_member_required
 def dashboard_product_add(request):
     if request.method == 'POST':
@@ -169,7 +171,7 @@ def dashboard_product_add(request):
     return render(request, 'dashboard/product_form.html', context)
 
 
-                                                               
+# Edit an existing product's details, price, stock, image, etc.
 @staff_member_required
 def dashboard_product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -194,10 +196,10 @@ def dashboard_product_edit(request, product_id):
     return render(request, 'dashboard/product_form.html', context)
 
 
-                                                              
-                                                                  
-                                                                  
-                                                                  
+# Toggle a product between available and unavailable. We don't
+# offer a hard "delete" here on purpose - a product that's already
+# part of someone's order history has to stick around so those old
+# orders still make sense, so "deactivate" is the safe equivalent.
 @staff_member_required
 def dashboard_product_toggle(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -211,14 +213,39 @@ def dashboard_product_toggle(request, product_id):
     return redirect('dashboard:products')
 
 
-                                                                        
+# Staff can select any catalog product and set (or remove) its discount.
 @staff_member_required
 def dashboard_product_offers(request):
     products = Product.objects.select_related('category').order_by('name')
+    categories = Category.objects.order_by('name')
     selected_id = request.POST.get('product') or request.GET.get('product')
-    selected_product = None
-    if selected_id:
-        selected_product = Product.objects.filter(id=selected_id).first()
+    selected_product = Product.objects.filter(id=selected_id).first() if selected_id else None
+
+    if request.method == 'POST' and request.POST.get('offer_type') == 'category':
+        category_id = request.POST.get('category')
+        category = Category.objects.filter(id=category_id).first()
+        try:
+            percent = int(request.POST.get('category_discount_percent', ''))
+            duration = int(request.POST.get('duration_days', ''))
+        except (TypeError, ValueError):
+            percent, duration = -1, 0
+        if not category:
+            messages.error(request, 'Please select a category.')
+        elif percent < 0 or percent > 90:
+            messages.error(request, 'Enter a category offer from 0% to 90%.')
+        elif percent == 0:
+            category.offer_percent = 0
+            category.offer_ends_at = None
+            category.save(update_fields=['offer_percent', 'offer_ends_at'])
+            messages.success(request, f'The category offer for {category.name} was cancelled.')
+        elif duration < 1 or duration > 365:
+            messages.error(request, 'Offer duration must be between 1 and 365 days.')
+        else:
+            category.offer_percent = percent
+            category.offer_ends_at = timezone.now() + timedelta(days=duration)
+            category.save(update_fields=['offer_percent', 'offer_ends_at'])
+            messages.success(request, f'{percent}% offer set for {category.name} for {duration} day(s).')
+        return redirect('dashboard:product_offers')
 
     if request.method == 'POST':
         if not selected_product:
@@ -242,5 +269,7 @@ def dashboard_product_offers(request):
     return render(request, 'dashboard/product_offers.html', {
         'active': 'offers',
         'products': products,
+        'categories': categories,
         'selected_product': selected_product,
     })
+

@@ -1,10 +1,10 @@
-                                                            
-                                                             
-                                                            
-                                       
-                                                               
-                                                                
-                                                                
+# One small helper shared by the two checkout flows (Cash on
+# Delivery in orders/views.py, and the demo online payment in
+# payments/views.py). It figures out which name/email/phone/
+# address should be used for the order:
+#   - if the user picked one of their saved addresses, use that
+#   - otherwise, save whatever they typed as a brand-new address
+#     (so next time it shows up in their saved address list too)
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -40,8 +40,8 @@ def resolve_checkout_address(request):
     if not name or not email or not phone or not address_text:
         return None, None, None, None, 'Please fill in all customer information.'
 
-                                                                       
-                                                                       
+    # Validate email and phone on the server as well as in the browser.
+    # Browser validation can be bypassed, so the server must check too.
     try:
         validate_email(email)
     except ValidationError:
@@ -50,8 +50,8 @@ def resolve_checkout_address(request):
     if not phone.isdigit() or not 10 <= len(phone) <= 15:
         return None, None, None, None, 'Phone number must contain 10 to 15 digits only.'
 
-                                                                
-                                                                 
+    # Save this as a new address so the user only has to type it
+    # once. The first address they ever save becomes the default.
     is_first_address = not request.user.addresses.exists()
     Address.objects.create(
         user=request.user,

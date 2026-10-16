@@ -46,16 +46,22 @@ def create_payment_order(request):
                 'error': f'Not enough stock for {item.product.name}.'
             }, status=400)
 
-    amount = int(_cart_total(cart_items) * 100)
+    shipping_method = request.POST.get('shipping_method', Order.SHIPPING_FREE)
+    if shipping_method not in (Order.SHIPPING_FREE, Order.SHIPPING_EXPRESS):
+        return JsonResponse({'success': False, 'error': 'Please select a valid shipping method.'}, status=400)
+    shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
+    amount = int((_cart_total(cart_items) + shipping_cost) * 100)
     demo_order_id = f'order_DEMO{uuid.uuid4().hex[:14]}'
 
     request.session['demo_payment_order_id'] = demo_order_id
+    request.session['demo_payment_shipping_method'] = shipping_method
     request.session.modified = True
 
     return JsonResponse({
         'success': True,
         'razorpay_order_id': demo_order_id,
         'amount': amount,
+        'shipping_method': shipping_method,
         'currency': 'INR',
         'name': 'E-Commerce Store',
         'description': 'Order payment (Demo - no real charge)',
@@ -80,6 +86,11 @@ def verify_payment(request):
             'success': False,
             'error': 'Invalid demo payment reference.'
         }, status=400)
+
+    shipping_method = request.session.get('demo_payment_shipping_method', Order.SHIPPING_FREE)
+    if shipping_method not in (Order.SHIPPING_FREE, Order.SHIPPING_EXPRESS):
+        return JsonResponse({'success': False, 'error': 'Please start checkout again and select shipping.'}, status=400)
+    shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
 
     name, email, phone, address, error = resolve_checkout_address(request)
     if error:
@@ -130,7 +141,9 @@ def verify_payment(request):
                 email=email,
                 phone=phone,
                 address=address,
-                total_amount=total,
+                total_amount=total + shipping_cost,
+                shipping_method=shipping_method,
+                shipping_cost=shipping_cost,
                 payment_method='razorpay (demo)',
                 payment_status='Paid',
                 status=Order.STATUS_CONFIRMED,
@@ -153,6 +166,7 @@ def verify_payment(request):
             cart.items.all().delete()
 
         request.session.pop('demo_payment_order_id', None)
+        request.session.pop('demo_payment_shipping_method', None)
         return JsonResponse({
             'success': True,
             'redirect_url': reverse('order_success'),

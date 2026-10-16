@@ -18,5 +18,5 @@ class AddressAdmin(admin.ModelAdmin):
 class EmailOTPAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'created_at', 'attempts')
     search_fields = ('user__username', 'user__email')
-                                                                    
+    # The code is stored hashed, so there is nothing useful to edit.
     readonly_fields = ('code_hash',)

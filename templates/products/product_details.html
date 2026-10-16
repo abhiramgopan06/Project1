@@ -16,9 +16,9 @@
         </div>
 
         <div>
-            <span class="product-category">{{ product.category.name }}</span>{% if product.discount_percent %}<div style="margin:10px 0"><span class="offer-ribbon">{{ product.discount_percent }}% OFF</span></div>{% endif %}
+            <span class="product-category">{{ product.category.name }}</span>{% if product.effective_discount_percent %}<div style="margin:10px 0"><span class="offer-ribbon">{{ product.effective_discount_percent }}% OFF</span></div>{% endif %}
             <h1>{{ product.name }}</h1>
-            <div class="detail-price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
+            <div class="detail-price">{% if product.effective_discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.effective_discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
             <div style="margin:8px 0;font-size:18px">{% for i in "12345" %}{% if forloop.counter <= product.rating_average %}★{% else %}☆{% endif %}{% endfor %} <span style="font-size:14px;color:#64748b">{{ product.rating_average|floatformat:1 }}/5 ({{ product.rating_count }} reviews)</span></div>
             <p class="detail-desc">{{ product.description }}</p>
 

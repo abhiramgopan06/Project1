@@ -1,6 +1,7 @@
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
 from django.db.models import Q
 
 from .models import Product, Category
@@ -74,10 +75,15 @@ def home(request):
 
     _record_search(request, q, category, min_price, max_price)
     categories = Category.objects.all()
-    featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('-created_at')[:20]
-    recommendations = recommended_products(request.user, limit=12) if request.user.is_authenticated else []
+    product_count = products.count()
+    paginator = Paginator(products.order_by('-created_at'), 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('-created_at')[:12]
+    recommendations = recommended_products(request.user, limit=8) if request.user.is_authenticated else []
     return render(request, 'products/home.html', {
-        'products': products,
+        'products': page_obj.object_list,
+        'page_obj': page_obj,
+        'product_count': product_count,
         'featured_products': featured_products,
         'categories': categories,
         'recommendations': recommendations,

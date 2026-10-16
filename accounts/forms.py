@@ -34,7 +34,7 @@ class RegistrationForm(UserCreationForm):
             'password2',
         )
 
-                                                                
+    # Placeholder text and browser hints shown inside the boxes.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({
@@ -123,7 +123,7 @@ class LoginForm(AuthenticationForm):
     """Normal login form, plus one extra check: if the person registered
     but never entered the OTP, tell them (instead of "wrong password")."""
 
-                                                                               
+    # Set when the username + password are right but the email is not verified.
     unverified_user = None
 
     def clean(self):
@@ -133,8 +133,8 @@ class LoginForm(AuthenticationForm):
         if username and password:
             user = User.objects.filter(username=username).first()
 
-                                                                       
-                                                              
+            # An account that is not active AND still has a pending OTP
+            # is one that has not finished email verification.
             if (user is not None
                     and not user.is_active
                     and hasattr(user, 'email_otp')

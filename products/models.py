@@ -1,8 +1,15 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    offer_percent = models.PositiveSmallIntegerField(default=0)
+    offer_ends_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_offer_active(self):
+        return bool(self.offer_percent and self.offer_ends_at and self.offer_ends_at > timezone.now())
 
     def __str__(self):
         return self.name
@@ -17,7 +24,7 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-                                                                        
+    # Percentage discount set by staff from the Offer for Products page.
     discount_percent = models.PositiveSmallIntegerField(default=0)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
@@ -33,9 +40,18 @@ class Product(models.Model):
     rating_count = models.PositiveIntegerField(default=0)
 
     @property
-    def discounted_price(self):
+    def effective_discount_percent(self):
         if self.discount_percent:
-            return self.price * (100 - self.discount_percent) / 100
+            return self.discount_percent
+        if self.category and self.category.is_offer_active:
+            return self.category.offer_percent
+        return 0
+
+    @property
+    def discounted_price(self):
+        percent = self.effective_discount_percent
+        if percent:
+            return self.price * (100 - percent) / 100
         return self.price
 
     def refresh_vector(self):

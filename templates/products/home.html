@@ -16,8 +16,8 @@
         </div>
 
         <div class="hero-image">
-            {% if products.0.image %}
-                <img src="{{ products.0.image.url }}" alt="{{ products.0.name }}">
+            {% if featured_products.0.image %}
+                <img src="{{ featured_products.0.image.url }}" alt="{{ featured_products.0.name }}">
             {% else %}
                 <div class="hero-art-badge" aria-hidden="true">
                     <svg width="90" height="90" viewBox="0 0 24 24" fill="none">
@@ -47,7 +47,7 @@
 
         <div class="product-carousel-viewport">
             <div class="product-carousel-track">
-                {% for product in products|slice:":16" %}
+                {% for product in featured_products %}
                 <article class="product-card product-carousel-card">
                     <a class="product-image"
                        href="{% url 'products:product_detail' product.id %}">
@@ -55,7 +55,7 @@
                             <span class="badge-bestseller">Bestseller</span>
                         {% endif %}
 
-                        {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
+                        {% if product.effective_discount_percent %}<span class="offer-ribbon">{{ product.effective_discount_percent }}% OFF</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
 
                         {% if product.image %}
@@ -80,7 +80,7 @@
                             </span>
                         {% endif %}
 
-                        <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
+                        <div class="price">{% if product.effective_discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.effective_discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
@@ -185,7 +185,7 @@
                             <span class="badge-bestseller">Bestseller</span>
                         {% endif %}
 
-                        {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
+                        {% if product.effective_discount_percent %}<span class="offer-ribbon">{{ product.effective_discount_percent }}% OFF</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
 
                         {% if product.image %}
@@ -210,7 +210,7 @@
                             </span>
                         {% endif %}
 
-                        <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
+                        <div class="price">{% if product.effective_discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.effective_discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
@@ -254,7 +254,7 @@
     <div class="section-head" id="products">
         <div>
             <h2>All Products</h2>
-            <p>{{ products|length }} product{{ products|length|pluralize }} available</p>
+            <p>{{ product_count }} product{{ product_count|pluralize }} available</p>
         </div>
     </div>
 
@@ -332,7 +332,7 @@
                                 <span class="badge-bestseller">Bestseller</span>
                             {% endif %}
 
-                            {% if product.discount_percent %}<span class="offer-ribbon">{{ product.discount_percent }}% OFF</span>{% endif %}
+                            {% if product.effective_discount_percent %}<span class="offer-ribbon">{{ product.effective_discount_percent }}% OFF</span>{% endif %}
                         <span class="product-image-badge">{{ product.category.name }}</span>
 
                             {% if product.image %}
@@ -367,7 +367,7 @@
                                 </button>
                             </div>
 
-                            <div class="price">{% if product.discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
+                            <div class="price">{% if product.effective_discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.effective_discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                             <div class="product-delivery">🚚 Free delivery</div>
 
                             {% if product.stock > 0 and product.is_available %}
@@ -413,6 +413,28 @@
                     </article>
                     {% endfor %}
                 </div>
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="shop-pagination" aria-label="Product pages">
+                    <span class="pagination-summary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ product_count }} products)</span>
+                    <div class="pagination-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&amp;{% endif %}{% if request.GET.category %}category={{ request.GET.category|urlencode }}&amp;{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price|urlencode }}&amp;{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price|urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous page">‹</a>
+                        {% else %}<span class="disabled" aria-disabled="true">‹</span>{% endif %}
+                        {% for page_number in page_obj.paginator.page_range %}
+                            {% if page_number == page_obj.number %}
+                                <span class="active" aria-current="page">{{ page_number }}</span>
+                            {% elif page_number == 1 or page_number == page_obj.paginator.num_pages or page_number >= page_obj.number|add:"-2" and page_number <= page_obj.number|add:"2" %}
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&amp;{% endif %}{% if request.GET.category %}category={{ request.GET.category|urlencode }}&amp;{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price|urlencode }}&amp;{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price|urlencode }}&amp;{% endif %}page={{ page_number }}">{{ page_number }}</a>
+                            {% elif page_number == 2 and page_obj.number > 4 or page_number == page_obj.paginator.num_pages|add:"-1" and page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+                                <span class="pagination-ellipsis">…</span>
+                            {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&amp;{% endif %}{% if request.GET.category %}category={{ request.GET.category|urlencode }}&amp;{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price|urlencode }}&amp;{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price|urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next page">›</a>
+                        {% else %}<span class="disabled" aria-disabled="true">›</span>{% endif %}
+                    </div>
+                </nav>
+                {% endif %}
             {% else %}
                 <div class="empty no-products">
                     <div class="empty-icon">🔎</div>
@@ -480,26 +502,30 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
+        let pointerDown = false;
         let dragging = false;
         let startX = 0;
         let startScroll = 0;
 
         viewport.addEventListener("pointerdown", function (event) {
-            dragging = true;
+            if (event.target.closest("a, button, form, input, select")) return;
+            pointerDown = true;
+            dragging = false;
             startX = event.clientX;
             startScroll = viewport.scrollLeft;
-            viewport.classList.add("is-dragging");
-            viewport.setPointerCapture(event.pointerId);
         });
 
         viewport.addEventListener("pointermove", function (event) {
-            if (!dragging) {
-                return;
+            if (!pointerDown) return;
+            if (Math.abs(event.clientX - startX) > 6) {
+                dragging = true;
+                viewport.classList.add("is-dragging");
             }
-            viewport.scrollLeft = startScroll - (event.clientX - startX);
+            if (dragging) viewport.scrollLeft = startScroll - (event.clientX - startX);
         });
 
         function stopDragging() {
+            pointerDown = false;
             dragging = false;
             viewport.classList.remove("is-dragging");
         }

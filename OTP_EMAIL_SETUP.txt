@@ -1,0 +1,24 @@
+EMAIL OTP SETUP FOR SHOP EASY
+=============================
+
+Registration already uses a six-digit email OTP. A new account remains inactive until the code is entered correctly, which verifies access to the registered email address. The code expires after 10 minutes and has a limit on incorrect attempts.
+
+SENDER EMAIL
+------------
+The intended sender is abhiramgopan06@gmail.com. To actually send email from this account, you must configure its Gmail App Password on your own computer. The project cannot send through Gmail using only the email address.
+
+1. Sign in to the Google account for abhiramgopan06@gmail.com.
+2. Enable 2-Step Verification if it is not already enabled.
+3. In Google Account Security, create an App Password for this project. Use the 16-character App Password, not your normal Gmail password. If Google does not offer App Passwords for this account, follow Google's account requirements or use another SMTP provider.
+4. In the same folder as manage.py, copy .env.example to a file named .env.
+5. Keep EMAIL_HOST_USER=abhiramgopan06@gmail.com and set EMAIL_HOST_PASSWORD to the App Password (spaces can be omitted).
+6. Save .env, stop the server with Ctrl+C, and restart it using python manage.py runserver.
+7. Register using an email inbox you can access. The OTP should arrive in that inbox; check Spam/Junk if needed.
+
+IMPORTANT
+---------
+- Never put your Gmail password or App Password in source code, chat, or GitHub. The .env file is ignored by Git.
+- If EMAIL_HOST_PASSWORD is empty, the project deliberately uses Django's console email backend, so the OTP appears in the terminal. That is local test mode, not real email delivery.
+- This verifies control of the email inbox, not a person's government identity or real-world identity. Do not describe email OTP as full identity verification.
+- If email delivery fails, check the runserver terminal for the SMTP error and confirm the App Password and internet connection.
+- Run python manage.py migrate and python manage.py test accounts after extracting the project.

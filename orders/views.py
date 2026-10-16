@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Avg, F
+from decimal import Decimal
 
 from cart.models import Cart
 from products.models import Product, ProductReview
@@ -23,6 +24,11 @@ def checkout(request):
         return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': 0, 'addresses': addresses})
 
     total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    shipping_method = request.POST.get('shipping_method', Order.SHIPPING_FREE)
+    if shipping_method not in (Order.SHIPPING_FREE, Order.SHIPPING_EXPRESS):
+        shipping_method = Order.SHIPPING_FREE
+    shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
+    grand_total = total + shipping_cost
 
     if request.method == 'POST':
         payment = request.POST.get('payment', 'cod')
@@ -31,13 +37,16 @@ def checkout(request):
         if error:
             return render(request, 'orders/checkout.html', {
                 'cart_items': cart_items, 'total': total, 'addresses': addresses,
-                'error': error
+                'error': error, 'shipping_method': shipping_method,
+                'shipping_cost': shipping_cost, 'grand_total': grand_total
             })
 
         if payment == 'online':
             return render(request, 'orders/checkout.html', {
                 'cart_items': cart_items, 'total': total, 'addresses': addresses,
-                'error': 'Please use the Online Payment button to complete payment.'
+                'error': 'Please use the Online Payment button to complete payment.',
+                'shipping_method': shipping_method, 'shipping_cost': shipping_cost,
+                'grand_total': grand_total
             })
 
         try:
@@ -55,7 +64,8 @@ def checkout(request):
                     return render(request, 'orders/checkout.html', {
                         'cart_items': cart.items.select_related('product'), 'total': 0,
                         'addresses': addresses,
-                        'error': 'Your cart is empty.'
+                        'error': 'Your cart is empty.', 'shipping_method': shipping_method,
+                        'shipping_cost': shipping_cost, 'grand_total': grand_total
                     })
 
                 for item in locked_items:
@@ -69,6 +79,7 @@ def checkout(request):
                     locked_products[item.product_id].discounted_price * item.quantity
                     for item in locked_items
                 )
+                current_shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
 
                 order = Order.objects.create(
                     user=request.user,
@@ -76,7 +87,9 @@ def checkout(request):
                     email=email,
                     phone=phone,
                     address=address,
-                    total_amount=current_total,
+                    total_amount=current_total + current_shipping_cost,
+                    shipping_method=shipping_method,
+                    shipping_cost=current_shipping_cost,
                     payment_method='cod',
                     payment_status='Pending',
                     status='Pending'
@@ -102,12 +115,17 @@ def checkout(request):
                 'cart_items': cart.items.select_related('product'),
                 'total': total,
                 'addresses': addresses,
-                'error': str(exc),
+                'error': str(exc), 'shipping_method': shipping_method,
+                'shipping_cost': shipping_cost, 'grand_total': grand_total
             })
 
         return redirect('order_success')
 
-    return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': total, 'addresses': addresses})
+    return render(request, 'orders/checkout.html', {
+        'cart_items': cart_items, 'total': total, 'addresses': addresses,
+        'shipping_method': shipping_method, 'shipping_cost': shipping_cost,
+        'grand_total': grand_total,
+    })
 
 
 @login_required

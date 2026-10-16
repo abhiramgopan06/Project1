@@ -11,9 +11,9 @@ class ProductReviewForm(forms.ModelForm):
         }
 
 
-                                                                
-                                                                
-                                
+# Used by the staff dashboard to add and edit products - this is
+# the "separate admin dashboard" product form (as opposed to the
+# built-in Django /admin/ site).
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product

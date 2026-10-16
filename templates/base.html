@@ -25,7 +25,7 @@
             {% if user.is_authenticated %}
                 {# Admins (staff) manage the store - they don't buy products or place orders themselves, so no Cart or My Orders link for them. #}
                 {% if not user.is_staff %}
-                    <a class="icon-link" href="{% url 'cart:cart' %}">🛒 Cart <span class="badge">{{ cart_count }}</span></a>
+                    <a class="icon-link" href="{% url 'cart:cart' %}">🛒 Cart{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
                     <a href="{% url 'order_history' %}">My Orders</a>
                 {% endif %}
                 {% if user.is_staff %}
@@ -146,6 +146,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });*/
+</script>
+<script>
+(function () {
+    const key = 'shopPageScrollY';
+    document.addEventListener('submit', function (event) {
+        const form = event.target;
+        if (form.matches('form') && !form.classList.contains('nav-search')) {
+            sessionStorage.setItem(key, String(window.scrollY));
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        const savedPosition = sessionStorage.getItem(key);
+        if (savedPosition !== null) {
+            sessionStorage.removeItem(key);
+            window.scrollTo(0, Number(savedPosition) || 0);
+        }
+    });
+})();
 </script>
 </body>
 </html>

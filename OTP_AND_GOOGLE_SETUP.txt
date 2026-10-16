@@ -36,11 +36,11 @@ SENDING REAL EMAILS (Gmail)
 2. Create an "App password" for it (Google Account -> Security -> App passwords).
 3. Copy .env.example to a new file named .env  (same folder as manage.py)
 4. Open the new .env file in a text editor and fill in:
-      EMAIL_HOST_USER=yourgmail@gmail.com
+      EMAIL_HOST_USER=abhiramgopan06@gmail.com
       EMAIL_HOST_PASSWORD=your16letterapppassword
    Use Google's 16-character App Password, NOT your normal Gmail password.
    Remove spaces from the App Password if you copied them from Google.
-5. Restart runserver. OTP emails now go to the address the user registered with.
+5. Restart runserver. OTP emails now go from abhiramgopan06@gmail.com to the address the user registered with. See OTP_EMAIL_SETUP.txt for the beginner-friendly steps.
 
 NEVER upload the .env file to GitHub (it is already listed in .gitignore).
 

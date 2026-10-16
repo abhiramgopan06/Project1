@@ -31,6 +31,24 @@ class Order(models.Model):
         decimal_places=2
     )
 
+    SHIPPING_FREE = 'free'
+    SHIPPING_EXPRESS = 'express'
+    SHIPPING_CHOICES = [
+        (SHIPPING_FREE, 'Free Shipping'),
+        (SHIPPING_EXPRESS, 'Express Shipping'),
+    ]
+
+    shipping_method = models.CharField(
+        max_length=20,
+        choices=SHIPPING_CHOICES,
+        default=SHIPPING_FREE
+    )
+    shipping_cost = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0
+    )
+
     payment_method = models.CharField(
         max_length=50,
         default='cod'
@@ -69,10 +87,10 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
-                                                             
+    # True when the customer cancelled just this one product.
     is_cancelled = models.BooleanField(default=False)
 
-                                                                             
+    # price x quantity for this line - shown as the "value" in order history.
     @property
     def line_total(self):
         return self.price * self.quantity
@@ -81,10 +99,10 @@ class OrderItem(models.Model):
         return f"{self.product.name} x {self.quantity}"
 
 
-                                                           
-                                                                 
-                                                                  
-                                  
+# A customer's request to return or replace one item from a
+# delivered order. Only created if the product allows that option
+# (Product.is_returnable / is_replaceable) - the view that creates
+# these checks that before saving.
 class ReturnReplaceRequest(models.Model):
     REQUEST_RETURN = 'Return'
     REQUEST_REPLACE = 'Replace'
@@ -106,8 +124,8 @@ class ReturnReplaceRequest(models.Model):
         (STATUS_COMPLETED, 'Completed'),
     ]
 
-                                                               
-                                                        
+    # One request per order item - a customer can't ask to both
+    # return AND replace the same item at the same time.
     order_item = models.OneToOneField(
         OrderItem,
         on_delete=models.CASCADE,

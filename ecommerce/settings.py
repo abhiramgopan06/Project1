@@ -12,9 +12,9 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-                                                            
-                                                             
-                                                            
+# Read secret values (email password, Google keys...) from a
+# file called ".env" in the project folder, so they are never
+# written inside the code. Each line looks like:  NAME=value
 def load_env_file():
     env_path = BASE_DIR / '.env'
     if not env_path.exists():
@@ -26,7 +26,7 @@ def load_env_file():
             continue
         name, value = line.split('=', 1)
         value = value.strip().strip('"').strip("'")
-                                                                    
+        # A value already set in the system wins over the .env file.
         os.environ.setdefault(name.strip(), value)
 
 
@@ -137,12 +137,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 
-                                   
-                                                                      
-                                                                     
-                                                     
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-                                                                   
+# Email (used to send the OTP code)
+# OTP emails use the configured Gmail sender. Gmail requires an App Password;
+# if it is not configured, Django uses the terminal backend for local testing.
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'abhiramgopan06@gmail.com').strip()
+# Gmail shows app passwords with spaces; we remove them to be safe.
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
@@ -154,14 +153,14 @@ if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     DEFAULT_FROM_EMAIL = f'E-Commerce Shop <{EMAIL_HOST_USER}>'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'E-Commerce Shop <noreply@ecommerce.local>'
+    DEFAULT_FROM_EMAIL = f'E-Commerce Shop <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'E-Commerce Shop <noreply@ecommerce.local>'
 
-           
-OTP_EXPIRY_MINUTES = 10                                  
-OTP_RESEND_SECONDS = 30                                                   
-OTP_MAX_ATTEMPTS = 5                                      
+# OTP rules
+OTP_EXPIRY_MINUTES = 10     # how long a code stays valid
+OTP_RESEND_SECONDS = 30     # wait time before a new code can be requested
+OTP_MAX_ATTEMPTS = 5        # wrong tries allowed per code
 
-                                                              
+# "Continue with Google" (get these from Google Cloud Console)
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
@@ -175,8 +174,8 @@ LOGOUT_REDIRECT_URL = '/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
-                                                                       
-                                                                 
+# Real payment credentials are intentionally not stored in source code.
+# The current checkout uses a clearly labelled demo payment flow.
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 

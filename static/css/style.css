@@ -4254,7 +4254,7 @@ button.btn:focus-visible {
 }
 
 
-
+/* Checkout page layout and responsive styling */
 .checkout-container {
     max-width: 1180px;
     margin: 34px auto 60px;
@@ -4448,4 +4448,176 @@ button.btn:focus-visible {
         height: 58px;
         flex-basis: 58px;
     }
+}
+
+/* Homepage product actions and pagination */
+.product-carousel-card a,
+.product-carousel-card button,
+.product-carousel-card .btn,
+.product-carousel-card .btn-add-to-cart,
+.product-actions a,
+.product-actions button,
+.shop-pagination a {
+    text-decoration: none !important;
+}
+
+.product-carousel-card .product-actions a,
+.product-carousel-card .product-actions button,
+.product-carousel-card .product-actions form {
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.product-carousel-card .product-image {
+    display: block;
+}
+
+.product-carousel-card .product-info {
+    display: flex;
+    flex-direction: column;
+    min-height: 285px;
+}
+
+.product-carousel-card .product-actions {
+    margin-top: auto;
+}
+
+.product-carousel-card .product-actions .btn-add-to-cart,
+.product-carousel-card .product-actions .btn {
+    min-height: 48px;
+}
+
+.shop-pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0 40px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.pagination-summary {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.pagination-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pagination-links a,
+.pagination-links span {
+    display: inline-flex;
+    min-width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border: 1px solid #dbe3ee;
+    border-radius: 10px;
+    background: #fff;
+    color: #172033;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.pagination-links a:hover,
+.pagination-links .active {
+    background: #111827;
+    border-color: #111827;
+    color: #fff;
+}
+
+.pagination-links .disabled {
+    color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.pagination-links .pagination-ellipsis {
+    border-color: transparent;
+    background: transparent;
+}
+
+/* Keep recommendation cards compact so the shop area begins sooner. */
+.product-carousel[aria-label="Recommended for You"] .product-carousel-card {
+    flex-basis: 235px;
+    width: 235px;
+}
+
+.product-carousel[aria-label="Recommended for You"] .product-carousel-card .product-image {
+    height: 185px;
+}
+
+.product-carousel[aria-label="Recommended for You"] {
+    margin-bottom: 28px;
+}
+
+
+/* Checkout shipping options and black primary action */
+.shipping-method-section {
+    border: 0;
+    padding: 0;
+    margin: 24px 0 20px;
+    min-width: 0;
+}
+.shipping-method-section legend {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #111827;
+}
+.shipping-method-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.shipping-method-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #d8dee8;
+    border-radius: 10px;
+    padding: 14px 12px;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color .18s ease, background .18s ease;
+}
+.shipping-method-option:has(input:checked) {
+    border-color: #15803d;
+    background: #f0fdf4;
+}
+.shipping-method-option input {
+    margin: 0;
+    flex: 0 0 auto;
+    accent-color: #15803d;
+}
+.shipping-option-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.shipping-option-copy strong { font-size: 13px; color: #111827; }
+.shipping-option-copy small { font-size: 11px; color: #64748b; }
+.shipping-option-price {
+    margin-left: auto;
+    font-size: 12px;
+    white-space: nowrap;
+    color: #111827;
+}
+.place-order-btn, .place-order-btn:hover, .place-order-btn:focus {
+    background: #111111;
+    color: #fff;
+}
+.place-order-btn:hover { background: #262626; }
+@media (max-width: 560px) {
+    .shipping-method-options { grid-template-columns: 1fr; }
 }

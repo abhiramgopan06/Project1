@@ -1,4 +1,4 @@
-                                              
+# Generated manually for Razorpay integration.
 from django.db import migrations
 
 

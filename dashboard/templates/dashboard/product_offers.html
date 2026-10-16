@@ -9,6 +9,22 @@
     <a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a>
 </div>
 
+<section class="offer-page-card category-offer-card">
+    <h3 style="margin:0 0 6px">Weekend and category-wide offers</h3>
+    <p class="offer-muted">Choose a category to apply a temporary discount to all products in it. The offer expires automatically after the selected duration.</p>
+    <form method="post" class="category-offer-form">
+        {% csrf_token %}
+        <input type="hidden" name="offer_type" value="category">
+        <div class="category-fields">
+            <div><label for="offer-category">Category</label><select id="offer-category" name="category" required><option value="">Select category</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></div>
+            <div><label for="category-discount">Discount (%)</label><input id="category-discount" name="category_discount_percent" type="number" min="0" max="90" value="10" required></div>
+            <div><label for="duration-days">Duration (days)</label><input id="duration-days" name="duration_days" type="number" min="1" max="365" value="2" required><small>Example: 2 days for a weekend offer.</small></div>
+        </div>
+        <div class="category-actions"><button class="btn btn-primary" type="submit">Save Category Offer</button><p class="offer-muted">Enter 0% to cancel the offer for the selected category.</p></div>
+    </form>
+    <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Offer</th><th>Expires</th><th>Status</th></tr></thead><tbody>{% for category in categories %}<tr><td><strong>{{ category.name }}</strong></td><td>{% if category.is_offer_active %}{{ category.offer_percent }}% off{% else %}No active offer{% endif %}</td><td>{% if category.offer_ends_at %}{{ category.offer_ends_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td><td>{% if category.is_offer_active %}<span class="offer-percent">Active</span>{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No categories available.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+
 <style>
     /* Simple, reusable styles for the product-offer page */
     .offer-page-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 18px; padding: 28px; margin: 22px 0; box-shadow: 0 8px 24px rgba(15,23,42,.045); }
@@ -39,7 +55,14 @@
     .checkout-card .dashboard-table th { white-space: nowrap; }
     .checkout-card .dashboard-table td { vertical-align: middle; padding-top: 15px; padding-bottom: 15px; }
     .offer-percent { display: inline-block; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 800; padding: 6px 9px; border-radius: 999px; white-space: nowrap; }
-    @media (max-width: 760px) { .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
+    .category-fields { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px; }
+    .category-fields label { display:block;font-weight:700;margin-bottom:8px; }
+    .category-fields input,.category-fields select { width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:9px;padding:9px 12px;background:#fff; }
+    .category-fields small { display:block;color:#64748b;margin-top:6px;line-height:1.4; }
+    .category-actions { display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:18px; }
+    .category-actions .offer-muted { margin:0; }
+    .offer-cancel-link { display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:10px;padding:11px 18px;font-weight:700;color:#334155;text-decoration:none;margin-left:8px; }
+    @media (max-width: 760px) { .category-fields { grid-template-columns:1fr; } .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
     @media (max-width: 420px) { .offer-product-thumb, .offer-product-placeholder { width: 76px; height: 88px; } .offer-page-card { padding: 14px; } .selected-product-info h3 { font-size: 21px !important; } }
 </style>
 
@@ -61,7 +84,7 @@
                     <span class="offer-product-name" style="display:block">{{ product.name }}</span>
                     <span class="offer-muted" style="display:block">Price: ₹{{ product.price|floatformat:2 }}</span>
                     <span class="offer-muted" style="display:block">Category: {% if product.category %}{{ product.category }}{% else %}Not set{% endif %}</span>
-                    <span class="offer-muted" style="display:block">Current offer: {% if product.discount_percent %}{{ product.discount_percent }}% off{% else %}None{% endif %}</span>
+                    <span class="offer-muted" style="display:block">Current offer: {% if product.effective_discount_percent %}{{ product.effective_discount_percent }}% off{% else %}None{% endif %}</span>
                 </span>
             </label>
             {% empty %}
@@ -88,7 +111,7 @@
                 <p style="margin:7px 0"><strong>Original price:</strong> ₹{{ selected_product.price|floatformat:2 }}</p>
                 <p style="margin:7px 0"><strong>Category:</strong> {% if selected_product.category %}{{ selected_product.category }}{% else %}Not set{% endif %}</p>
                 <p style="margin:7px 0"><strong>Stock:</strong> {{ selected_product.stock }}</p>
-                <p style="margin:7px 0"><strong>Current offer:</strong> {% if selected_product.discount_percent %}{{ selected_product.discount_percent }}% off{% else %}No offer{% endif %}</p>
+                <p style="margin:7px 0"><strong>Current offer:</strong> {% if selected_product.effective_discount_percent %}{{ selected_product.effective_discount_percent }}% off{% else %}No offer{% endif %}</p>
                 <form method="post" style="margin-top:18px">
                     {% csrf_token %}
                     <input type="hidden" name="product" value="{{ selected_product.id }}">
@@ -97,6 +120,7 @@
                     <p class="offer-muted">Enter 10 for 10% off or 30 for 30% off. Enter 0 to remove the offer. The allowed range is 0% to 90%.</p>
                     <div id="offer-preview" style="margin:12px 0;font-weight:700;color:#15803d"></div>
                     <button class="btn btn-primary" type="submit">Save Offer</button>
+                    <a class="offer-cancel-link" href="{% url 'dashboard:product_offers' %}">Cancel</a>
                 </form>
             </div>
         </div>
@@ -116,7 +140,7 @@
                     <td>{% if product.image %}<img class="offer-table-image" src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<div class="offer-table-placeholder">No image</div>{% endif %}</td>
                     <td><strong>{{ product.name }}</strong><div class="offer-muted">Category: {% if product.category %}{{ product.category }}{% else %}Not set{% endif %}</div><div class="offer-muted">Stock: {{ product.stock }}</div></td>
                     <td>₹{{ product.price|floatformat:2 }}</td>
-                    <td>{% if product.discount_percent %}<span class="offer-percent">{{ product.discount_percent }}% OFF</span>{% else %}No offer{% endif %}</td>
+                    <td>{% if product.effective_discount_percent %}<span class="offer-percent">{{ product.effective_discount_percent }}% OFF</span>{% else %}No offer{% endif %}</td>
                     <td>₹{{ product.discounted_price|floatformat:2 }}</td>
                 </tr>
             {% empty %}

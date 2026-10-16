@@ -127,6 +127,8 @@
                 <h2 class="section-title">Payment</h2>
                 <div class="summary-row"><span>Method</span><span>{{ order.payment_method }}</span></div>
                 <div class="summary-row"><span>Payment Status</span><span>{{ order.payment_status }}</span></div>
+                <div class="summary-row"><span>Shipping Method</span><span>{{ order.get_shipping_method_display }}</span></div>
+                <div class="summary-row"><span>Shipping Cost</span><span>{% if order.shipping_cost %}₹{{ order.shipping_cost|floatformat:2 }}{% else %}FREE{% endif %}</span></div>
                 <div class="summary-row total"><span>Total</span><span>₹{{ order.total_amount|floatformat:2 }}</span></div>
             </div>
             <a href="{% url 'order_history' %}" class="back-cart">← Back to My Orders</a>

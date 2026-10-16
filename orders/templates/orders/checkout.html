@@ -6,7 +6,14 @@
 <div class="checkout-container">
     <div class="checkout-header">
         <h1>Checkout</h1>
-        <p>Review your order and complete your purchase securely.</p>
+        <p>Confirm your delivery details and complete your purchase securely.</p>
+        <div class="checkout-steps" aria-label="Checkout progress">
+            <span class="checkout-step is-complete"><span>✓</span> Cart</span>
+            <span class="checkout-step-line"></span>
+            <span class="checkout-step is-active"><span>2</span> Checkout</span>
+            <span class="checkout-step-line"></span>
+            <span class="checkout-step"><span>3</span> Confirmation</span>
+        </div>
     </div>
 
     {% if error %}
@@ -16,24 +23,6 @@
     {% if cart_items %}
     <div class="checkout-layout">
         <div>
-            <div class="checkout-card">
-                <h2 class="section-title">Order Summary</h2>
-                {% for item in cart_items %}
-                <div class="product-item">
-                    {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" class="order-item-image" alt="{{ item.product.name }}">
-                    {% else %}
-                        <div class="order-item-image order-item-image-empty"></div>
-                    {% endif %}
-                    <div class="order-item-info">
-                        <div class="product-name">{{ item.product.name }}</div>
-                        <div class="product-price">Price: ₹{{ item.product.price }}</div>
-                        <div class="product-quantity">Quantity: {{ item.quantity }}</div>
-                    </div>
-                    <div class="product-subtotal">₹{{ item.total_price|floatformat:2 }}</div>
-                </div>
-                {% endfor %}
-            </div>
 
             <div class="checkout-card checkout-form-card">
                 <h2 class="section-title">Customer Information</h2>
@@ -107,8 +96,28 @@
             </div>
         </div>
 
-        <aside>
-            <div class="checkout-card">
+        <aside class="checkout-sidebar">
+            <div class="checkout-card checkout-order-summary">
+                <h2 class="section-title">Order Summary</h2>
+                <div class="checkout-order-items">
+                    {% for item in cart_items %}
+                    <div class="product-item">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" class="order-item-image" alt="{{ item.product.name }}">
+                        {% else %}
+                            <div class="order-item-image order-item-image-empty"></div>
+                        {% endif %}
+                        <div class="order-item-info">
+                            <div class="product-name">{{ item.product.name }}</div>
+                            <div class="product-price">Price: ₹{{ item.product.price }}</div>
+                            <div class="product-quantity">Quantity: {{ item.quantity }}</div>
+                        </div>
+                        <div class="product-subtotal">₹{{ item.total_price|floatformat:2 }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="checkout-card checkout-price-card">
                 <h2 class="section-title">Price Details</h2>
                 <div class="summary-row"><span>Subtotal</span><span>₹{{ total|floatformat:2 }}</span></div>
                 <div class="summary-row"><span>Delivery</span><span class="free">FREE</span></div>

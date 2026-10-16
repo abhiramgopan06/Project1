@@ -1,5 +1,5 @@
-# Tests for registration with email OTP and the Google button.
-# Run them with:  python manage.py test accounts
+                                                              
+                                                
 
 import re
 from datetime import timedelta
@@ -59,7 +59,7 @@ class RegistrationOtpTests(TestCase):
         self.assertTrue(user.is_active)
         self.assertFalse(EmailOTP.objects.filter(user=user).exists())
 
-        # and now the user can really log in
+                                            
         logged_in = self.client.login(username='newuser', password='Str0ng!Pass#2026')
         self.assertTrue(logged_in)
 
@@ -101,13 +101,13 @@ class RegistrationOtpTests(TestCase):
         self.register()
         response = self.client.post(reverse('resend_otp'), follow=True)
         self.assertContains(response, 'Please wait')
-        self.assertEqual(len(mail.outbox), 1)      # no second email
+        self.assertEqual(len(mail.outbox), 1)                       
 
     def test_resend_sends_new_code_and_old_code_stops_working(self):
         self.register()
         old_code = code_from_last_email()
 
-        # pretend 31 seconds have passed
+                                        
         EmailOTP.objects.update(created_at=timezone.now() - timedelta(seconds=31))
         response = self.client.post(reverse('resend_otp'), follow=True)
         self.assertContains(response, 'new code has been sent')
@@ -254,9 +254,9 @@ class PageTests(TestCase):
         self.assertEqual(self.client.get(reverse('verify_otp')).status_code, 200)
 
 
-# Your original registration tests, updated for the new flow:
-# registering now sends an OTP first, and the account only
-# works after the OTP is verified.
+                                                             
+                                                          
+                                  
 class RegistrationTests(TestCase):
     def test_registration_creates_user_profile_and_hashes_password(self):
         response = self.client.post(
@@ -272,7 +272,7 @@ class RegistrationTests(TestCase):
             },
         )
 
-        # Now goes to the OTP page (not straight to login).
+                                                           
         self.assertRedirects(response, reverse('verify_otp'))
         user = User.objects.get(username='testcustomer')
         self.assertFalse(user.is_active)
@@ -325,7 +325,7 @@ class RegistrationTests(TestCase):
             },
         )
 
-        # Verify the email with the code that was "sent".
+                                                         
         self.client.post(reverse('verify_otp'), {'otp': code_from_last_email()})
 
         response = self.client.post(

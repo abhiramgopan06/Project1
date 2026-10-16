@@ -1,6 +1,6 @@
 
-# Handles account pages: creating a new account (register)
-# and editing your profile info (profile).
+                                                          
+                                          
 
 import re
 import secrets
@@ -28,24 +28,24 @@ from .otp_helpers import (
 )
 
 
-# REGISTRATION WITH EMAIL OTP
-#
-#   1. register()    - user fills the form. The account is created
-#                      but kept INACTIVE, and an OTP is emailed.
-#   2. verify_otp()  - user types the code. If it is right the
-#                      account becomes active.
-#   3. resend_otp()  - sends a fresh code if the first one did not
-#                      arrive or expired.
-#   4. The user is sent to the login page and logs in normally.
+                             
+ 
+                                                                  
+                                                                
+                                                              
+                                              
+                                                                  
+                                         
+                                                               
 
-# Sign-up page: creates a new Django User (inactive) plus an empty
-# UserProfile to go with it, then emails the OTP.
+                                                                  
+                                                 
 def register(request):
     if request.method == 'POST':
 
-        # If someone registered earlier but never entered the OTP, their
-        # half-finished account would block the same username/email.
-        # Remove only those unverified leftovers so they can try again.
+                                                                        
+                                                                    
+                                                                       
         typed_username = request.POST.get('username', '').strip()
         typed_email = request.POST.get('email', '').strip()
         if typed_username or typed_email:
@@ -60,7 +60,7 @@ def register(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False      # cannot log in until the OTP is verified
+            user.is_active = False                                               
             user.save()
 
             UserProfile.objects.create(
@@ -70,7 +70,7 @@ def register(request):
 
             email_sent = send_new_otp(user)
 
-            # Remember who is verifying (stored in the session, not the URL).
+                                                                             
             request.session['otp_user_id'] = user.id
 
             if email_sent:
@@ -96,8 +96,8 @@ def register(request):
     )
 
 
-# Find the user who is currently verifying (from the session).
-# Returns (user, otp) or (None, None) if there is nothing to verify.
+                                                              
+                                                                    
 def get_pending_user(request):
     user_id = request.session.get('otp_user_id')
     if not user_id:
@@ -111,7 +111,7 @@ def get_pending_user(request):
     return user, user.email_otp
 
 
-# The page where the user types the OTP.
+                                        
 def verify_otp(request):
     user, otp = get_pending_user(request)
 
@@ -132,7 +132,7 @@ def verify_otp(request):
             if is_ok:
                 user.is_active = True
                 user.save(update_fields=['is_active'])
-                otp.delete()                       # the code is used up
+                otp.delete()                                            
                 request.session.pop('otp_user_id', None)
 
                 messages.success(
@@ -146,13 +146,13 @@ def verify_otp(request):
         'error': error,
         'resend_wait': resend_wait_seconds(otp),
         'expiry_minutes': settings.OTP_EXPIRY_MINUTES,
-        # True while real email is not set up: the code is only printed in
-        # the terminal, so we tell the developer where to look.
+                                                                          
+                                                               
         'email_is_test_mode': settings.EMAIL_BACKEND.endswith('console.EmailBackend') and settings.DEBUG,
     })
 
 
-# "Resend code" button. Only accepts POST (a button press, not a link).
+                                                                       
 @require_POST
 def resend_otp(request):
     user, otp = get_pending_user(request)
@@ -180,8 +180,8 @@ def resend_otp(request):
     return redirect('verify_otp')
 
 
-# Login page. Same as Django's login, but if the user never verified
-# their email we send them to the OTP page instead of showing an error.
+                                                                    
+                                                                       
 class CustomLoginView(auth_views.LoginView):
     template_name = 'accounts/login.html'
     authentication_form = LoginForm
@@ -199,12 +199,12 @@ class CustomLoginView(auth_views.LoginView):
         return super().form_invalid(form)
 
 
-# CONTINUE WITH GOOGLE
-#
-#   1. google_login()    - sends the user to Google's account chooser.
-#   2. google_callback() - Google sends the user back here with a code.
-#                          We swap the code for the user's email + name,
-#                          then log them in (creating the account if new).
+                      
+ 
+                                                                      
+                                                                       
+                                                                        
+                                                                          
 
 GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -219,7 +219,7 @@ def google_redirect_uri(request):
     return request.build_absolute_uri(reverse('google_callback'))
 
 
-# Step 1: open the Google "choose an account" screen.
+                                                     
 def google_login(request):
     if not google_is_configured():
         messages.error(
@@ -229,8 +229,8 @@ def google_login(request):
         )
         return redirect('login')
 
-    # "state" is a random value we check later to be sure the answer
-    # really came from the sign-in we started.
+                                                                    
+                                              
     state = secrets.token_urlsafe(24)
     request.session['google_state'] = state
 
@@ -240,13 +240,13 @@ def google_login(request):
         'response_type': 'code',
         'scope': 'openid email profile',
         'state': state,
-        'prompt': 'select_account',    # always show the account chooser
+        'prompt': 'select_account',                                     
     })
     return redirect(f'{GOOGLE_AUTH_URL}?{query}')
 
 
-# Make a username from an email, e.g. "abhi.ram@gmail.com" -> "abhi.ram"
-# and add a number if somebody already has it.
+                                                                        
+                                              
 def make_unique_username(email):
     base = re.sub(r'[^A-Za-z0-9._]', '', email.split('@')[0]) or 'user'
     base = base[:140]
@@ -259,12 +259,12 @@ def make_unique_username(email):
     return username
 
 
-# Step 2: Google sends the user back here.
+                                          
 def google_callback(request):
     if not google_is_configured():
         return redirect('login')
 
-    # The user pressed "Cancel" on the Google screen.
+                                                     
     if request.GET.get('error'):
         messages.info(request, 'Google sign-in was cancelled.')
         return redirect('login')
@@ -280,7 +280,7 @@ def google_callback(request):
         return redirect('login')
 
     try:
-        # Swap the code for an access token.
+                                            
         token_response = requests.post(GOOGLE_TOKEN_URL, data={
             'code': code,
             'client_id': settings.GOOGLE_CLIENT_ID,
@@ -293,7 +293,7 @@ def google_callback(request):
         if not access_token:
             raise ValueError('No access token received')
 
-        # Ask Google who the user is.
+                                     
         info_response = requests.get(
             GOOGLE_USERINFO_URL,
             headers={'Authorization': f'Bearer {access_token}'},
@@ -312,20 +312,20 @@ def google_callback(request):
     user = User.objects.filter(email__iexact=email).first()
 
     if user is None:
-        # First time with this email: create the account.
+                                                         
         user = User(
             username=make_unique_username(email),
             email=email,
             first_name=(info.get('given_name') or '')[:150],
             last_name=(info.get('family_name') or '')[:150],
         )
-        user.set_unusable_password()   # they sign in with Google, no password
+        user.set_unusable_password()                                          
         user.save()
         UserProfile.objects.create(user=user)
 
     elif not user.is_active:
-        # Registered with the form but never typed the OTP. Google has
-        # just proved the email is theirs, so we can activate it.
+                                                                      
+                                                                 
         if hasattr(user, 'email_otp'):
             user.is_active = True
             user.save(update_fields=['is_active'])
@@ -339,8 +339,8 @@ def google_callback(request):
     return redirect(settings.LOGIN_REDIRECT_URL)
 
 
-# The "My Profile" page. Shows the current details in a form,
-# and saves them when the user submits changes.
+                                                             
+                                               
 @login_required
 def profile(request):
 
@@ -389,8 +389,8 @@ def profile(request):
             'user_form': user_form,
             'profile_form': profile_form,
             'addresses': request.user.addresses.all(),
-            # The 5 most recently ordered products, shown in the
-            # "Order History" section of the profile page.
+                                                                
+                                                          
             'order_items': OrderItem.objects.filter(
                 order__user=request.user
             ).select_related('product', 'order').order_by('-order__created_at', '-id')[:5],
@@ -398,12 +398,12 @@ def profile(request):
     )
 
 
-# Saved addresses ("My Addresses"). A user enters their
-# details once and can save more than one address - handy if
-# they move somewhere temporarily and need deliveries sent
-# there for a while.
+                                                       
+                                                            
+                                                          
+                    
 
-# Add a brand-new saved address for the logged-in user.
+                                                       
 @login_required
 def address_add(request):
     if request.method == 'POST':
@@ -413,8 +413,8 @@ def address_add(request):
             address = form.save(commit=False)
             address.user = request.user
 
-            # The very first address a user saves automatically
-            # becomes their default one.
+                                                               
+                                        
             if not request.user.addresses.exists():
                 address.is_default = True
 
@@ -434,7 +434,7 @@ def address_add(request):
     return render(request, 'accounts/address_form.html', {'form': form, 'is_new': True})
 
 
-# Edit one of the user's existing saved addresses.
+                                                  
 @login_required
 def address_edit(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -458,7 +458,7 @@ def address_edit(request, address_id):
     return render(request, 'accounts/address_form.html', {'form': form, 'is_new': False})
 
 
-# Delete a saved address.
+                         
 @login_required
 def address_delete(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -467,9 +467,9 @@ def address_delete(request, address_id):
         was_default = address.is_default
         address.delete()
 
-        # If we just deleted the default address, make the next
-        # most recent one the new default so checkout still has
-        # a sensible pre-selected address.
+                                                               
+                                                               
+                                          
         if was_default:
             next_address = request.user.addresses.first()
             if next_address:

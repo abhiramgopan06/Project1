@@ -1,0 +1,15 @@
+FIX: no such column: products_category.offer_percent
+
+Why it happened
+The Category model includes offer_percent and offer_ends_at, but your local SQLite database was created before those fields were added. Django needs to apply the migration before the homepage can query categories.
+
+Beginner steps
+1. Stop the server with Ctrl+C.
+2. Open the folder containing manage.py in VS Code.
+3. Run: python manage.py migrate
+4. Run: python manage.py runserver
+
+On Windows, you can also double-click run_project.bat. It runs migrations first and then starts the server.
+
+Important
+Do not delete db.sqlite3 just to fix this error. Running migrate preserves your existing products and user data. The bundled sample database in this ZIP also includes the category offer columns. If you are using a different existing database, run migrate against that database.

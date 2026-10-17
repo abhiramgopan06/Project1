@@ -26,9 +26,9 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-# A saved delivery address. A user can have more than one of these
-# (home, a temporary place while traveling, a relative's house, etc).
-# At checkout the user picks one instead of typing everything again.
+                                                                  
+                                                                     
+                                                                    
 class Address(models.Model):
     user = models.ForeignKey(
         User,
@@ -36,8 +36,8 @@ class Address(models.Model):
         related_name='addresses'
     )
 
-    # A short label so the user can tell their addresses apart,
-    # e.g. "Home", "Hostel", "Temporary".
+                                                               
+                                         
     label = models.CharField(max_length=50, blank=True, default='Address')
 
     full_name = models.CharField(max_length=100)
@@ -55,11 +55,11 @@ class Address(models.Model):
         return f'{self.label} - {self.user.username}'
 
 
-# A one-time password (OTP) used to verify a new user's email.
-# There is only ONE row per user. Asking for a new OTP simply
-# replaces the old code, so old codes stop working.
-# The code itself is saved hashed (like a password), never as
-# plain text.
+                                                              
+                                                             
+                                                   
+                                                             
+             
 class EmailOTP(models.Model):
     user = models.OneToOneField(
         User,
@@ -69,10 +69,10 @@ class EmailOTP(models.Model):
 
     code_hash = models.CharField(max_length=128)
 
-    # When the current code was sent (used for expiry + resend wait).
+                                                                     
     created_at = models.DateTimeField(default=timezone.now)
 
-    # How many wrong codes were typed for the current code.
+                                                           
     attempts = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):

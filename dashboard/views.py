@@ -1,8 +1,8 @@
-# dashboard/views.py
-# This is the staff-only admin dashboard: overview numbers,
-# the list of orders (with a way to update their status),
-# and the list of registered users. Only staff members
-# (people with is_staff=True) are allowed to see these pages.
+                    
+                                                           
+                                                         
+                                                      
+                                                             
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -17,8 +17,8 @@ from products.models import Product, Category
 from products.forms import ProductForm
 
 
-# The dashboard "home" page: a few summary numbers (total orders,
-# revenue, products, users) plus recent orders and low-stock items.
+                                                                 
+                                                                   
 @staff_member_required
 def dashboard_home(request):
     total_orders = Order.objects.count()
@@ -49,8 +49,8 @@ def dashboard_home(request):
     return render(request, 'dashboard/home.html', context)
 
 
-# Shows every order in the store, with an optional filter by
-# status (e.g. only "Pending" orders).
+                                                            
+                                      
 @staff_member_required
 def dashboard_orders(request):
     orders = Order.objects.select_related('user').order_by('-created_at')
@@ -70,8 +70,8 @@ def dashboard_orders(request):
     return render(request, 'dashboard/orders.html', context)
 
 
-# Lets a staff member change an order's status (e.g. from
-# "Pending" to "Shipped") using the dropdown on the orders page.
+                                                         
+                                                                
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -93,7 +93,7 @@ def update_order_status(request, order_id):
     return redirect('dashboard:orders')
 
 
-# Shows every registered user and how many orders each one has made.
+                                                                    
 @staff_member_required
 def dashboard_users(request):
     users = User.objects.annotate(
@@ -108,10 +108,10 @@ def dashboard_users(request):
     return render(request, 'dashboard/users.html', context)
 
 
-# Shows everything about one single order for staff: the customer's
-# account info, the delivery address they typed in at checkout, the
-# items ordered, and a form to update the order status. This is the
-# page the "View" button on the orders table opens.
+                                                                   
+                                                                   
+                                                                   
+                                                   
 @staff_member_required
 def dashboard_order_detail(request, order_id):
     order = get_object_or_404(
@@ -131,12 +131,12 @@ def dashboard_order_detail(request, order_id):
     return render(request, 'dashboard/order_detail.html', context)
 
 
-# Product management - the "separate admin dashboard" area where
-# staff can add and edit products, without needing to go into the
-# built-in Django /admin/ site.
+                                                                
+                                                                 
+                               
 
-# Shows every product (available or not) so staff can see the
-# whole catalog and jump into add/edit.
+                                                             
+                                       
 @staff_member_required
 def dashboard_products(request):
     products = Product.objects.select_related('category').order_by('-created_at')
@@ -149,7 +149,7 @@ def dashboard_products(request):
     return render(request, 'dashboard/products.html', context)
 
 
-# Add a brand-new product to the catalog.
+                                         
 @staff_member_required
 def dashboard_product_add(request):
     if request.method == 'POST':
@@ -171,7 +171,7 @@ def dashboard_product_add(request):
     return render(request, 'dashboard/product_form.html', context)
 
 
-# Edit an existing product's details, price, stock, image, etc.
+                                                               
 @staff_member_required
 def dashboard_product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -196,10 +196,10 @@ def dashboard_product_edit(request, product_id):
     return render(request, 'dashboard/product_form.html', context)
 
 
-# Toggle a product between available and unavailable. We don't
-# offer a hard "delete" here on purpose - a product that's already
-# part of someone's order history has to stick around so those old
-# orders still make sense, so "deactivate" is the safe equivalent.
+                                                              
+                                                                  
+                                                                  
+                                                                  
 @staff_member_required
 def dashboard_product_toggle(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -213,7 +213,7 @@ def dashboard_product_toggle(request, product_id):
     return redirect('dashboard:products')
 
 
-# Staff can select any catalog product and set (or remove) its discount.
+                                                                        
 @staff_member_required
 def dashboard_product_offers(request):
     products = Product.objects.select_related('category').order_by('name')

@@ -118,6 +118,9 @@
                     <label for="discount-percent" style="display:block;font-weight:700;margin-bottom:8px">Offer percentage (%)</label>
                     <input class="input" type="number" id="discount-percent" name="discount_percent" min="0" max="90" step="1" required value="{{ selected_product.discount_percent }}" style="max-width:220px;width:100%">
                     <p class="offer-muted">Enter 10 for 10% off or 30 for 30% off. Enter 0 to remove the offer. The allowed range is 0% to 90%.</p>
+                    <label for="duration-days" style="display:block;font-weight:700;margin:16px 0 8px">Duration (days)</label>
+                    <input class="input" type="number" id="duration-days" name="duration_days" min="1" max="365" step="1" value="7" style="max-width:220px;width:100%">
+                    <p class="offer-muted">Choose how many days this offer should remain active (1 to 365 days). Enter 0% above to remove an offer.</p>
                     <div id="offer-preview" style="margin:12px 0;font-weight:700;color:#15803d"></div>
                     <button class="btn btn-primary" type="submit">Save Offer</button>
                     <a class="offer-cancel-link" href="{% url 'dashboard:product_offers' %}">Cancel</a>
@@ -126,6 +129,19 @@
         </div>
     </div>
     {% endif %}
+</section>
+
+<section class="offer-page-card">
+    <h3 style="margin-top:0">Offer History</h3>
+    <p class="offer-muted">Manage active offers and review offers that have ended.</p>
+    <h4>Present Offers</h4>
+    <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
+    {% for product in present_offers %}<tr><td><strong>{{ product.name }}</strong></td><td><span class="offer-percent">{{ product.discount_percent }}% OFF</span></td><td>{{ product.discount_ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' product.id %}">View</a> <a class="btn btn-primary" href="{% url 'dashboard:product_offers' %}?product={{ product.id }}">Edit</a></td></tr>{% empty %}<tr><td colspan="4">There are no present offers.</td></tr>{% endfor %}
+    </tbody></table></div>
+    <h4 style="margin-top:28px">Old Offers</h4>
+    <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Ended</th><th>Actions</th></tr></thead><tbody>
+    {% for offer in old_offers %}<tr><td><strong>{{ offer.product.name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' offer.product.id %}">View</a></td></tr>{% empty %}<tr><td colspan="4">There are no old offers yet.</td></tr>{% endfor %}
+    </tbody></table></div>
 </section>
 
 <section class="checkout-card" style="margin-top:22px;padding:22px">

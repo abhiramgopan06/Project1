@@ -4450,7 +4450,7 @@ button.btn:focus-visible {
     }
 }
 
-/* Homepage product actions and pagination */
+
 .product-carousel-card a,
 .product-carousel-card button,
 .product-carousel-card .btn,
@@ -4492,17 +4492,21 @@ button.btn:focus-visible {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    margin: 28px 0 40px;
-    padding: 20px;
+    gap: 18px;
+    margin: 36px auto 48px;
+    padding: 24px 18px;
+    width: fit-content;
+    max-width: 100%;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
+    border-radius: 16px;
     background: #fff;
 }
 
 .pagination-summary {
     color: #64748b;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 .pagination-links {
@@ -4620,4 +4624,29 @@ button.btn:focus-visible {
 .place-order-btn:hover { background: #262626; }
 @media (max-width: 560px) {
     .shipping-method-options { grid-template-columns: 1fr; }
+}
+
+.dashboard-sidebar .dashboard-nav-link,
+.dashboard-sidebar .dashboard-nav-link:hover,
+.dashboard-sidebar .dashboard-nav-link:focus,
+.dashboard-sidebar .dashboard-nav-link:active,
+.dashboard-sidebar .dashboard-nav-link:visited {
+    text-decoration: none !important;
+}
+
+@media (max-width: 480px) {
+    .shop-pagination {
+        width: 100%;
+        padding: 20px 12px;
+        gap: 16px;
+    }
+    .pagination-links {
+        gap: 10px;
+    }
+    .pagination-links a,
+    .pagination-links span {
+        min-width: 42px;
+        height: 42px;
+        padding: 0 10px;
+    }
 }

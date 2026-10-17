@@ -86,7 +86,11 @@
                         <div class="product-actions">
                             {% if product.stock > 0 and product.is_available %}
                                 {% if user.is_authenticated %}
-                                    {% if product.id in cart_product_ids %}
+                                    {% if user.is_staff %}
+                                    <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart">
+                                        🛒 Add to Cart
+                                    </button>
+                                {% elif product.id in cart_product_ids %}
                                         <a class="btn-add-to-cart"
                                            href="{% url 'cart:cart' %}">
                                             🛒 Go to Cart
@@ -215,7 +219,11 @@
 
                         <div class="product-actions">
                             {% if product.stock > 0 and product.is_available %}
-                                {% if product.id in cart_product_ids %}
+                                {% if user.is_staff %}
+                                    <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart">
+                                        🛒 Add to Cart
+                                    </button>
+                                {% elif product.id in cart_product_ids %}
                                     <a class="btn-add-to-cart"
                                        href="{% url 'cart:cart' %}">
                                         🛒 Go to Cart
@@ -415,7 +423,7 @@
                 </div>
                 {% if page_obj.paginator.num_pages > 1 %}
                 <nav class="shop-pagination" aria-label="Product pages">
-                    <span class="pagination-summary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ product_count }} products)</span>
+                    <span class="pagination-summary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
                     <div class="pagination-links">
                         {% if page_obj.has_previous %}
                             <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&amp;{% endif %}{% if request.GET.category %}category={{ request.GET.category|urlencode }}&amp;{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price|urlencode }}&amp;{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price|urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous page">‹</a>

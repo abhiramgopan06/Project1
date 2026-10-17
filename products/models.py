@@ -26,6 +26,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
                                                                         
     discount_percent = models.PositiveSmallIntegerField(default=0)
+    discount_ends_at = models.DateTimeField(null=True, blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
@@ -41,7 +42,7 @@ class Product(models.Model):
 
     @property
     def effective_discount_percent(self):
-        if self.discount_percent:
+        if self.discount_percent and self.discount_ends_at and self.discount_ends_at > timezone.now():
             return self.discount_percent
         if self.category and self.category.is_offer_active:
             return self.category.offer_percent
@@ -175,3 +176,17 @@ class ProductHistory(models.Model):
 
     def __str__(self):
         return f'{self.user.username}: {self.product.name}'
+
+
+class ProductOfferHistory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='offer_history')
+    discount_percent = models.PositiveSmallIntegerField(default=0)
+    started_at = models.DateTimeField(default=timezone.now)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['recorded_at']
+
+    def __str__(self):
+        return f'{self.product.name} - {self.discount_percent}% offer'

@@ -13,7 +13,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from orders.models import Order
-from products.models import Product, Category
+from products.models import Product, Category, ProductOfferHistory
 from products.forms import ProductForm
 
 
@@ -253,23 +253,60 @@ def dashboard_product_offers(request):
         else:
             try:
                 percent = int(request.POST.get('discount_percent', ''))
+                duration = int(request.POST.get('duration_days', ''))
             except (TypeError, ValueError):
-                percent = -1
+                percent, duration = -1, 0
             if percent < 0 or percent > 90:
                 messages.error(request, 'Enter an offer from 0% to 90%. Use 0% to remove an offer.')
+            elif percent and (duration < 1 or duration > 365):
+                messages.error(request, 'Offer duration must be between 1 and 365 days.')
             else:
+                now = timezone.now()
+                if selected_product.discount_percent:
+                    ProductOfferHistory.objects.create(
+                        product=selected_product,
+                        discount_percent=selected_product.discount_percent,
+                        started_at=selected_product.updated_at,
+                        ends_at=selected_product.discount_ends_at or now,
+                    )
                 selected_product.discount_percent = percent
-                selected_product.save(update_fields=['discount_percent'])
+                selected_product.discount_ends_at = now + timedelta(days=duration) if percent else None
+                selected_product.save(update_fields=['discount_percent', 'discount_ends_at'])
                 if percent:
-                    messages.success(request, f'{percent}% offer saved for "{selected_product.name}".')
+                    ProductOfferHistory.objects.create(
+                        product=selected_product,
+                        discount_percent=percent,
+                        started_at=now,
+                        ends_at=selected_product.discount_ends_at,
+                    )
+                    messages.success(request, f'{percent}% offer saved for "{selected_product.name}" for {duration} day(s).')
                 else:
                     messages.success(request, f'Offer removed from "{selected_product.name}".')
                 return redirect('dashboard:product_offers')
 
+    now = timezone.now()
+    present_offers = [p for p in products if p.discount_percent and p.discount_ends_at and p.discount_ends_at > now]
+    old_offers = ProductOfferHistory.objects.select_related('product', 'product__category').filter(ends_at__lte=now).order_by('-ends_at')
+    for product in products:
+        product.offer_history_rows = product.offer_history.all()
     return render(request, 'dashboard/product_offers.html', {
         'active': 'offers',
         'products': products,
         'categories': categories,
         'selected_product': selected_product,
+        'present_offers': present_offers,
+        'old_offers': old_offers,
+    })
+
+
+@staff_member_required
+def dashboard_offer_detail(request, product_id):
+    product = get_object_or_404(Product.objects.select_related('category'), id=product_id)
+    offer_history = ProductOfferHistory.objects.filter(product=product).order_by('recorded_at')
+    return render(request, 'dashboard/product_offer_detail.html', {
+        'active': 'offers',
+        'product': product,
+        'offer_history': offer_history,
+        'now': timezone.now(),
     })
 

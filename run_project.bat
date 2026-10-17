@@ -1,9 +1,9 @@
 @echo off
 cd /d "%~dp0"
-echo Applying database migrations...
-python manage.py migrate
+echo Checking and repairing database fields...
+python repair_database.py
 if errorlevel 1 (
-  echo Migration failed. Check the error above.
+  echo Database repair failed. Check the error above.
   pause
   exit /b 1
 )

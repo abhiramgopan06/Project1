@@ -267,7 +267,7 @@ def dashboard_product_offers(request):
                         product=selected_product,
                         discount_percent=selected_product.discount_percent,
                         started_at=selected_product.updated_at,
-                        ends_at=selected_product.discount_ends_at or now,
+                        ends_at=now,
                     )
                 selected_product.discount_percent = percent
                 selected_product.discount_ends_at = now + timedelta(days=duration) if percent else None

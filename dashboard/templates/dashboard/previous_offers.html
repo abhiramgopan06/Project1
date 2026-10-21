@@ -1,0 +1,11 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Previous Product Offers | E-Commerce Shop{% endblock %}
+{% block dashboard_content %}
+<div class="section-head"><div><h2>Previous Offers</h2><p>Offers that have expired are listed here with their start and expiry dates.</p></div><a class="btn btn-outline" href="{% url 'dashboard:product_offers' %}">Back to Offers</a></div>
+<section class="offer-page-card"><div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Category</th><th>Discount</th><th>Offer started</th><th>Expired date</th><th>Details</th></tr></thead><tbody>
+{% for offer in page_obj %}<tr><td><strong>{{ offer.product.name }}</strong></td><td>{{ offer.product.category.name|default:"Not set" }}</td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' offer.product.id %}">View</a></td></tr>{% empty %}<tr><td colspan="6">No expired product offers have been recorded yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% if page_obj.paginator.num_pages > 1 %}<nav class="offer-pagination" aria-label="Previous offers pages">{% if page_obj.has_previous %}<a class="btn btn-outline" href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}{% for number in page_obj.paginator.page_range %}<a class="btn {% if page_obj.number == number %}btn-primary{% else %}btn-outline{% endif %}" href="?page={{ number }}">{{ number }}</a>{% endfor %}{% if page_obj.has_next %}<a class="btn btn-outline" href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+</section>
+<style>.offer-page-card{background:var(--card-bg,#fff);border:1px solid var(--border-color,#e2e8f0);border-radius:16px;padding:22px}.offer-pagination{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}</style>
+{% endblock %}

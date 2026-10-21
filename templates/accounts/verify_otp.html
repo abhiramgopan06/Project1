@@ -83,12 +83,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var codeBox = document.getElementById('id_otp');
     var resendBtn = document.getElementById('resend-btn');
 
-    // Only allow digits in the code box.
     codeBox.addEventListener('input', function () {
         codeBox.value = codeBox.value.replace(/\D/g, '').slice(0, 6);
     });
 
-    // After a code is sent, the resend button is locked for a few seconds.
     var secondsLeft = parseInt(resendBtn.dataset.wait, 10) || 0;
 
     function updateButton() {

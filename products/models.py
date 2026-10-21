@@ -1,6 +1,7 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.db import models
 from django.utils import timezone
-
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -13,7 +14,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Product(models.Model):
     category = models.ForeignKey(
@@ -52,8 +52,9 @@ class Product(models.Model):
     def discounted_price(self):
         percent = self.effective_discount_percent
         if percent:
-            return self.price * (100 - percent) / 100
-        return self.price
+            discounted = self.price * (100 - percent) / 100
+            return discounted.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return self.price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     def refresh_vector(self):
         from .recommendations import build_product_vector
@@ -75,7 +76,6 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class ProductReview(models.Model):
     product = models.ForeignKey(
@@ -106,7 +106,6 @@ class ProductReview(models.Model):
 
     def __str__(self):
         return f'{self.product.name} - {self.user.username} ({self.rating}/5)'
-
 
 class SearchHistory(models.Model):
     user = models.ForeignKey(
@@ -142,7 +141,6 @@ class SearchHistory(models.Model):
     def __str__(self):
         return f'{self.user.username}: {self.query}'
 
-
 class ProductHistory(models.Model):
     ACTION_VIEW = 'view'
     ACTION_CART = 'cart'
@@ -177,7 +175,6 @@ class ProductHistory(models.Model):
     def __str__(self):
         return f'{self.user.username}: {self.product.name}'
 
-
 class ProductOfferHistory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='offer_history')
     discount_percent = models.PositiveSmallIntegerField(default=0)
@@ -190,3 +187,23 @@ class ProductOfferHistory(models.Model):
 
     def __str__(self):
         return f'{self.product.name} - {self.discount_percent}% offer'
+
+class CategoryOfferHistory(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='offer_history'
+    )
+    category_name = models.CharField(max_length=100)
+    discount_percent = models.PositiveSmallIntegerField(default=0)
+    started_at = models.DateTimeField(default=timezone.now)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f'{self.category_name} - {self.discount_percent}% offer'

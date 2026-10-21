@@ -24,7 +24,6 @@ class SearchHistoryAdmin(admin.ModelAdmin):
     list_filter = ('category',)
     search_fields = ('user__username', 'query')
 
-
 @admin.register(ProductHistory)
 class ProductHistoryAdmin(admin.ModelAdmin):
     list_display = ('user', 'product', 'viewed_count', 'search_count', 'cart_count', 'ordered_count', 'last_interacted')

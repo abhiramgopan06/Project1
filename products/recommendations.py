@@ -6,17 +6,14 @@ STOP_WORDS = {
     'by','from','at','as','be','it','your','you','new','best','more','all','one'
 }
 
-
 def tokenize(text):
     words = re.findall(r'[a-zA-Z0-9]+', (text or '').lower())
     return [w for w in words if len(w) > 1 and w not in STOP_WORDS]
-
 
 def build_product_vector(product):
     text = f"{product.name} {product.description} {product.category.name if product.category_id else ''}"
     counts = Counter(tokenize(text))
     return dict(counts.most_common(80))
-
 
 def add_to_user_vector(profile, text, weight=1):
     vector = dict(profile.vector_data or {})
@@ -24,7 +21,6 @@ def add_to_user_vector(profile, text, weight=1):
         vector[token] = round(float(vector.get(token, 0)) + weight, 4)
     profile.vector_data = dict(sorted(vector.items(), key=lambda x: x[1], reverse=True)[:200])
     profile.save(update_fields=['vector_data'])
-
 
 def record_product_history(user, product, action):
     from django.utils import timezone
@@ -40,7 +36,6 @@ def record_product_history(user, product, action):
         history.ordered_count += 1
     history.save()
     return history
-
 
 def sync_existing_history(user):
     from django.db.models import Sum
@@ -95,7 +90,6 @@ def sync_existing_history(user):
         history.cart_count = max(history.cart_count, cart_rows.get(product_id, 0))
         history.save()
 
-
 def product_score(product, user_vector, history_map):
     score = 0.0
     pv = product.vector_data or {}
@@ -112,7 +106,6 @@ def product_score(product, user_vector, history_map):
 
     score += float(getattr(product, 'rating_average', 0) or 0) * 0.8
     return score
-
 
 def recommended_products(user, exclude_id=None, limit=12):
     from .models import Product, ProductHistory

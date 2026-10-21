@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 def populate_vectors(apps, schema_editor):
     Product = apps.get_model('products', 'Product')
     for product in Product.objects.select_related('category').all():
@@ -11,11 +10,9 @@ def populate_vectors(apps, schema_editor):
         product.vector_data = dict(Counter(words).most_common(80))
         product.save(update_fields=['vector_data'])
 
-
 def reverse_vectors(apps, schema_editor):
     Product = apps.get_model('products', 'Product')
     Product.objects.all().update(vector_data={})
-
 
 class Migration(migrations.Migration):
     dependencies = [('products', '0002_recommendations_reviews')]

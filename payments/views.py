@@ -1,6 +1,8 @@
 
 import uuid
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+
+from django.conf import settings
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -14,17 +16,21 @@ from products.models import Product
 from products.recommendations import record_product_history
 from accounts.checkout_helpers import resolve_checkout_address
 
-
 def _cart_total(cart_items):
     return sum(
         (item.product.discounted_price * item.quantity for item in cart_items),
         Decimal('0.00')
     )
 
-
 @login_required
 @require_POST
 def create_payment_order(request):
+    if not settings.DEBUG:
+        return JsonResponse({
+            'success': False,
+            'error': 'Demo payments are disabled outside development mode.'
+        }, status=503)
+
     try:
         cart = Cart.objects.get(user=request.user)
     except Cart.DoesNotExist:
@@ -50,7 +56,7 @@ def create_payment_order(request):
     if shipping_method not in (Order.SHIPPING_FREE, Order.SHIPPING_EXPRESS):
         return JsonResponse({'success': False, 'error': 'Please select a valid shipping method.'}, status=400)
     shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
-    amount = int((_cart_total(cart_items) + shipping_cost) * 100)
+    amount = int(((_cart_total(cart_items) + shipping_cost).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)) * 100)
     demo_order_id = f'order_DEMO{uuid.uuid4().hex[:14]}'
 
     request.session['demo_payment_order_id'] = demo_order_id
@@ -67,10 +73,15 @@ def create_payment_order(request):
         'description': 'Order payment (Demo - no real charge)',
     })
 
-
 @login_required
 @require_POST
 def verify_payment(request):
+    if not settings.DEBUG:
+        return JsonResponse({
+            'success': False,
+            'error': 'Demo payments are disabled outside development mode.'
+        }, status=503)
+
     razorpay_payment_id = request.POST.get('razorpay_payment_id', '').strip()
     razorpay_order_id = request.POST.get('razorpay_order_id', '').strip()
 

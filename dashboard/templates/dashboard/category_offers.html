@@ -1,0 +1,39 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Category Offer History | E-Commerce Shop{% endblock %}
+{% block dashboard_content %}
+<div class="section-head">
+    <div><h2>Category Offers</h2><p>Active category discounts and expired category offers are shown separately.</p></div>
+    <a class="btn btn-outline" href="{% url 'dashboard:product_offers' %}">Back to Offers</a>
+</div>
+<section class="offer-page-card">
+    <h3>Create a category offer</h3>
+    <form method="post" action="{% url 'dashboard:product_offers' %}" class="category-offer-form">
+        {% csrf_token %}
+        <input type="hidden" name="offer_type" value="category">
+        <div class="category-fields">
+            <div><label for="category">Category</label><select id="category" name="category" required><option value="">Select category</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></div>
+            <div><label for="category-discount">Discount (%)</label><input id="category-discount" name="category_discount_percent" type="number" min="0" max="90" value="10" required></div>
+            <div><label for="category-duration">Duration (days)</label><input id="category-duration" name="duration_days" type="number" min="1" max="365" value="7" required></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Save Category Offer</button>
+        <p class="offer-muted">Enter 0% to cancel an active offer.</p>
+    </form>
+</section>
+<div class="category-offer-columns">
+    <section class="offer-page-card">
+        <h3>Present Offers</h3>
+        <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Discount</th><th>Started</th><th>Expires</th></tr></thead><tbody>
+        {% for offer in present_offers %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% endfor %}
+        {% for category in legacy_present_categories %}<tr><td><strong>{{ category.name }}</strong></td><td>{{ category.offer_percent }}% off</td><td>Before history tracking</td><td>{{ category.offer_ends_at|date:"M d, Y H:i" }}</td></tr>{% endfor %}
+        {% if not present_offers and not legacy_present_categories %}<tr><td colspan="4">There are no present category offers.</td></tr>{% endif %}
+        </tbody></table></div>
+    </section>
+    <section class="offer-page-card">
+        <h3>Expired Offers</h3>
+        <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Discount</th><th>Started</th><th>Expired</th></tr></thead><tbody>
+        {% for offer in expired_offers %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4">There are no expired category offers yet.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+</div>
+<style>.category-offer-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.offer-page-card{min-width:0;background:var(--card-bg,#fff);border:1px solid var(--border-color,#e2e8f0);border-radius:16px;padding:22px;margin:18px 0}.offer-muted{color:var(--muted-text,#64748b);font-size:13px;margin:8px 0}.category-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0}.category-fields label{display:block;margin-bottom:7px;font-weight:700}.category-fields input,.category-fields select{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:850px){.category-offer-columns{grid-template-columns:1fr}.category-fields{grid-template-columns:1fr}}</style>
+{% endblock %}

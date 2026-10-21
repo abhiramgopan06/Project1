@@ -10,8 +10,6 @@ def cart_count(request):
     cart_items = cart.items.all()
     return {
         'cart_count': sum(item.quantity for item in cart_items),
-                                                                      
-                                                           
-                                        
+
         'cart_product_ids': list(cart_items.values_list('product_id', flat=True)),
     }

@@ -9,7 +9,7 @@
     <a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a>
 </div>
 
-<section class="offer-page-card category-offer-card">
+<section class="offer-page-card category-offer-card" id="category-offers">
     <h3 style="margin:0 0 6px">Weekend and category-wide offers</h3>
     <p class="offer-muted">Choose a category to apply a temporary discount to all products in it. The offer expires automatically after the selected duration.</p>
     <form method="post" class="category-offer-form">
@@ -26,7 +26,7 @@
 </section>
 
 <style>
-    /* Simple, reusable styles for the product-offer page */
+    
     .offer-page-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 18px; padding: 28px; margin: 22px 0; box-shadow: 0 8px 24px rgba(15,23,42,.045); }
     .offer-page-card h3, .checkout-card h3 { color: var(--text-color, #172033); letter-spacing: -.25px; }
     .offer-muted { color: var(--muted-text, #64748b); font-size: 13px; line-height: 1.6; margin: 5px 0; }
@@ -64,13 +64,15 @@
     .offer-cancel-link { display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:10px;padding:11px 18px;font-weight:700;color:#334155;text-decoration:none;margin-left:8px; }
     @media (max-width: 760px) { .category-fields { grid-template-columns:1fr; } .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
     @media (max-width: 420px) { .offer-product-thumb, .offer-product-placeholder { width: 76px; height: 88px; } .offer-page-card { padding: 14px; } .selected-product-info h3 { font-size: 21px !important; } }
+    .offer-history-buttons { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 20px; }
+    .offer-history-buttons .btn { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
 </style>
 
 <section class="offer-page-card">
     <h3 style="margin:0 0 6px">1. Select a product</h3>
     <p class="offer-muted">Each option includes a product image, name, price, and current offer. Select the correct product, then press “Choose this product”.</p>
 
-    <form method="get">
+    <form method="get" action="{% url 'dashboard:product_offers' %}#product-information">
         <div class="offer-product-grid">
             {% for product in products %}
             <label class="offer-product-option">
@@ -95,7 +97,7 @@
     </form>
 
     {% if selected_product %}
-    <div style="margin-top:26px;border-top:1px solid #e2e8f0;padding-top:22px">
+    <div id="product-information" style="margin-top:26px;border-top:1px solid #e2e8f0;padding-top:22px">
         <h3 style="margin:0 0 6px">2. Product information and offer</h3>
         <p class="offer-muted">Check the product below before saving its offer.</p>
         <div class="selected-product-info">
@@ -131,14 +133,20 @@
     {% endif %}
 </section>
 
-<section class="offer-page-card">
+<section class="offer-page-card" id="offer-history">
     <h3 style="margin-top:0">Offer History</h3>
+    <p class="offer-muted">Choose a section to review category offers, previous offers, or the complete product offer history.</p>
+    <div class="offer-history-buttons">
+        <a class="btn btn-outline" href="{% url 'dashboard:category_offers' %}">Category Offers</a>
+        <a class="btn btn-outline" href="{% url 'dashboard:previous_offers' %}">Previous Offers</a>
+        <a class="btn btn-primary" href="{% url 'dashboard:offer_history' %}">Product Offer History</a>
+    </div>
     <p class="offer-muted">Manage active offers and review offers that have ended.</p>
     <h4>Present Offers</h4>
     <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
     {% for product in present_offers %}<tr><td><strong>{{ product.name }}</strong></td><td><span class="offer-percent">{{ product.discount_percent }}% OFF</span></td><td>{{ product.discount_ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' product.id %}">View</a> <a class="btn btn-primary" href="{% url 'dashboard:product_offers' %}?product={{ product.id }}">Edit</a></td></tr>{% empty %}<tr><td colspan="4">There are no present offers.</td></tr>{% endfor %}
     </tbody></table></div>
-    <h4 style="margin-top:28px">Old Offers</h4>
+    <h4 id="old-offers" style="margin-top:28px">Previous Offers</h4>
     <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Ended</th><th>Actions</th></tr></thead><tbody>
     {% for offer in old_offers %}<tr><td><strong>{{ offer.product.name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' offer.product.id %}">View</a></td></tr>{% empty %}<tr><td colspan="4">There are no old offers yet.</td></tr>{% endfor %}
     </tbody></table></div>

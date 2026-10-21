@@ -13,7 +13,6 @@ class AddressAdmin(admin.ModelAdmin):
     list_filter = ('is_default',)
     search_fields = ('user__username', 'full_name', 'phone', 'address')
 
-
 @admin.register(EmailOTP)
 class EmailOTPAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'created_at', 'attempts')

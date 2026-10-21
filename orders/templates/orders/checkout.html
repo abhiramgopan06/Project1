@@ -196,9 +196,6 @@
     const addressRadios = form.querySelectorAll('input[name=address_id]');
     const newAddressFields = document.getElementById('new-address-fields');
 
-    // If saved addresses exist, only show the typed-in fields when
-    // "+ Add a new address" is selected. Without any saved addresses
-    // the fields are always shown (there's nothing else to pick).
     function syncAddressFieldsVisibility() {
         if (!addressRadios.length || !newAddressFields) {
             return;
@@ -218,8 +215,6 @@
     });
     syncAddressFieldsVisibility();
 
-    // Reads whichever customer details are currently active: either
-    // the saved address that's selected, or the typed-in fields.
     function getSelectedCustomerInfo() {
         const checked = form.querySelector('input[name=address_id]:checked');
         if (checked && checked.value !== 'new') {
@@ -241,9 +236,6 @@
         };
     }
 
-    // DEMO MODE: no real payment gateway is contacted anywhere in this
-    // file. "create_payment_order" only reserves stock and returns a
-    // fake order id, and this modal simulates the payment popup.
     const demoOverlay = document.getElementById('demo-payment-overlay');
     const demoAmount = document.getElementById('demo-payment-amount');
     const demoPayBtn = document.getElementById('demo-pay-btn');
@@ -290,8 +282,6 @@
         demoPayBtn.disabled = true;
         demoPayBtn.textContent = 'Processing...';
 
-        // Simulated payment identifiers - a real gateway would return
-        // these after the customer actually pays.
         const demoPaymentId = 'pay_DEMO' + Date.now();
         const info = getSelectedCustomerInfo();
 

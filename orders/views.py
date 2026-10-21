@@ -13,7 +13,6 @@ from products.forms import ProductReviewForm
 from accounts.checkout_helpers import resolve_checkout_address
 from .models import Order, OrderItem, ReturnReplaceRequest
 
-
 @login_required
 def checkout(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -69,7 +68,11 @@ def checkout(request):
                     })
 
                 for item in locked_items:
-                    product = locked_products[item.product_id]
+                    product = locked_products.get(item.product_id)
+                    if product is None or not product.is_available:
+                        raise ValueError(
+                            f'Sorry, {item.product.name} is no longer available.'
+                        )
                     if item.quantity > product.stock:
                         raise ValueError(
                             f'Sorry, only {product.stock} units of {product.name} are available.'
@@ -127,11 +130,9 @@ def checkout(request):
         'grand_total': grand_total,
     })
 
-
 @login_required
 def order_success(request):
     return render(request, 'orders/order_success.html')
-
 
 @login_required
 def order_history(request):
@@ -148,7 +149,6 @@ def order_history(request):
         'orders/order_history.html',
         {'orders': orders, 'order_items': order_items}
     )
-
 
 @login_required
 def order_detail(request, order_id):
@@ -205,7 +205,6 @@ def order_detail(request, order_id):
         }
     )
 
-
 @login_required
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -224,7 +223,6 @@ def cancel_order(request, order_id):
             messages.error(request, 'This order can no longer be cancelled.')
 
     return redirect('order_detail', order_id=order.id)
-
 
 @login_required
 def cancel_order_item(request, order_id, item_id):
@@ -255,7 +253,6 @@ def cancel_order_item(request, order_id, item_id):
             messages.success(request, f'"{item.product.name}" was cancelled.')
 
     return redirect('order_detail', order_id=order.id)
-
 
 @login_required
 def request_return_replace(request, order_id, item_id):
@@ -291,7 +288,6 @@ def request_return_replace(request, order_id, item_id):
             messages.success(request, f'Your {request_type.lower()} request for "{item.product.name}" was submitted.')
 
     return redirect('order_detail', order_id=order.id)
-
 
 @login_required
 def rate_product(request, order_id, item_id):

@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-
 class UserProfile(models.Model):
     user = models.OneToOneField(
         User,
@@ -25,10 +24,6 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
-
-                                                                  
-                                                                     
-                                                                    
 class Address(models.Model):
     user = models.ForeignKey(
         User,
@@ -36,8 +31,6 @@ class Address(models.Model):
         related_name='addresses'
     )
 
-                                                               
-                                         
     label = models.CharField(max_length=50, blank=True, default='Address')
 
     full_name = models.CharField(max_length=100)
@@ -54,12 +47,6 @@ class Address(models.Model):
     def __str__(self):
         return f'{self.label} - {self.user.username}'
 
-
-                                                              
-                                                             
-                                                   
-                                                             
-             
 class EmailOTP(models.Model):
     user = models.OneToOneField(
         User,
@@ -69,10 +56,8 @@ class EmailOTP(models.Model):
 
     code_hash = models.CharField(max_length=128)
 
-                                                                     
     created_at = models.DateTimeField(default=timezone.now)
 
-                                                           
     attempts = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):

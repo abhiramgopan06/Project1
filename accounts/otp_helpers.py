@@ -1,9 +1,4 @@
                                                     
-                                 
- 
-                                                       
-                                                          
-                                                        
 
 import secrets
 
@@ -15,30 +10,20 @@ from django.utils import timezone
 
 from .models import EmailOTP
 
-
-                                                
-                                                      
 def make_code():
     number = secrets.randbelow(1000000)
     return str(number).zfill(6)
 
-
-                                                                           
 def mask_email(email):
     if '@' not in email:
         return email
     name, domain = email.split('@', 1)
     return name[0] + '*' * (len(name) - 1) + '@' + domain
 
-
-                                                          
 def is_expired(otp):
     age = timezone.now() - otp.created_at
     return age.total_seconds() > settings.OTP_EXPIRY_MINUTES * 60
 
-
-                                                                          
-                                            
 def resend_wait_seconds(otp):
     age = (timezone.now() - otp.created_at).total_seconds()
     wait = settings.OTP_RESEND_SECONDS - age
@@ -46,13 +31,9 @@ def resend_wait_seconds(otp):
         return 0
     return int(wait) + 1
 
-
-                                                          
-                                                              
 def send_new_otp(user):
     code = make_code()
 
-                                                                        
     EmailOTP.objects.update_or_create(
         user=user,
         defaults={
@@ -79,23 +60,18 @@ def send_new_otp(user):
     message.attach_alternative(html_body, 'text/html')
 
     try:
-                                                                           
-                                                              
+
         sent_count = message.send(fail_silently=False)
         if sent_count != 1:
             print('Could not send OTP email: the email backend sent 0 messages.')
             return False
     except Exception as error:
-                                                                            
-                                                                         
+
         print('Could not send OTP email:', error)
         return False
 
     return True
 
-
-                                   
-                                         
 def check_otp(otp, typed_code):
     if is_expired(otp):
         return False, 'This code has expired. Please request a new one.'

@@ -1,15 +1,8 @@
                                                             
-                                                             
-                                                            
-                                       
-                                                               
-                                                                
-                                                                
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from .models import Address
-
 
 def resolve_checkout_address(request):
     """
@@ -40,8 +33,6 @@ def resolve_checkout_address(request):
     if not name or not email or not phone or not address_text:
         return None, None, None, None, 'Please fill in all customer information.'
 
-                                                                       
-                                                                       
     try:
         validate_email(email)
     except ValidationError:
@@ -50,8 +41,6 @@ def resolve_checkout_address(request):
     if not phone.isdigit() or not 10 <= len(phone) <= 15:
         return None, None, None, None, 'Phone number must contain 10 to 15 digits only.'
 
-                                                                
-                                                                 
     is_first_address = not request.user.addresses.exists()
     Address.objects.create(
         user=request.user,

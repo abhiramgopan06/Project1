@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 class Migration(migrations.Migration):
     """Removes the old, unused PendingRegistration table.
 

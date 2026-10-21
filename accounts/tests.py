@@ -1,5 +1,4 @@
                                                               
-                                                
 
 import re
 from datetime import timedelta
@@ -13,9 +12,7 @@ from django.utils import timezone
 
 from .models import EmailOTP, UserProfile
 
-
 User = get_user_model()
-
 
 REGISTER_DATA = {
     'username': 'newuser',
@@ -27,12 +24,10 @@ REGISTER_DATA = {
     'password2': 'Str0ng!Pass#2026',
 }
 
-
 def code_from_last_email():
     """Read the 6-digit code out of the last email that was 'sent'."""
     body = mail.outbox[-1].body
     return re.search(r'\b(\d{6})\b', body).group(1)
-
 
 class RegistrationOtpTests(TestCase):
 
@@ -59,7 +54,6 @@ class RegistrationOtpTests(TestCase):
         self.assertTrue(user.is_active)
         self.assertFalse(EmailOTP.objects.filter(user=user).exists())
 
-                                            
         logged_in = self.client.login(username='newuser', password='Str0ng!Pass#2026')
         self.assertTrue(logged_in)
 
@@ -107,7 +101,6 @@ class RegistrationOtpTests(TestCase):
         self.register()
         old_code = code_from_last_email()
 
-                                        
         EmailOTP.objects.update(created_at=timezone.now() - timedelta(seconds=31))
         response = self.client.post(reverse('resend_otp'), follow=True)
         self.assertContains(response, 'new code has been sent')
@@ -173,7 +166,6 @@ class RegistrationOtpTests(TestCase):
             response = self.register()
         self.assertRedirects(response, reverse('verify_otp'))
         self.assertTrue(EmailOTP.objects.exists())
-
 
 class GoogleButtonTests(TestCase):
 
@@ -245,7 +237,6 @@ class GoogleButtonTests(TestCase):
         self.assertContains(response, 'not verified')
         self.assertFalse(User.objects.exists())
 
-
 class PageTests(TestCase):
 
     def test_register_and_verify_pages_render(self):
@@ -253,10 +244,6 @@ class PageTests(TestCase):
         self.client.post(reverse('register'), REGISTER_DATA)
         self.assertEqual(self.client.get(reverse('verify_otp')).status_code, 200)
 
-
-                                                             
-                                                          
-                                  
 class RegistrationTests(TestCase):
     def test_registration_creates_user_profile_and_hashes_password(self):
         response = self.client.post(
@@ -272,7 +259,6 @@ class RegistrationTests(TestCase):
             },
         )
 
-                                                           
         self.assertRedirects(response, reverse('verify_otp'))
         user = User.objects.get(username='testcustomer')
         self.assertFalse(user.is_active)
@@ -325,7 +311,6 @@ class RegistrationTests(TestCase):
             },
         )
 
-                                                         
         self.client.post(reverse('verify_otp'), {'otp': code_from_last_email()})
 
         response = self.client.post(
@@ -338,7 +323,6 @@ class RegistrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
-
 
 class RegistrationPhoneValidationTests(TestCase):
     def registration_data(self, phone):

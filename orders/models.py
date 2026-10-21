@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from cart.models import Cart
 
-
 class Order(models.Model):
     STATUS_PENDING = 'Pending'
     STATUS_CONFIRMED = 'Confirmed'
@@ -73,7 +72,6 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
 
-
 class OrderItem(models.Model):
     order = models.ForeignKey(
         Order,
@@ -87,10 +85,8 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
-                                                             
     is_cancelled = models.BooleanField(default=False)
 
-                                                                             
     @property
     def line_total(self):
         return self.price * self.quantity
@@ -98,11 +94,6 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
 
-
-                                                           
-                                                                 
-                                                                  
-                                  
 class ReturnReplaceRequest(models.Model):
     REQUEST_RETURN = 'Return'
     REQUEST_REPLACE = 'Replace'
@@ -124,8 +115,6 @@ class ReturnReplaceRequest(models.Model):
         (STATUS_COMPLETED, 'Completed'),
     ]
 
-                                                               
-                                                        
     order_item = models.OneToOneField(
         OrderItem,
         on_delete=models.CASCADE,

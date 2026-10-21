@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import UserProfile, Address
 
-
 class RegistrationForm(UserCreationForm):
     """Beginner-friendly registration form."""
 
@@ -12,7 +11,6 @@ class RegistrationForm(UserCreationForm):
     last_name = forms.CharField(required=True, max_length=150)
     phone = forms.CharField(
         required=True,
-        max_length=10,
         widget=forms.TextInput(attrs={
             'type': 'tel',
             'inputmode': 'numeric',
@@ -34,7 +32,6 @@ class RegistrationForm(UserCreationForm):
             'password2',
         )
 
-                                                                
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({
@@ -64,7 +61,6 @@ class RegistrationForm(UserCreationForm):
             raise forms.ValidationError('Enter exactly 10 digits for an Indian mobile number.')
         return phone
 
-
 class UserForm(forms.ModelForm):
     """Form used to edit the logged-in user's basic information."""
 
@@ -80,7 +76,6 @@ class UserForm(forms.ModelForm):
         if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('Another account already uses this email.')
         return email
-
 
 class UserProfileForm(forms.ModelForm):
     """Form for the phone and profile delivery details."""
@@ -101,7 +96,6 @@ class UserProfileForm(forms.ModelForm):
             raise forms.ValidationError('Pincode must contain 6 digits.')
         return pincode
 
-
 class AddressForm(forms.ModelForm):
     """Form for saving a delivery address."""
 
@@ -118,12 +112,10 @@ class AddressForm(forms.ModelForm):
             raise forms.ValidationError('Phone number must contain 10 to 15 digits.')
         return phone
 
-
 class LoginForm(AuthenticationForm):
     """Normal login form, plus one extra check: if the person registered
     but never entered the OTP, tell them (instead of "wrong password")."""
 
-                                                                               
     unverified_user = None
 
     def clean(self):
@@ -133,8 +125,6 @@ class LoginForm(AuthenticationForm):
         if username and password:
             user = User.objects.filter(username=username).first()
 
-                                                                       
-                                                              
             if (user is not None
                     and not user.is_active
                     and hasattr(user, 'email_otp')

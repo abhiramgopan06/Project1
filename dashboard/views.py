@@ -1,24 +1,16 @@
-                    
-                                                           
-                                                         
-                                                      
-                                                             
-
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.db.models import Count, Sum
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from datetime import timedelta
 
 from orders.models import Order
-from products.models import Product, Category, ProductOfferHistory
+from products.models import Product, Category, ProductOfferHistory, CategoryOfferHistory
 from products.forms import ProductForm
 
-
-                                                                 
-                                                                   
 @staff_member_required
 def dashboard_home(request):
     total_orders = Order.objects.count()
@@ -48,9 +40,6 @@ def dashboard_home(request):
 
     return render(request, 'dashboard/home.html', context)
 
-
-                                                            
-                                      
 @staff_member_required
 def dashboard_orders(request):
     orders = Order.objects.select_related('user').order_by('-created_at')
@@ -69,9 +58,6 @@ def dashboard_orders(request):
 
     return render(request, 'dashboard/orders.html', context)
 
-
-                                                         
-                                                                
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -92,8 +78,6 @@ def update_order_status(request, order_id):
 
     return redirect('dashboard:orders')
 
-
-                                                                    
 @staff_member_required
 def dashboard_users(request):
     users = User.objects.annotate(
@@ -107,11 +91,6 @@ def dashboard_users(request):
 
     return render(request, 'dashboard/users.html', context)
 
-
-                                                                   
-                                                                   
-                                                                   
-                                                   
 @staff_member_required
 def dashboard_order_detail(request, order_id):
     order = get_object_or_404(
@@ -130,13 +109,6 @@ def dashboard_order_detail(request, order_id):
 
     return render(request, 'dashboard/order_detail.html', context)
 
-
-                                                                
-                                                                 
-                               
-
-                                                             
-                                       
 @staff_member_required
 def dashboard_products(request):
     products = Product.objects.select_related('category').order_by('-created_at')
@@ -148,8 +120,6 @@ def dashboard_products(request):
 
     return render(request, 'dashboard/products.html', context)
 
-
-                                         
 @staff_member_required
 def dashboard_product_add(request):
     if request.method == 'POST':
@@ -170,8 +140,6 @@ def dashboard_product_add(request):
 
     return render(request, 'dashboard/product_form.html', context)
 
-
-                                                               
 @staff_member_required
 def dashboard_product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -195,11 +163,6 @@ def dashboard_product_edit(request, product_id):
 
     return render(request, 'dashboard/product_form.html', context)
 
-
-                                                              
-                                                                  
-                                                                  
-                                                                  
 @staff_member_required
 def dashboard_product_toggle(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -212,8 +175,6 @@ def dashboard_product_toggle(request, product_id):
 
     return redirect('dashboard:products')
 
-
-                                                                        
 @staff_member_required
 def dashboard_product_offers(request):
     products = Product.objects.select_related('category').order_by('name')
@@ -234,6 +195,10 @@ def dashboard_product_offers(request):
         elif percent < 0 or percent > 90:
             messages.error(request, 'Enter a category offer from 0% to 90%.')
         elif percent == 0:
+            now = timezone.now()
+            CategoryOfferHistory.objects.filter(
+                category=category, ends_at__gt=now
+            ).update(ends_at=now)
             category.offer_percent = 0
             category.offer_ends_at = None
             category.save(update_fields=['offer_percent', 'offer_ends_at'])
@@ -241,11 +206,22 @@ def dashboard_product_offers(request):
         elif duration < 1 or duration > 365:
             messages.error(request, 'Offer duration must be between 1 and 365 days.')
         else:
+            now = timezone.now()
+            CategoryOfferHistory.objects.filter(
+                category=category, ends_at__gt=now
+            ).update(ends_at=now)
             category.offer_percent = percent
-            category.offer_ends_at = timezone.now() + timedelta(days=duration)
+            category.offer_ends_at = now + timedelta(days=duration)
             category.save(update_fields=['offer_percent', 'offer_ends_at'])
+            CategoryOfferHistory.objects.create(
+                category=category,
+                category_name=category.name,
+                discount_percent=percent,
+                started_at=now,
+                ends_at=category.offer_ends_at,
+            )
             messages.success(request, f'{percent}% offer set for {category.name} for {duration} day(s).')
-        return redirect('dashboard:product_offers')
+        return redirect('dashboard:category_offers')
 
     if request.method == 'POST':
         if not selected_product:
@@ -262,13 +238,9 @@ def dashboard_product_offers(request):
                 messages.error(request, 'Offer duration must be between 1 and 365 days.')
             else:
                 now = timezone.now()
-                if selected_product.discount_percent:
-                    ProductOfferHistory.objects.create(
-                        product=selected_product,
-                        discount_percent=selected_product.discount_percent,
-                        started_at=selected_product.updated_at,
-                        ends_at=now,
-                    )
+                ProductOfferHistory.objects.filter(
+                    product=selected_product, ends_at__gt=now
+                ).update(ends_at=now)
                 selected_product.discount_percent = percent
                 selected_product.discount_ends_at = now + timedelta(days=duration) if percent else None
                 selected_product.save(update_fields=['discount_percent', 'discount_ends_at'])
@@ -298,6 +270,41 @@ def dashboard_product_offers(request):
         'old_offers': old_offers,
     })
 
+@staff_member_required
+def dashboard_category_offers(request):
+    now = timezone.now()
+    categories = Category.objects.order_by('name')
+    present_offers = CategoryOfferHistory.objects.select_related('category').filter(
+        ends_at__gt=now
+    ).order_by('ends_at')
+    tracked_category_ids = CategoryOfferHistory.objects.values_list('category_id', flat=True)
+    legacy_present_categories = categories.filter(
+        offer_percent__gt=0, offer_ends_at__gt=now
+    ).exclude(id__in=tracked_category_ids)
+    expired_offers = CategoryOfferHistory.objects.select_related('category').filter(
+        ends_at__lte=now
+    ).order_by('-ends_at')
+    return render(request, 'dashboard/category_offers.html', {
+        'active': 'offers',
+        'categories': categories,
+        'present_offers': present_offers,
+        'legacy_present_categories': legacy_present_categories,
+        'expired_offers': expired_offers,
+        'now': now,
+    })
+
+@staff_member_required
+def dashboard_previous_offers(request):
+    now = timezone.now()
+    expired = ProductOfferHistory.objects.select_related(
+        'product', 'product__category'
+    ).filter(ends_at__lte=now).order_by('-ends_at')
+    page_obj = Paginator(expired, 10).get_page(request.GET.get('page'))
+    return render(request, 'dashboard/previous_offers.html', {
+        'active': 'offers',
+        'page_obj': page_obj,
+        'now': now,
+    })
 
 @staff_member_required
 def dashboard_offer_detail(request, product_id):
@@ -310,3 +317,19 @@ def dashboard_offer_detail(request, product_id):
         'now': timezone.now(),
     })
 
+@staff_member_required
+def dashboard_offer_history(request):
+    product_history = ProductOfferHistory.objects.select_related(
+        'product', 'product__category'
+    ).order_by('-recorded_at')
+    category_history = CategoryOfferHistory.objects.select_related(
+        'category'
+    ).order_by('-recorded_at')
+    product_page = Paginator(product_history, 10).get_page(request.GET.get('product_page'))
+    category_page = Paginator(category_history, 10).get_page(request.GET.get('category_page'))
+    return render(request, 'dashboard/product_offer_history.html', {
+        'active': 'offers',
+        'product_page': product_page,
+        'category_page': category_page,
+        'now': timezone.now(),
+    })

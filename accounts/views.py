@@ -1,6 +1,4 @@
 
-                                                          
-                                          
 
 import re
 import secrets
@@ -27,25 +25,9 @@ from .otp_helpers import (
     send_new_otp, check_otp, mask_email, resend_wait_seconds,
 )
 
-
-                             
- 
-                                                                  
-                                                                
-                                                              
-                                              
-                                                                  
-                                         
-                                                               
-
-                                                                  
-                                                 
 def register(request):
     if request.method == 'POST':
 
-                                                                        
-                                                                    
-                                                                       
         typed_username = request.POST.get('username', '').strip()
         typed_email = request.POST.get('email', '').strip()
         if typed_username or typed_email:
@@ -70,7 +52,6 @@ def register(request):
 
             email_sent = send_new_otp(user)
 
-                                                                             
             request.session['otp_user_id'] = user.id
 
             if email_sent:
@@ -95,9 +76,6 @@ def register(request):
         {'form': form}
     )
 
-
-                                                              
-                                                                    
 def get_pending_user(request):
     user_id = request.session.get('otp_user_id')
     if not user_id:
@@ -110,8 +88,6 @@ def get_pending_user(request):
 
     return user, user.email_otp
 
-
-                                        
 def verify_otp(request):
     user, otp = get_pending_user(request)
 
@@ -146,13 +122,10 @@ def verify_otp(request):
         'error': error,
         'resend_wait': resend_wait_seconds(otp),
         'expiry_minutes': settings.OTP_EXPIRY_MINUTES,
-                                                                          
-                                                               
+
         'email_is_test_mode': settings.EMAIL_BACKEND.endswith('console.EmailBackend') and settings.DEBUG,
     })
 
-
-                                                                       
 @require_POST
 def resend_otp(request):
     user, otp = get_pending_user(request)
@@ -179,9 +152,6 @@ def resend_otp(request):
 
     return redirect('verify_otp')
 
-
-                                                                    
-                                                                       
 class CustomLoginView(auth_views.LoginView):
     template_name = 'accounts/login.html'
     authentication_form = LoginForm
@@ -198,28 +168,16 @@ class CustomLoginView(auth_views.LoginView):
 
         return super().form_invalid(form)
 
-
-                      
- 
-                                                                      
-                                                                       
-                                                                        
-                                                                          
-
 GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
-
 def google_is_configured():
     return bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
-
 
 def google_redirect_uri(request):
     return request.build_absolute_uri(reverse('google_callback'))
 
-
-                                                     
 def google_login(request):
     if not google_is_configured():
         messages.error(
@@ -229,8 +187,6 @@ def google_login(request):
         )
         return redirect('login')
 
-                                                                    
-                                              
     state = secrets.token_urlsafe(24)
     request.session['google_state'] = state
 
@@ -244,9 +200,6 @@ def google_login(request):
     })
     return redirect(f'{GOOGLE_AUTH_URL}?{query}')
 
-
-                                                                        
-                                              
 def make_unique_username(email):
     base = re.sub(r'[^A-Za-z0-9._]', '', email.split('@')[0]) or 'user'
     base = base[:140]
@@ -258,13 +211,10 @@ def make_unique_username(email):
         username = f'{base}{number}'
     return username
 
-
-                                          
 def google_callback(request):
     if not google_is_configured():
         return redirect('login')
 
-                                                     
     if request.GET.get('error'):
         messages.info(request, 'Google sign-in was cancelled.')
         return redirect('login')
@@ -293,7 +243,6 @@ def google_callback(request):
         if not access_token:
             raise ValueError('No access token received')
 
-                                     
         info_response = requests.get(
             GOOGLE_USERINFO_URL,
             headers={'Authorization': f'Bearer {access_token}'},
@@ -324,8 +273,7 @@ def google_callback(request):
         UserProfile.objects.create(user=user)
 
     elif not user.is_active:
-                                                                      
-                                                                 
+
         if hasattr(user, 'email_otp'):
             user.is_active = True
             user.save(update_fields=['is_active'])
@@ -338,9 +286,6 @@ def google_callback(request):
     messages.success(request, f'Welcome, {user.first_name or user.username}!')
     return redirect(settings.LOGIN_REDIRECT_URL)
 
-
-                                                             
-                                               
 @login_required
 def profile(request):
 
@@ -389,21 +334,13 @@ def profile(request):
             'user_form': user_form,
             'profile_form': profile_form,
             'addresses': request.user.addresses.all(),
-                                                                
-                                                          
+
             'order_items': OrderItem.objects.filter(
                 order__user=request.user
             ).select_related('product', 'order').order_by('-order__created_at', '-id')[:5],
         }
     )
 
-
-                                                       
-                                                            
-                                                          
-                    
-
-                                                       
 @login_required
 def address_add(request):
     if request.method == 'POST':
@@ -413,8 +350,6 @@ def address_add(request):
             address = form.save(commit=False)
             address.user = request.user
 
-                                                               
-                                        
             if not request.user.addresses.exists():
                 address.is_default = True
 
@@ -433,8 +368,6 @@ def address_add(request):
 
     return render(request, 'accounts/address_form.html', {'form': form, 'is_new': True})
 
-
-                                                  
 @login_required
 def address_edit(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -457,8 +390,6 @@ def address_edit(request, address_id):
 
     return render(request, 'accounts/address_form.html', {'form': form, 'is_new': False})
 
-
-                         
 @login_required
 def address_delete(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -467,9 +398,6 @@ def address_delete(request, address_id):
         was_default = address.is_default
         address.delete()
 
-                                                               
-                                                               
-                                          
         if was_default:
             next_address = request.user.addresses.first()
             if next_address:

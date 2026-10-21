@@ -8,7 +8,6 @@ from .models import Product, Category
 from .recommendations import add_to_user_vector, recommended_products, record_product_history
 from accounts.models import UserProfile
 
-
 def _record_search(request, q, category, min_price, max_price):
     if not request.user.is_authenticated:
         return
@@ -30,7 +29,6 @@ def _record_search(request, q, category, min_price, max_price):
                 history, _ = ProductHistory.objects.get_or_create(user=request.user, product=product)
                 history.search_count += 1
                 history.save(update_fields=['search_count', 'last_interacted'])
-
 
 def home(request):
     products = Product.objects.filter(is_available=True).select_related('category')
@@ -89,7 +87,6 @@ def home(request):
         'recommendations': recommendations,
         'price_error': price_error,
     })
-
 
 def product_detail(request, id):
     product = get_object_or_404(Product.objects.select_related('category'), id=id)

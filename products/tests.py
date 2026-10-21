@@ -5,7 +5,6 @@ from django.urls import reverse
 from .models import Category, Product, ProductHistory, SearchHistory
 from .recommendations import recommended_products, record_product_history
 
-
 class RecommendationHistoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='Testpass123!')

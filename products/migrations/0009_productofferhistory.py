@@ -2,7 +2,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 
-
 class Migration(migrations.Migration):
     dependencies = [('products', '0008_product_discount_ends_at')]
     operations = [

@@ -8,7 +8,6 @@ from .models import Cart, CartItem
 from products.models import Product
 from products.recommendations import record_product_history
 
-
 @login_required
 @require_POST
 def add_to_cart(request, id):
@@ -52,7 +51,6 @@ def add_to_cart(request, id):
         return redirect(next_url)
     return redirect('products:product_detail', id=id)
 
-
 @login_required
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
@@ -69,7 +67,6 @@ def cart(request):
 
     return render(request, 'products/cart.html', context)
 
-
 @login_required
 @require_POST
 def remove_from_cart(request, id):
@@ -83,7 +80,6 @@ def remove_from_cart(request, id):
     cart_item.delete()
     messages.success(request, 'Product removed from cart.')
     return redirect('cart:cart')
-
 
 @login_required
 @require_POST
@@ -106,7 +102,6 @@ def increase_quantity(request, id):
 
     return redirect('cart:cart')
 
-
 @login_required
 @require_POST
 def decrease_quantity(request, id):
@@ -124,7 +119,6 @@ def decrease_quantity(request, id):
         cart_item.delete()
 
     return redirect('cart:cart')
-
 
 @login_required
 @require_POST

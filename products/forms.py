@@ -10,10 +10,6 @@ class ProductReviewForm(forms.ModelForm):
             'review': forms.Textarea(attrs={'class': 'input', 'rows': 4, 'placeholder': 'Write your review...'}),
         }
 
-
-                                                                
-                                                                
-                                
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product

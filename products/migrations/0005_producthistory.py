@@ -1,7 +1,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
-
 class Migration(migrations.Migration):
     dependencies = [
         ('products', '0004_product_is_replaceable_product_is_returnable'),

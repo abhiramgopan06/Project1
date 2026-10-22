@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}E-Commerce Store | Online Store{% endblock %}
+{% block title %}ShopEasy | Find Your Next Favourite{% endblock %}
 
 {% block content %}
 <div class="container">
 
     <section class="hero">
         <div class="hero-content">
-            <h1>Everything you need, all in one place.</h1>
+            <span class="hero-eyebrow"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> A better way to shop</span>
+            <h1>Find your next favourite thing.</h1>
             <p>
-                Discover quality products at great prices. Browse categories,
-                compare products and add your favourites to the cart.
+                Explore hand-picked products, discover great offers, and enjoy a simple shopping experience from browsing to checkout.
             </p>
-            <a class="btn btn-primary" href="#products">Shop Now →</a>
+            <div class="hero-actions"><a class="btn btn-primary" href="#products">Explore Products <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a class="hero-secondary-link" href="#categories">Browse Categories</a></div>
         </div>
 
         <div class="hero-image">
@@ -31,6 +31,12 @@
                 </div>
             {% endif %}
         </div>
+    </section>
+
+    <section class="shop-benefits" aria-label="ShopEasy benefits">
+        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i></span><div><strong>Easy delivery</strong><span>Clear shipping choices</span></div></div>
+        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><div><strong>Secure checkout</strong><span>Protected account flow</span></div></div>
+        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></span><div><strong>Order support</strong><span>Track returns and requests</span></div></div>
     </section>
 
     {% if products %}
@@ -132,7 +138,7 @@
     </section>
     {% endif %}
 
-    <div class="section-head">
+    <div class="section-head" id="categories">
         <div>
             <h2>Shop by Category</h2>
             <p>Find what you are looking for faster.</p>

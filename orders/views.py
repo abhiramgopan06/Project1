@@ -259,7 +259,10 @@ def request_return_replace(request, order_id, item_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     item = get_object_or_404(OrderItem, id=item_id, order=order)
 
-    if order.status != Order.STATUS_DELIVERED:
+    if request.method != 'POST':
+        return redirect('order_detail', order_id=order.id)
+
+    if item.is_cancelled or order.status != Order.STATUS_DELIVERED:
         messages.error(request, 'Return/Replace is only available after your order has been delivered.')
         return redirect('order_detail', order_id=order.id)
 
@@ -269,7 +272,15 @@ def request_return_replace(request, order_id, item_id):
 
     if request.method == 'POST':
         request_type = request.POST.get('request_type')
+        reason_category = request.POST.get('reason_category', '').strip()
         reason = request.POST.get('reason', '').strip()
+        valid_reasons = [choice[0] for choice in ReturnReplaceRequest.REASON_CHOICES]
+        if request_type == ReturnReplaceRequest.REQUEST_RETURN and (reason_category not in valid_reasons or not reason):
+            messages.error(request, 'Choose a return reason and add a short message.')
+            return redirect('order_detail', order_id=order.id)
+        if request_type == ReturnReplaceRequest.REQUEST_REPLACE and not reason:
+            messages.error(request, 'Please explain why you want a replacement.')
+            return redirect('order_detail', order_id=order.id)
 
         allowed_types = []
         if item.product.is_returnable:
@@ -283,6 +294,7 @@ def request_return_replace(request, order_id, item_id):
             ReturnReplaceRequest.objects.create(
                 order_item=item,
                 request_type=request_type,
+                reason_category=reason_category if request_type == ReturnReplaceRequest.REQUEST_RETURN else ReturnReplaceRequest.REASON_OTHER,
                 reason=reason,
             )
             messages.success(request, f'Your {request_type.lower()} request for "{item.product.name}" was submitted.')

@@ -1,5 +1,5 @@
-{# Shows a list of ordered products: image, name, value and the day it was ordered. #}
-{# Used on both the "My Orders" page and the Profile page. #}
+
+
 <div class="history-list">
     {% for item in order_items %}
     <a class="history-item" href="{% url 'order_detail' item.order.id %}">

@@ -44,8 +44,10 @@ class ReturnReplaceRequestAdmin(admin.ModelAdmin):
         'id',
         'order_item',
         'request_type',
+        'reason_category',
         'status',
         'created_at',
     )
 
-    list_filter = ('request_type', 'status')
+    list_filter = ('request_type', 'reason_category', 'status')
+    search_fields = ('reason', 'order_item__product__name', 'order_item__order__user__username')

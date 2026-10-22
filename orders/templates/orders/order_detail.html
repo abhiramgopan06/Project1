@@ -1,6 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Order #{{ order.id }} | E-Commerce Store{% endblock %}
+{% block title %}Order #{{ order.id }} | E-Commerce Store<script>
+document.querySelectorAll('.return-replace-form').forEach(function (form) {
+    const reasonSelect = form.querySelector('[name="reason_category"]');
+    const requestTypes = form.querySelectorAll('[name="request_type"]');
+    if (!reasonSelect) return;
+    function updateReasonRequirement() {
+        const selected = form.querySelector('[name="request_type"]:checked');
+        reasonSelect.required = Boolean(selected && selected.value === 'Return');
+    }
+    requestTypes.forEach(function (radio) {
+        radio.addEventListener('change', updateReasonRequirement);
+    });
+    updateReasonRequirement();
+});
+</script>
+{% endblock %}
 {% block content %}
+<div class="container" style="margin:12px auto;max-width:1100px"><a class="btn btn-outline" href="{% url 'storeextras:invoice' order.id %}">Print / Download Invoice</a></div>
 <div class="checkout-container">
     <div class="checkout-header">
         <h1>Order #{{ order.id }}</h1>
@@ -83,6 +99,7 @@
                                 {% if item.return_request_obj %}
                                 <div class="return-status-box">
                                     <strong>{{ item.return_request_obj.request_type }} requested</strong>
+                                    {% if item.return_request_obj.request_type == 'Return' %}<p style="margin:6px 0 0 0;color:#475569">Reason: {{ item.return_request_obj.get_reason_category_display }}</p>{% endif %}
                                     <span class="pill">{{ item.return_request_obj.status }}</span>
                                     {% if item.return_request_obj.reason %}<p style="margin:6px 0 0 0;color:#64748b">{{ item.return_request_obj.reason }}</p>{% endif %}
                                 </div>
@@ -102,7 +119,23 @@
                                         </label>
                                         {% endif %}
                                     </div>
-                                    <textarea name="reason" class="input" rows="2" placeholder="Tell us what went wrong (optional)"></textarea>
+                                    {% if item.product.is_returnable %}
+                                    <label for="reason-category-{{ item.id }}" style="display:block;font-weight:600;font-size:13px;margin:8px 0 6px">Reason for return</label>
+                                    <select id="reason-category-{{ item.id }}" name="reason_category" class="input">
+                                        <option value="">Choose a reason</option>
+                                        <option value="Color differs">Color differs from the picture</option>
+                                        <option value="Damaged product">Product arrived damaged</option>
+                                        <option value="Smaller than pictured">Product is smaller than pictured</option>
+                                        <option value="Bigger than pictured">Product is bigger than pictured</option>
+                                        <option value="Wrong product received">Wrong product received</option>
+                                        <option value="Missing parts or accessories">Parts or accessories are missing</option>
+                                        <option value="Quality not as expected">Quality is not as expected</option>
+                                        <option value="Changed my mind">Changed my mind</option>
+                                        <option value="Other">Other reason</option>
+                                    </select>
+                                    {% endif %}
+                                    <label for="return-message-{{ item.id }}" style="display:block;font-weight:600;font-size:13px;margin:8px 0 6px">Message / additional details</label>
+                                    <textarea id="return-message-{{ item.id }}" name="reason" class="input" rows="3" placeholder="Tell us more about the issue (required)" required></textarea>
                                     <button class="btn btn-outline" type="submit" style="margin-top:8px">Submit Request</button>
                                 </form>
                                 {% endif %}
@@ -135,4 +168,19 @@
         </aside>
     </div>
 </div>
+<script>
+document.querySelectorAll('.return-replace-form').forEach(function (form) {
+    const reasonSelect = form.querySelector('[name="reason_category"]');
+    const requestTypes = form.querySelectorAll('[name="request_type"]');
+    if (!reasonSelect) return;
+    function updateReasonRequirement() {
+        const selected = form.querySelector('[name="request_type"]:checked');
+        reasonSelect.required = Boolean(selected && selected.value === 'Return');
+    }
+    requestTypes.forEach(function (radio) {
+        radio.addEventListener('change', updateReasonRequirement);
+    });
+    updateReasonRequirement();
+});
+</script>
 {% endblock %}

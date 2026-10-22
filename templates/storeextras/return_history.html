@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Returns and Refunds{% endblock %}
+{% block content %}
+<section class="container" style="max-width:1100px;margin:36px auto;padding:0 18px">
+    <h1>Returns and Refunds</h1><p>Track your return reason, product inspection, and refund progress.</p>
+    <div style="overflow-x:auto;background:white;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:20px">
+        <table style="width:100%;border-collapse:collapse;min-width:800px"><thead><tr><th align="left">Product</th><th align="left">Order</th><th align="left">Reason</th><th align="left">Condition</th><th align="left">Request status</th><th align="left">Refund status</th><th align="left">Date</th></tr></thead><tbody>
+        {% for item in requests %}<tr style="border-top:1px solid #e2e8f0"><td style="padding:12px 6px">{{ item.order_item.product.name }}</td><td>#{{ item.order_item.order_id }}</td><td><strong>{{ item.get_reason_category_display }}</strong><br>{{ item.reason }}</td><td>{{ item.product_condition }}</td><td>{{ item.status }}</td><td>{{ item.refund_status }}{% if item.refund_amount %}<br>₹{{ item.refund_amount }}{% endif %}</td><td>{{ item.created_at|date:'d M Y' }}</td></tr>
+        {% empty %}<tr><td colspan="7" style="padding:18px">No return or refund requests yet.</td></tr>{% endfor %}
+        </tbody></table>
+    </div>
+</section>
+{% endblock %}

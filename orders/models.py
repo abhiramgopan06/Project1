@@ -107,12 +107,55 @@ class ReturnReplaceRequest(models.Model):
     STATUS_APPROVED = 'Approved'
     STATUS_REJECTED = 'Rejected'
     STATUS_COMPLETED = 'Completed'
+    STATUS_RECEIVED = 'Product Received'
+    STATUS_REFUNDED = 'Refunded'
 
     STATUS_CHOICES = [
         (STATUS_REQUESTED, 'Requested'),
         (STATUS_APPROVED, 'Approved'),
         (STATUS_REJECTED, 'Rejected'),
+        (STATUS_RECEIVED, 'Product Received'),
+        (STATUS_REFUNDED, 'Refunded'),
         (STATUS_COMPLETED, 'Completed'),
+    ]
+
+    CONDITION_PENDING = 'Pending Inspection'
+    CONDITION_GOOD = 'Good'
+    CONDITION_DAMAGED = 'Damaged'
+    CONDITION_CHOICES = [
+        (CONDITION_PENDING, 'Pending Inspection'),
+        (CONDITION_GOOD, 'Good'),
+        (CONDITION_DAMAGED, 'Damaged'),
+    ]
+
+    REFUND_NOT_ELIGIBLE = 'Not Eligible'
+    REFUND_PENDING = 'Pending'
+    REFUND_PROCESSED = 'Processed'
+    REFUND_STATUS_CHOICES = [
+        (REFUND_NOT_ELIGIBLE, 'Not Eligible'),
+        (REFUND_PENDING, 'Pending'),
+        (REFUND_PROCESSED, 'Processed'),
+    ]
+
+    REASON_COLOR = 'Color differs'
+    REASON_DAMAGED = 'Damaged product'
+    REASON_SMALLER = 'Smaller than pictured'
+    REASON_BIGGER = 'Bigger than pictured'
+    REASON_WRONG_ITEM = 'Wrong product received'
+    REASON_MISSING_PARTS = 'Missing parts or accessories'
+    REASON_QUALITY = 'Quality not as expected'
+    REASON_CHANGED_MIND = 'Changed my mind'
+    REASON_OTHER = 'Other'
+    REASON_CHOICES = [
+        (REASON_COLOR, 'Color differs from the picture'),
+        (REASON_DAMAGED, 'Product arrived damaged'),
+        (REASON_SMALLER, 'Product is smaller than pictured'),
+        (REASON_BIGGER, 'Product is bigger than pictured'),
+        (REASON_WRONG_ITEM, 'Wrong product received'),
+        (REASON_MISSING_PARTS, 'Parts or accessories are missing'),
+        (REASON_QUALITY, 'Quality is not as expected'),
+        (REASON_CHANGED_MIND, 'Changed my mind'),
+        (REASON_OTHER, 'Other reason'),
     ]
 
     order_item = models.OneToOneField(
@@ -122,7 +165,14 @@ class ReturnReplaceRequest(models.Model):
     )
 
     request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
-    reason = models.TextField(blank=True)
+    reason_category = models.CharField(max_length=40, choices=REASON_CHOICES, default=REASON_OTHER)
+    reason = models.TextField()
+    product_condition = models.CharField(max_length=30, choices=CONDITION_CHOICES, default=CONDITION_PENDING)
+    inspection_note = models.TextField(blank=True)
+    refund_status = models.CharField(max_length=20, choices=REFUND_STATUS_CHOICES, default=REFUND_NOT_ELIGIBLE)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    received_at = models.DateTimeField(null=True, blank=True)
+    inspected_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='inspected_returns')
 
     status = models.CharField(
         max_length=20,

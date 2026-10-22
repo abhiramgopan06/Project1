@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }} | E-Commerce Store{% endblock %}
 {% block content %}
+{% if user.is_authenticated and not user.is_staff %}<form method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}" style="margin:12px 0">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-outline" type="submit">♡ Save to Wishlist</button></form>{% endif %}
+
 <div class="container">
     <div style="margin-top:25px;color:#64748b;font-size:14px">
         <a href="{% url 'products:home' %}">Home</a> / {{ product.category.name }} / {{ product.name }}

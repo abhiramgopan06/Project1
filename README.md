@@ -234,3 +234,17 @@ Two payment methods are offered at checkout:
 - The online payment flow is a **demo/simulation**, not a production payment integration — see Payment Flow.
 - Product, category, and stock management is done through Django's built-in Admin site rather than a custom-built product editor in the staff dashboard.
 - SQLite is used by default; swap `DATABASES` in `ecommerce/settings.py` for a production database (e.g. PostgreSQL) before deploying.
+
+## Additional customer and admin features
+
+The account area now includes Wishlist, Payment History, Returns and Replacements, Notifications, and printable order receipts. Staff users can open Activity History, Stock History, and Return Management from the navigation bar. The new `storeextras` app stores these records in separate database tables.
+
+After extracting the project, activate your virtual environment, install `requirements.txt`, and run:
+
+```powershell
+python manage.py migrate
+python manage.py check
+python manage.py runserver
+```
+
+Payment history is a record of the current order/payment flow; it does not itself verify real Razorpay payments or issue a real refund. Real payment confirmation and refunds must be connected to verified provider callbacks before production use.

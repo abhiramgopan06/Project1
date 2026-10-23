@@ -25,12 +25,17 @@
             {% if user.is_authenticated %}
                 
                 {% if not user.is_staff %}
-                    <a class="icon-link" href="{% url 'cart:cart' %}">🛒 Cart{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
-                    <a href="{% url 'order_history' %}">My Orders</a>
-                    <a href="{% url 'storeextras:wishlist' %}">Wishlist</a>
-                    <a href="{% url 'storeextras:payment_history' %}">Payments</a>
-                    <a href="{% url 'storeextras:return_history' %}">Returns</a>
-                    <a href="{% url 'storeextras:notifications' %}">Notifications</a>
+                    <details class="nav-dropdown customer-nav-dropdown">
+                        <summary aria-label="Open shopping menu">My Shopping <span aria-hidden="true">▾</span>{% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}</summary>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'cart:cart' %}">🛒 Cart{% if cart_count %} ({{ cart_count }}){% endif %}</a>
+                            <a href="{% url 'order_history' %}">My Orders</a>
+                            <a href="{% url 'storeextras:wishlist' %}">Wishlist</a>
+                            <a href="{% url 'storeextras:payment_history' %}">Payment History</a>
+                            <a href="{% url 'storeextras:return_history' %}">Returns &amp; Replacements</a>
+                            <a href="{% url 'storeextras:notifications' %}">Notifications</a>
+                        </div>
+                    </details>
                 {% endif %}
                 {% if user.is_staff %}
                     <details class="nav-dropdown">

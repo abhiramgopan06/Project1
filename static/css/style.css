@@ -4663,38 +4663,14 @@ button.btn:focus-visible {
     .dashboard-nav-submenu { padding-left: 8px; }
     .hero { border-radius: 16px; }
 }
-.store-benefits {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin: 26px 0 38px;
-}
-.store-benefit {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    min-width: 0;
-    padding: 17px;
-    border: 1px solid #e8edf3;
-    border-radius: 14px;
-    background: #fff;
-}
-.store-benefit-icon {
-    display: grid;
-    place-items: center;
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    background: #f1f5f9;
-    color: #111827;
-    font-size: 22px;
-    font-weight: 800;
-}
-.store-benefit strong, .store-benefit span:not(.store-benefit-icon) { display: block; }
-.store-benefit strong { margin-bottom: 4px; color: #111827; font-size: 14px; }
-.store-benefit div span { color: #64748b; font-size: 12px; line-height: 1.5; }
-@media (max-width: 700px) {
-    .store-benefits { grid-template-columns: 1fr; gap: 10px; margin: 20px 0 30px; }
-    .store-benefit { padding: 14px; }
+
+.customer-nav-dropdown > summary { gap: 8px; }
+.customer-nav-dropdown .badge { margin-left: 1px; background: #2563eb; }
+.nav-dropdown > summary:focus-visible,
+.dashboard-nav-group > summary:focus-visible { outline: 3px solid rgba(59, 130, 246, .55); outline-offset: 3px; }
+.nav-dropdown-menu a:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; background: #f1f5f9; }
+@media (max-width: 600px) {
+    .nav-inner { align-items: flex-start; }
+    .nav-links { align-items: center; }
+    .customer-nav-dropdown .nav-dropdown-menu { left: 0; right: auto; }
 }

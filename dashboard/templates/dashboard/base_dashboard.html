@@ -4,12 +4,26 @@
     <div class="dashboard-layout">
         <aside class="dashboard-sidebar">
             <h3>Admin Dashboard</h3>
-            <nav>
+            <nav aria-label="Admin navigation">
                 <a class="dashboard-nav-link {% if active == 'home' %}active{% endif %}" href="{% url 'dashboard:home' %}" {% if active == 'home' %}aria-current="page"{% endif %}><span class="nav-icon">📊</span>Overview</a>
-                <a class="dashboard-nav-link {% if active == 'products' %}active{% endif %}" href="{% url 'dashboard:products' %}" {% if active == 'products' %}aria-current="page"{% endif %}><span class="nav-icon">🛍️</span>Products</a>
-                <a class="dashboard-nav-link {% if active == 'offers' %}active{% endif %}" href="{% url 'dashboard:product_offers' %}" {% if active == 'offers' %}aria-current="page"{% endif %}><span class="nav-icon">🏷️</span>Offer for Products</a>
+                <details class="dashboard-nav-group" {% if active == 'products' or active == 'offers' or active == 'category_offers' %}open{% endif %}>
+                    <summary><span class="nav-icon">🛍️</span>Catalog &amp; offers <span class="group-chevron">▾</span></summary>
+                    <div class="dashboard-nav-submenu">
+                        <a class="dashboard-nav-link {% if active == 'products' %}active{% endif %}" href="{% url 'dashboard:products' %}" {% if active == 'products' %}aria-current="page"{% endif %}>Products</a>
+                        <a class="dashboard-nav-link {% if active == 'offers' %}active{% endif %}" href="{% url 'dashboard:product_offers' %}" {% if active == 'offers' %}aria-current="page"{% endif %}>Product offers</a>
+                        <a class="dashboard-nav-link {% if active == 'category_offers' %}active{% endif %}" href="{% url 'dashboard:category_offers' %}" {% if active == 'category_offers' %}aria-current="page"{% endif %}>Category offers</a>
+                    </div>
+                </details>
                 <a class="dashboard-nav-link {% if active == 'orders' %}active{% endif %}" href="{% url 'dashboard:orders' %}" {% if active == 'orders' %}aria-current="page"{% endif %}><span class="nav-icon">📦</span>Orders</a>
                 <a class="dashboard-nav-link {% if active == 'users' %}active{% endif %}" href="{% url 'dashboard:users' %}" {% if active == 'users' %}aria-current="page"{% endif %}><span class="nav-icon">👥</span>Users</a>
+                <details class="dashboard-nav-group">
+                    <summary><span class="nav-icon">🧾</span>Store operations <span class="group-chevron">▾</span></summary>
+                    <div class="dashboard-nav-submenu">
+                        <a class="dashboard-nav-link" href="{% url 'storeextras:return_management' %}">Returns &amp; replacements</a>
+                        <a class="dashboard-nav-link" href="{% url 'storeextras:stock_history' %}">Stock history</a>
+                        <a class="dashboard-nav-link" href="{% url 'storeextras:activity_history' %}">Activity history</a>
+                    </div>
+                </details>
                 <a class="dashboard-nav-link" href="{% url 'admin:index' %}"><span class="nav-icon">⚙️</span>Django Admin</a>
             </nav>
         </aside>

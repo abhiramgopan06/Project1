@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}ShopEasy | Find Your Next Favourite{% endblock %}
+{% block title %}E-Commerce Store | Online Store{% endblock %}
 
 {% block content %}
 <div class="container">
 
     <section class="hero">
         <div class="hero-content">
-            <span class="hero-eyebrow"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> A better way to shop</span>
-            <h1>Find your next favourite thing.</h1>
+            <h1>Everything you need, all in one place.</h1>
             <p>
-                Explore hand-picked products, discover great offers, and enjoy a simple shopping experience from browsing to checkout.
+                Discover quality products at great prices. Browse categories,
+                compare products and add your favourites to the cart.
             </p>
-            <div class="hero-actions"><a class="btn btn-primary" href="#products">Explore Products <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a class="hero-secondary-link" href="#categories">Browse Categories</a></div>
+            <a class="btn btn-primary" href="#products">Shop Now →</a>
         </div>
 
         <div class="hero-image">
@@ -33,10 +33,10 @@
         </div>
     </section>
 
-    <section class="shop-benefits" aria-label="ShopEasy benefits">
-        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i></span><div><strong>Easy delivery</strong><span>Clear shipping choices</span></div></div>
-        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><div><strong>Secure checkout</strong><span>Protected account flow</span></div></div>
-        <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></span><div><strong>Order support</strong><span>Track returns and requests</span></div></div>
+    <section class="store-benefits" aria-label="Shopping highlights">
+        <div class="store-benefit"><span class="store-benefit-icon">⌕</span><div><strong>Find it faster</strong><span>Search products and browse categories</span></div></div>
+        <div class="store-benefit"><span class="store-benefit-icon">%</span><div><strong>Clear offers</strong><span>See discounts and current prices</span></div></div>
+        <div class="store-benefit"><span class="store-benefit-icon">▣</span><div><strong>Order updates</strong><span>Review your orders from your account</span></div></div>
     </section>
 
     {% if products %}
@@ -138,7 +138,7 @@
     </section>
     {% endif %}
 
-    <div class="section-head" id="categories">
+    <div class="section-head">
         <div>
             <h2>Shop by Category</h2>
             <p>Find what you are looking for faster.</p>

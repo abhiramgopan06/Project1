@@ -1,20 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Order #{{ order.id }} | E-Commerce Store<script>
-document.querySelectorAll('.return-replace-form').forEach(function (form) {
-    const reasonSelect = form.querySelector('[name="reason_category"]');
-    const requestTypes = form.querySelectorAll('[name="request_type"]');
-    if (!reasonSelect) return;
-    function updateReasonRequirement() {
-        const selected = form.querySelector('[name="request_type"]:checked');
-        reasonSelect.required = Boolean(selected && selected.value === 'Return');
-    }
-    requestTypes.forEach(function (radio) {
-        radio.addEventListener('change', updateReasonRequirement);
-    });
-    updateReasonRequirement();
-});
-</script>
-{% endblock %}
+{% block title %}Order #{{ order.id }} | E-Commerce Store{% endblock %}
 {% block content %}
 <div class="container" style="margin:12px auto;max-width:1100px"><a class="btn btn-outline" href="{% url 'storeextras:invoice' order.id %}">Print / Download Invoice</a></div>
 <div class="checkout-container">

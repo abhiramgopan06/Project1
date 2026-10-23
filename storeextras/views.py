@@ -69,7 +69,7 @@ def stock_history(request):
 
 @user_passes_test(lambda user: user.is_staff)
 def return_management(request):
-    requests = ReturnReplaceRequest.objects.select_related('order_item__product', 'order_item__order', 'order_item__order__user', 'inspected_by')
+    requests = ReturnReplaceRequest.objects.select_related('order_item__product', 'order_item__order', 'order_item__order__user', 'inspected_by').order_by('-created_at')
     if request.method == 'POST':
         request_id = request.POST.get('request_id')
         action = request.POST.get('action')
@@ -101,14 +101,20 @@ def return_management(request):
                 messages.warning(request, 'The product was marked damaged. The return was rejected and the refund process was stopped.')
             elif condition == ReturnReplaceRequest.CONDITION_GOOD:
                 item.product_condition = condition
-                item.status = ReturnReplaceRequest.STATUS_RECEIVED
-                item.refund_status = ReturnReplaceRequest.REFUND_PENDING
-                item.refund_amount = item.order_item.line_total
                 item.inspection_note = note
                 item.inspected_by = request.user
                 item.received_at = timezone.now()
-                item.save(update_fields=['product_condition', 'status', 'refund_status', 'refund_amount', 'inspection_note', 'inspected_by', 'received_at', 'updated_at'])
-                messages.success(request, 'Product received in good condition. Refund is now awaiting staff confirmation.')
+                if item.request_type == ReturnReplaceRequest.REQUEST_RETURN:
+                    item.status = ReturnReplaceRequest.STATUS_RECEIVED
+                    item.refund_status = ReturnReplaceRequest.REFUND_PENDING
+                    item.refund_amount = item.order_item.line_total
+                    item.save(update_fields=['product_condition', 'status', 'refund_status', 'refund_amount', 'inspection_note', 'inspected_by', 'received_at', 'updated_at'])
+                    messages.success(request, 'Product received in good condition. Refund is awaiting staff confirmation.')
+                else:
+                    item.status = ReturnReplaceRequest.STATUS_COMPLETED
+                    item.refund_status = ReturnReplaceRequest.REFUND_NOT_ELIGIBLE
+                    item.save(update_fields=['product_condition', 'status', 'refund_status', 'inspection_note', 'inspected_by', 'received_at', 'updated_at'])
+                    messages.success(request, 'Returned product received in good condition. Replacement request marked completed. Staff should arrange the replacement shipment.')
             else:
                 messages.error(request, 'Select whether the received product is in good or damaged condition.')
         elif action == 'refund' and item.status == ReturnReplaceRequest.STATUS_RECEIVED and item.product_condition == ReturnReplaceRequest.CONDITION_GOOD:

@@ -8,8 +8,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category', 'price', 'stock', 'rating_average', 'rating_count', 'is_available', 'created_at')
-    list_filter = ('category', 'is_available')
+    list_display = ('id', 'name', 'category', 'price', 'stock', 'rating_average', 'rating_count', 'is_available', 'is_returnable', 'is_replaceable', 'created_at')
+    list_filter = ('category', 'is_available', 'is_returnable', 'is_replaceable')
     search_fields = ('name', 'description')
 
 @admin.register(ProductReview)

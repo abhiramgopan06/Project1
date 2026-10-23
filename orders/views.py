@@ -262,8 +262,8 @@ def request_return_replace(request, order_id, item_id):
     if request.method != 'POST':
         return redirect('order_detail', order_id=order.id)
 
-    if item.is_cancelled or order.status != Order.STATUS_DELIVERED:
-        messages.error(request, 'Return/Replace is only available after your order has been delivered.')
+    if order.status != Order.STATUS_DELIVERED or item.is_cancelled:
+        messages.error(request, 'Return/Replace is only available for delivered, non-cancelled items.')
         return redirect('order_detail', order_id=order.id)
 
     if ReturnReplaceRequest.objects.filter(order_item=item).exists():
@@ -275,12 +275,14 @@ def request_return_replace(request, order_id, item_id):
         reason_category = request.POST.get('reason_category', '').strip()
         reason = request.POST.get('reason', '').strip()
         valid_reasons = [choice[0] for choice in ReturnReplaceRequest.REASON_CHOICES]
-        if request_type == ReturnReplaceRequest.REQUEST_RETURN and (reason_category not in valid_reasons or not reason):
-            messages.error(request, 'Choose a return reason and add a short message.')
+        if not reason:
+            messages.error(request, 'Please add a short message explaining your request.')
             return redirect('order_detail', order_id=order.id)
-        if request_type == ReturnReplaceRequest.REQUEST_REPLACE and not reason:
-            messages.error(request, 'Please explain why you want a replacement.')
+        if request_type == ReturnReplaceRequest.REQUEST_RETURN and reason_category not in valid_reasons:
+            messages.error(request, 'Choose a valid reason for returning the product.')
             return redirect('order_detail', order_id=order.id)
+        if request_type == ReturnReplaceRequest.REQUEST_REPLACE:
+            reason_category = ReturnReplaceRequest.REASON_OTHER
 
         allowed_types = []
         if item.product.is_returnable:

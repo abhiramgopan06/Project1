@@ -6,12 +6,13 @@
     <p>Approve valid requests, inspect returned products, and stop refunds for damaged products.</p>
     <div style="overflow-x:auto;background:white;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:20px">
         <table style="width:100%;border-collapse:collapse;min-width:1000px">
-            <thead><tr><th align="left">Customer / Order</th><th align="left">Product</th><th align="left">Reason</th><th align="left">Condition</th><th align="left">Refund</th><th align="left">Status</th><th align="left">Staff action</th></tr></thead>
+            <thead><tr><th align="left">Customer / Order</th><th align="left">Product</th><th align="left">Request type</th><th align="left">Reason</th><th align="left">Condition</th><th align="left">Refund</th><th align="left">Status</th><th align="left">Staff action</th></tr></thead>
             <tbody>
             {% for row in requests %}
             <tr style="border-top:1px solid #e2e8f0;vertical-align:top">
-                <td style="padding:12px 6px">{{ row.order_item.order.user.username }}<br>Order #{{ row.order_item.order_id }}</td>
+                <td style="padding:12px 6px">{{ row.order_item.order.user.username }}<br>{{ row.order_item.order.name }}<br>{{ row.order_item.order.email }}<br>{{ row.order_item.order.phone }}<br>Order #{{ row.order_item.order_id }}</td>
                 <td style="padding:12px 6px">{{ row.order_item.product.name }}<br>Qty: {{ row.order_item.quantity }}</td>
+                <td style="padding:12px 6px">{{ row.request_type }}</td>
                 <td style="padding:12px 6px;max-width:220px"><strong>{{ row.get_reason_category_display }}</strong><br>{{ row.reason }}</td>
                 <td style="padding:12px 6px">{{ row.product_condition }}{% if row.inspection_note %}<p>{{ row.inspection_note }}</p>{% endif %}</td>
                 <td style="padding:12px 6px">{{ row.refund_status }}{% if row.refund_amount %}<br>₹{{ row.refund_amount }}{% endif %}</td>
@@ -21,12 +22,12 @@
                     <form method="post" style="display:grid;gap:8px;margin-bottom:8px">{% csrf_token %}<input type="hidden" name="request_id" value="{{ row.id }}"><textarea name="inspection_note" rows="2" placeholder="Optional note to customer"></textarea><button class="btn btn-primary" name="action" value="approve">Approve request</button><button class="btn btn-outline" name="action" value="reject">Reject request</button></form>
                     {% elif row.status == 'Approved' %}
                     <form method="post" style="display:grid;gap:8px">{% csrf_token %}<input type="hidden" name="request_id" value="{{ row.id }}"><select name="product_condition" required><option value="">Inspect returned product</option><option value="Good">Received in good condition</option><option value="Damaged">Product is damaged</option></select><textarea name="inspection_note" rows="2" placeholder="Inspection note (optional)"></textarea><button class="btn btn-primary" name="action" value="received">Confirm product received</button></form>
-                    {% elif row.status == 'Product Received' and row.product_condition == 'Good' and row.refund_status == 'Pending' %}
+                    {% elif row.status == 'Product Received' and row.request_type == 'Return' and row.product_condition == 'Good' and row.refund_status == 'Pending' %}
                     <form method="post" style="display:grid;gap:8px">{% csrf_token %}<input type="hidden" name="request_id" value="{{ row.id }}"><p>Confirm only after completing the actual refund, if applicable.</p><button class="btn btn-primary" name="action" value="refund">Mark refund processed</button></form>
-                    {% elif row.status == 'Rejected' %}<strong>Stopped</strong>{% else %}<span> No action needed </span>{% endif %}
+                    {% elif row.status == 'Rejected' %}<strong>Rejected / stopped</strong>{% elif row.status == 'Completed' and row.request_type == 'Replace' %}<strong>Replacement marked complete</strong><p>Arrange and record the replacement shipment according to store policy.</p>{% else %}<span>No action needed</span>{% endif %}
                 </td>
             </tr>
-            {% empty %}<tr><td colspan="7" style="padding:18px">No return or refund requests yet.</td></tr>{% endfor %}
+            {% empty %}<tr><td colspan="8" style="padding:18px">No return, refund, or replacement requests yet.</td></tr>{% endfor %}
             </tbody>
         </table>
     </div>

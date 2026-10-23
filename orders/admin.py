@@ -42,12 +42,27 @@ class OrderItemAdmin(admin.ModelAdmin):
 class ReturnReplaceRequestAdmin(admin.ModelAdmin):
     list_display = (
         'id',
+        'id',
+        'customer_name',
+        'customer_email',
         'order_item',
         'request_type',
         'reason_category',
         'status',
+        'product_condition',
+        'refund_status',
+        'refund_amount',
         'created_at',
     )
 
-    list_filter = ('request_type', 'reason_category', 'status')
-    search_fields = ('reason', 'order_item__product__name', 'order_item__order__user__username')
+    list_filter = ('request_type', 'reason_category', 'status', 'product_condition', 'refund_status', 'created_at')
+    search_fields = ('reason', 'inspection_note', 'order_item__product__name', 'order_item__order__user__username', 'order_item__order__name', 'order_item__order__email', 'order_item__order__phone')
+    readonly_fields = ('created_at', 'updated_at', 'received_at')
+
+    @admin.display(description='Customer')
+    def customer_name(self, obj):
+        return obj.order_item.order.name
+
+    @admin.display(description='Customer email')
+    def customer_email(self, obj):
+        return obj.order_item.order.email

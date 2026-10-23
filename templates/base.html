@@ -14,48 +14,49 @@
 <body>
 <header class="navbar">
     <div class="container nav-inner">
-        <a class="brand" href="{% url 'products:home' %}" aria-label="ShopEasy home">ShopEasy<span class="brand-dot">.</span></a>
+        <a class="brand" href="{% url 'products:home' %}">E-Commerce Shop</a>
 
-        <form class="nav-search" method="get" action="{% url 'products:home' %}" role="search">
-            <label class="visually-hidden" for="site-search">Search products</label>
-            <input id="site-search" type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
-            <button type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <form class="nav-search" method="get" action="{% url 'products:home' %}">
+            <input type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
         </form>
 
-        <nav class="nav-links" aria-label="Main navigation">
-            <a class="nav-primary-link" href="{% url 'products:home' %}">Shop</a>
+        <nav class="nav-links">
+            <a href="{% url 'products:home' %}">Shop</a>
             {% if user.is_authenticated %}
+                
                 {% if not user.is_staff %}
-                    <a class="icon-link nav-primary-link" href="{% url 'cart:cart' %}"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Cart{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
-                    <a class="nav-primary-link nav-orders-link" href="{% url 'order_history' %}">My Orders</a>
-                    <div class="nav-dropdown">
-                        <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">More <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-                        <div class="nav-dropdown-menu" hidden>
-                            <a href="{% url 'storeextras:wishlist' %}"><i class="fa-regular fa-heart" aria-hidden="true"></i> Wishlist</a>
-                            <a href="{% url 'storeextras:payment_history' %}"><i class="fa-regular fa-credit-card" aria-hidden="true"></i> Payments</a>
-                            <a href="{% url 'storeextras:return_history' %}"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Returns</a>
-                            <a href="{% url 'storeextras:notifications' %}"><i class="fa-regular fa-bell" aria-hidden="true"></i> Notifications</a>
-                        </div>
-                    </div>
-                {% else %}
-                    <a class="nav-primary-link" href="{% url 'dashboard:home' %}">Dashboard</a>
-                    <div class="nav-dropdown">
-                        <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">Manage <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-                        <div class="nav-dropdown-menu" hidden>
-                            <a href="{% url 'storeextras:activity_history' %}"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Activity History</a>
-                            <a href="{% url 'storeextras:stock_history' %}"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i> Stock History</a>
-                            <a href="{% url 'storeextras:return_management' %}"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Returns Management</a>
-                        </div>
-                    </div>
+                    <a class="icon-link" href="{% url 'cart:cart' %}">🛒 Cart{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
+                    <a href="{% url 'order_history' %}">My Orders</a>
+                    <a href="{% url 'storeextras:wishlist' %}">Wishlist</a>
+                    <a href="{% url 'storeextras:payment_history' %}">Payments</a>
+                    <a href="{% url 'storeextras:return_history' %}">Returns</a>
+                    <a href="{% url 'storeextras:notifications' %}">Notifications</a>
                 {% endif %}
-                <a class="nav-user-link" href="{% url 'profile' %}" title="Open profile"><i class="fa-regular fa-user" aria-hidden="true"></i><span>{{ user.username }}</span></a>
-                <form method="post" action="{% url 'logout' %}" class="nav-logout-form">
+                {% if user.is_staff %}
+                    <details class="nav-dropdown">
+                        <summary aria-label="Open admin tools">Admin Tools <span aria-hidden="true">▾</span></summary>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'dashboard:home' %}">Dashboard overview</a>
+                            <a href="{% url 'dashboard:products' %}">Manage products</a>
+                            <a href="{% url 'dashboard:product_offers' %}">Product offers</a>
+                            <a href="{% url 'dashboard:category_offers' %}">Category offers</a>
+                            <a href="{% url 'dashboard:orders' %}">Manage orders</a>
+                            <a href="{% url 'dashboard:users' %}">Manage users</a>
+                            <a href="{% url 'storeextras:return_management' %}">Returns &amp; replacements</a>
+                            <a href="{% url 'storeextras:stock_history' %}">Stock history</a>
+                            <a href="{% url 'storeextras:activity_history' %}">Activity history</a>
+                            <a href="{% url 'admin:index' %}">Django admin</a>
+                        </div>
+                    </details>
+                {% endif %}
+                <a class="hide-mobile" href="{% url 'profile' %}">Hi, {{ user.username }}</a>
+                <form method="post" action="{% url 'logout' %}" style="display:inline">
                     {% csrf_token %}
-                    <button class="btn btn-outline nav-logout" type="submit">Logout</button>
+                    <button class="btn btn-outline" type="submit">Logout</button>
                 </form>
             {% else %}
-                <a class="nav-primary-link" href="{% url 'login' %}">Login</a>
-                <a class="btn btn-primary nav-signup" href="{% url 'register' %}">Sign Up</a>
+                <a href="{% url 'login' %}">Login</a>
+                <a class="btn btn-primary" href="{% url 'register' %}">Sign Up</a>
             {% endif %}
         </nav>
     </div>
@@ -85,102 +86,70 @@
 
 <footer class="site-footer">
     <div class="container footer-top">
+
         <div class="footer-col footer-white">
-            <h4>ShopEasy</h4>
-            <p class="footer-description">Discover useful products, compare prices, and manage your orders in one place.</p>
-            <a href="{% url 'products:home' %}">Shop all products</a>
-            <a href="{% url 'products:home' %}#categories">Browse categories</a>
+            <h4>E-Commerce Shop</h4>
+            <a href="#">About Us</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+            <a href="#">Sitemap</a>
+
+            <h4 class="footer-subhead">Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Cookies Policy</a>
+            <a href="#">Terms &amp; Conditions</a>
         </div>
 
         <div class="footer-col">
             <h4>Shopping</h4>
-            <a href="{% url 'products:home' %}#products">Featured products</a>
-            {% if user.is_authenticated and not user.is_staff %}
-                <a href="{% url 'cart:cart' %}">My cart</a>
-                <a href="{% url 'order_history' %}">Track my order</a>
-                <a href="{% url 'storeextras:return_history' %}">Returns and replacements</a>
-            {% else %}
-                <a href="{% url 'login' %}">Sign in to view orders</a>
+            <a href="{% url 'products:home' %}">How It Works</a>
+            <a href="#">Shipping &amp; Returns</a>
+            <a href="#">Size Guide</a>
+            {% if not user.is_staff %}
+                <a href="{% url 'order_history' %}">Track My Order</a>
             {% endif %}
+
+            <h4 class="footer-subhead">Join Us</h4>
+            <a href="#">Careers</a>
+            <a href="#">Become a Partner</a>
+            <a href="#">Work With Us</a>
         </div>
 
         <div class="footer-col">
-            <h4>Your Account</h4>
-            {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}">Profile and addresses</a>
-                {% if user.is_staff %}
-                    <a href="{% url 'dashboard:home' %}">Store dashboard</a>
-                {% else %}
-                    <a href="{% url 'storeextras:wishlist' %}">Wishlist</a>
-                    <a href="{% url 'storeextras:payment_history' %}">Payment history</a>
-                {% endif %}
-            {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'register' %}">Create an account</a>
-            {% endif %}
+            <h4>Support</h4>
+            <a href="#">Contact Support</a>
+            <a href="#"> +91 90610 76083</a>
         </div>
 
         <div class="footer-col">
-            <h4>Need Help?</h4>
-            <p>Use your account to view order updates, payment records, and return requests.</p>
-            {% if user.is_authenticated and not user.is_staff %}
-                <a href="{% url 'storeextras:notifications' %}">Order notifications</a>
-            {% endif %}
-            <a href="{% url 'products:home' %}">Continue shopping <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            <h4 class="footer-subhead">Follow Us</h4>
+            <div class="footer-social">
+                <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            </div>
         </div>
     </div>
 
     <div class="container footer-bottom">
         <p class="footer-copyright">
             <i class="fa-solid fa-bag-shopping"></i>
-            &copy; {% now "Y" %} ShopEasy — All rights reserved.
+            &copy; {% now "Y" %} E-Commerce Shop — All rights reserved.
         </p>
 
         <div class="footer-payments">
-            <span class="footer-payments-label">Shop securely · Manage orders easily</span>
+            <span class="footer-payments-label">Payment methods</span>
+            <i class="fa-brands fa-cc-visa"></i>
+            <i class="fa-brands fa-cc-mastercard"></i>
+            <i class="fa-brands fa-cc-paypal"></i>
+            <i class="fa-brands fa-cc-amex"></i>
         </div>
 
     </div>
 </footer>
-<script>
-(function () {
-    const dropdowns = document.querySelectorAll('.nav-dropdown');
-
-    function closeDropdown(dropdown) {
-        const button = dropdown.querySelector('.nav-dropdown-toggle');
-        const menu = dropdown.querySelector('.nav-dropdown-menu');
-        if (!button || !menu) return;
-        button.setAttribute('aria-expanded', 'false');
-        menu.hidden = true;
-    }
-
-    dropdowns.forEach(function (dropdown) {
-        const button = dropdown.querySelector('.nav-dropdown-toggle');
-        const menu = dropdown.querySelector('.nav-dropdown-menu');
-        if (!button || !menu) return;
-
-        button.addEventListener('click', function () {
-            const isOpen = button.getAttribute('aria-expanded') === 'true';
-            dropdowns.forEach(closeDropdown);
-            button.setAttribute('aria-expanded', String(!isOpen));
-            menu.hidden = isOpen;
-        });
-
-        dropdown.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closeDropdown(dropdown);
-                button.focus();
-            }
-        });
-    });
-
-    document.addEventListener('click', function (event) {
-        dropdowns.forEach(function (dropdown) {
-            if (!dropdown.contains(event.target)) closeDropdown(dropdown);
-        });
-    });
-})();
-</script>
 <script>
 (function () {
     const key = 'shopPageScrollY';

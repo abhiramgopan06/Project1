@@ -158,12 +158,45 @@
 <script>
 (function () {
     const key = 'shopPageScrollY';
+    const navbar = document.querySelector('.navbar');
+    let lastScrollY = window.scrollY;
+    let scrollTicking = false;
+
+    function updateNavbar() {
+        const currentScrollY = window.scrollY;
+        const scrollDifference = currentScrollY - lastScrollY;
+
+        if (currentScrollY <= 20) {
+            navbar.classList.remove('navbar-hidden');
+            navbar.classList.add('navbar-visible');
+        } else if (scrollDifference > 4) {
+            navbar.classList.add('navbar-hidden');
+            navbar.classList.remove('navbar-visible');
+        } else if (scrollDifference < -4) {
+            navbar.classList.remove('navbar-hidden');
+            navbar.classList.add('navbar-visible');
+        }
+
+        lastScrollY = currentScrollY;
+        scrollTicking = false;
+    }
+
+    if (navbar) {
+        window.addEventListener('scroll', function () {
+            if (!scrollTicking) {
+                window.requestAnimationFrame(updateNavbar);
+                scrollTicking = true;
+            }
+        }, { passive: true });
+    }
+
     document.addEventListener('submit', function (event) {
         const form = event.target;
         if (form.matches('form') && !form.classList.contains('nav-search')) {
             sessionStorage.setItem(key, String(window.scrollY));
         }
     });
+
     document.addEventListener('DOMContentLoaded', function () {
         const savedPosition = sessionStorage.getItem(key);
         if (savedPosition !== null) {

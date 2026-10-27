@@ -17,3 +17,16 @@ Important
 - The application is intended for local development until production settings and payment/email integrations are tested.
 - Run the Django checks above and manually test registration/OTP, product management, cart, checkout, payments, returns, and staff permissions.
 - The build environment does not have Django installed, so full Django checks and browser-based end-to-end tests could not be run here.
+
+
+UI and code review
+- Product-card action buttons now stay together with a consistent 8px gap.
+- Product information no longer stretches to create a large empty area between actions.
+- Product images use consistent contain sizing in the storefront grids and featured carousel.
+- Shared spacing, focus states, and responsive layouts are applied across the storefront.
+- Full end-to-end testing must be completed locally for email OTP, checkout, payment, returns, and staff permissions.
+
+Latest layout fixes
+- Product action buttons now use a fixed small 8px gap and cannot stretch apart vertically.
+- Product pagination is moved outside the sidebar/content row and centered across the full shop layout.
+- Program comments have been removed from Python, HTML, CSS, and standalone JavaScript source files.

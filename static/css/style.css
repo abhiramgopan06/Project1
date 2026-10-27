@@ -6117,3 +6117,248 @@ input, select, textarea, button {
 .product-carousel-card .product-actions .btn {
     min-height: 42px;
 }
+
+.product-carousel-card .product-info {
+    min-height: 0;
+}
+
+.product-carousel-card .product-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.product-carousel-card .product-actions form {
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 0;
+}
+
+.product-carousel-card .product-actions > a,
+.product-carousel-card .product-actions > span {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.product-carousel-card .product-actions .btn-add-to-cart,
+.product-carousel-card .product-actions .btn {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+}
+
+
+
+.home-page-polish .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 34px 0 16px;
+}
+
+.home-page-polish .hero {
+    overflow: hidden;
+    border: 1px solid #e4eaf3;
+    border-radius: 22px;
+    background: linear-gradient(120deg, #ffffff 0%, #f3f6fb 100%);
+    box-shadow: 0 12px 34px rgba(15, 23, 42, .06);
+}
+
+.home-page-polish .hero-content p {
+    max-width: 560px;
+    line-height: 1.7;
+}
+
+.home-page-polish .hero-image img {
+    object-fit: contain;
+}
+
+.product-grid .product-info,
+.product-carousel-card .product-info {
+    flex: 0 0 auto;
+    min-height: 0;
+    gap: 7px;
+}
+
+.product-grid .price,
+.product-carousel-card .price,
+.shop-layout .price {
+    margin: 8px 0 5px;
+}
+
+.product-grid .product-actions,
+.product-carousel-card .product-actions,
+.shop-layout .product-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 0;
+}
+
+.product-grid .product-actions form,
+.product-carousel-card .product-actions form,
+.shop-layout .product-actions form {
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 0;
+}
+
+.product-grid .product-actions .btn,
+.product-grid .product-actions .btn-add-to-cart,
+.product-carousel-card .product-actions .btn,
+.product-carousel-card .product-actions .btn-add-to-cart,
+.shop-layout .product-actions .btn,
+.shop-layout .product-actions .btn-add-to-cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 42px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.product-grid .product-actions > a,
+.product-carousel-card .product-actions > a,
+.shop-layout .product-actions > a {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.product-grid .product-image img,
+.product-carousel-card .product-image img {
+    object-fit: contain;
+    padding: 10px;
+}
+
+.product-title {
+    overflow-wrap: anywhere;
+}
+
+.filters input,
+.filters select,
+.filters .filter-button {
+    width: 100%;
+}
+
+.site-footer a,
+.nav-links a,
+.category-card,
+.btn {
+    transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+@media (max-width: 760px) {
+    .home-page-polish .hero {
+        gap: 12px;
+        padding: 22px 18px;
+    }
+
+    .home-page-polish .section-head {
+        margin-top: 26px;
+    }
+
+    .product-grid .product-info,
+    .product-carousel-card .product-info {
+        gap: 6px;
+    }
+
+    .product-grid .product-actions .btn,
+    .product-grid .product-actions .btn-add-to-cart,
+    .product-carousel-card .product-actions .btn,
+    .product-carousel-card .product-actions .btn-add-to-cart {
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 420px) {
+    .product-grid .product-info {
+        padding: 12px;
+    }
+
+    .product-grid .product-image {
+        background: #f8fafc;
+    }
+}
+
+
+.shop-layout .product-card {
+    height: auto;
+    min-height: 0;
+}
+
+.shop-layout .product-info {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+}
+
+.shop-layout .product-actions,
+.product-grid .product-actions,
+.product-carousel-card .product-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    align-content: flex-start !important;
+    gap: 8px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 0 !important;
+}
+
+.shop-layout .product-actions form,
+.product-grid .product-actions form,
+.product-carousel-card .product-actions form {
+    display: block !important;
+    flex: 0 0 auto !important;
+    align-self: stretch;
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.shop-layout .product-actions > a,
+.shop-layout .product-actions > button,
+.product-grid .product-actions > a,
+.product-grid .product-actions > button,
+.product-carousel-card .product-actions > a,
+.product-carousel-card .product-actions > button,
+.shop-layout .product-actions form button,
+.product-grid .product-actions form button,
+.product-carousel-card .product-actions form button {
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-height: 42px;
+    height: auto !important;
+    margin: 0 !important;
+}
+
+.shop-layout > .shop-pagination {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: fit-content;
+    max-width: 100%;
+    margin: 12px auto 28px !important;
+    align-self: center;
+}
+
+@media (max-width: 760px) {
+    .shop-layout > .shop-pagination {
+        grid-column: 1;
+        justify-self: center;
+        margin: 8px auto 24px !important;
+    }
+}

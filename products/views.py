@@ -80,6 +80,10 @@ def home(request):
     page_obj = paginator.get_page(request.GET.get('page'))
     featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('created_at')[:12]
     recommendations = recommended_products(request.user, limit=8) if request.user.is_authenticated else []
+    wishlist_product_ids = set()
+    if request.user.is_authenticated and not request.user.is_staff:
+        from storeextras.models import WishlistItem
+        wishlist_product_ids = set(WishlistItem.objects.filter(user=request.user).values_list('product_id', flat=True))
     return render(request, 'products/home.html', {
         'products': page_obj.object_list,
         'page_obj': page_obj,
@@ -87,6 +91,7 @@ def home(request):
         'featured_products': featured_products,
         'categories': categories,
         'recommendations': recommendations,
+        'wishlist_product_ids': wishlist_product_ids,
         'price_error': price_error,
     })
 

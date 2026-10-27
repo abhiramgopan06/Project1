@@ -39,3 +39,6 @@ Latest layout correction
 - Product action buttons now remain together with an 8px gap.
 - Removed fixed minimum heights that made product details areas unnecessarily tall.
 - Set STATIC_URL to an absolute /static/ path for predictable local static-file URLs.
+
+
+Product card refinement (2026-10-27): Product listing cards and homepage carousels use a more compact image area, tighter spacing, responsive grid columns, consistent action buttons, and a smaller circular wishlist heart. The heart stays in the upper-right of the product image and saved items retain the filled red heart state.

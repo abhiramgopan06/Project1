@@ -7,12 +7,18 @@
 
     <section class="hero">
         <div class="hero-content">
-            <h1>Everything you need, all in one place.</h1>
-            <p>
-                Discover quality products at great prices. Browse categories,
-                compare products and add your favourites to the cart.
-            </p>
-            <a class="btn btn-primary" href="#products">Shop Now →</a>
+            <span class="hero-eyebrow"><span class="hero-eyebrow-dot"></span> YOUR EVERYDAY SHOPPING DESTINATION</span>
+            <h1>Everything you need, <span>all in one place.</span></h1>
+            <p>Discover quality products at great prices. Explore trusted picks, compare your favourites, and enjoy a smoother way to shop.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#products">Shop Now <span aria-hidden="true">→</span></a>
+                <a class="hero-secondary-link" href="#categories">Explore categories <span aria-hidden="true">↗</span></a>
+            </div>
+            <div class="hero-highlights" aria-label="Shopping benefits">
+                <span><span aria-hidden="true">✓</span> Curated products</span>
+                <span><span aria-hidden="true">♡</span> Save your favourites</span>
+                <span><span aria-hidden="true">↗</span> Easy shopping</span>
+            </div>
         </div>
 
         <div class="hero-image">
@@ -149,7 +155,7 @@
     </section>
     {% endif %}
 
-    <div class="section-head">
+    <div class="section-head" id="categories">
         <div>
             <h2>Shop by Category</h2>
             <p>Find what you are looking for faster.</p>

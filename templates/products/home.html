@@ -78,8 +78,9 @@
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Saved to wishlist{% else %}Add to wishlist{% endif %}">
+                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+                            {% if product.id in wishlist_product_ids %}<span>Remove from Wishlist</span>{% endif %}
                         </button>
                     </form>
                     {% elif not user.is_authenticated %}
@@ -226,8 +227,9 @@
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Saved to wishlist{% else %}Add to wishlist{% endif %}">
+                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+                            {% if product.id in wishlist_product_ids %}<span>Remove from Wishlist</span>{% endif %}
                         </button>
                     </form>
                     {% elif not user.is_authenticated %}
@@ -391,8 +393,9 @@
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Saved to wishlist{% else %}Add to wishlist{% endif %}">
+                        <button class="product-wishlist-button{% if product.id in wishlist_product_ids %} is-saved{% endif %}" type="submit" aria-label="{% if product.id in wishlist_product_ids %}Remove {{ product.name }} from wishlist{% else %}Add {{ product.name }} to wishlist{% endif %}" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}" title="{% if product.id in wishlist_product_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+                            {% if product.id in wishlist_product_ids %}<span>Remove from Wishlist</span>{% endif %}
                         </button>
                     </form>
                     {% elif not user.is_authenticated %}

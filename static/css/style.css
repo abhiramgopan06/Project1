@@ -6555,3 +6555,27 @@ input, select, textarea, button {
     .product-wishlist-button { width: 33px; height: 33px; }
     .product-wishlist-button svg { width: 18px; height: 18px; }
 }
+
+
+.product-wishlist-button.is-saved {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: auto;
+    min-width: 36px;
+    max-width: min(210px, calc(100vw - 48px));
+    height: 36px;
+    padding: 0 11px;
+    border-radius: 999px;
+    color: #be123c;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.product-wishlist-button.is-saved span { overflow: hidden; text-overflow: ellipsis; }
+.product-wishlist-button.is-saved svg { flex: 0 0 19px; width: 19px; height: 19px; }
+@media (max-width: 480px) {
+    .product-wishlist-button.is-saved { height: 32px; gap: 5px; padding: 0 8px; font-size: 10px; }
+    .product-wishlist-button.is-saved svg { flex-basis: 17px; width: 17px; height: 17px; }
+}

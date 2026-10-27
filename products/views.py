@@ -108,4 +108,8 @@ def product_detail(request, id):
 
     reviews = product.reviews.select_related('user').all()
     recommendations = recommended_products(request.user, exclude_id=product.id, limit=12) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
-    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations})
+    wishlist_product_ids = set()
+    if request.user.is_authenticated and not request.user.is_staff:
+        from storeextras.models import WishlistItem
+        wishlist_product_ids = set(WishlistItem.objects.filter(user=request.user).values_list('product_id', flat=True))
+    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations, 'wishlist_product_ids': wishlist_product_ids})

@@ -32,3 +32,10 @@ Additional review fixes
 Known limitations
 - Activity tracking records operations made through the application's instrumented views and model signals. Direct database edits or changes made through uninstrumented scripts cannot be attributed reliably.
 - Full end-to-end testing still needs to be run in the user's local environment with the required packages and database.
+
+
+Latest layout correction
+- Removed the automatic top margin from product prices that was stretching the space above the Add to Cart button.
+- Product action buttons now remain together with an 8px gap.
+- Removed fixed minimum heights that made product details areas unnecessarily tall.
+- Set STATIC_URL to an absolute /static/ path for predictable local static-file URLs.

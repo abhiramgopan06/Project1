@@ -6084,3 +6084,36 @@ input, select, textarea, button {
         transition-duration: .01ms !important;
     }
 }
+
+
+.product-grid .product-info,
+.product-carousel-card .product-info {
+    min-height: 0;
+}
+
+.product-grid .price,
+.product-carousel-card .price {
+    margin: 8px 0 5px;
+}
+
+.product-grid .product-actions,
+.product-carousel-card .product-actions {
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.product-grid .product-actions form,
+.product-carousel-card .product-actions form {
+    margin: 0;
+}
+
+.product-grid .product-actions form .btn-add-to-cart,
+.product-carousel-card .product-actions form .btn-add-to-cart {
+    display: flex;
+    min-height: 42px;
+}
+
+.product-grid .product-actions .btn,
+.product-carousel-card .product-actions .btn {
+    min-height: 42px;
+}

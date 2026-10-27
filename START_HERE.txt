@@ -1,37 +1,19 @@
-PROJECT 1 - BEGINNER START GUIDE
+PROJECT 1 - DJANGO E-COMMERCE SHOP
 
-1. Open PowerShell in this project folder.
-2. Create a fresh virtual environment:
-   python -m venv env
-3. Activate it:
-   .\env\Scripts\Activate.ps1
-4. Install packages:
-   pip install -r requirements.txt
-5. Apply database migrations:
-   python manage.py migrate   (run this again - it adds the new OTP table)
-6. Start Django:
-   python manage.py runserver
-7. Open http://127.0.0.1:8000/
+Setup
+1. Extract the ZIP and open the project1 folder in VS Code.
+2. Create a virtual environment: python -m venv venv
+3. Activate it on Windows: venv\Scripts\activate
+4. Install dependencies: pip install -r requirements.txt
+5. Copy .env.example to .env if you need email, Google sign-in, or payment settings.
+6. Run: python manage.py check
+7. Run: python manage.py migrate
+8. Run: python manage.py runserver
+9. Open http://127.0.0.1:8000/
 
-IMPORTANT:
-Do not copy an old env folder into this project. The old environment had mixed Django files.
-If PowerShell blocks activation, run:
-   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-then activate again.
-
-LATEST FIX:
-The home page had a missing {% endif %} after the Featured Products carousel.
-This has been corrected.
-
-NEW: EMAIL OTP + GOOGLE SIGN-IN
-Read OTP_AND_GOOGLE_SETUP.txt for how to turn on real emails and the Google button.
-Without any setup, the OTP email is printed in the terminal while testing.
-
-PRODUCT OFFER FEATURE (added)
-1. Start the Django project as usual.
-2. Run: python manage.py migrate
-   This adds the discount_percent field to products.
-3. Sign in with a staff/admin account and open Admin Dashboard > Offer for Products.
-4. Select a product, enter a percentage from 1 to 90, and click Save Offer.
-   Enter 0% to remove the offer. Offers appear on product cards, product details,
-   and the cart; discounted prices are also used for checkout and orders.
+Important
+- Keep a backup of db.sqlite3 and the media folder before replacing an existing project.
+- Do not put real email passwords or payment keys in a shared ZIP.
+- The application is intended for local development until production settings and payment/email integrations are tested.
+- Run the Django checks above and manually test registration/OTP, product management, cart, checkout, payments, returns, and staff permissions.
+- The build environment does not have Django installed, so full Django checks and browser-based end-to-end tests could not be run here.

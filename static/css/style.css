@@ -6362,3 +6362,38 @@ input, select, textarea, button {
         margin: 8px auto 24px !important;
     }
 }
+
+.wishlist-page { width: min(1440px, calc(100% - 48px)); margin: 34px auto 64px; min-height: 48vh; }
+.wishlist-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin: 10px 0 26px; }
+.wishlist-eyebrow { display:block; margin-bottom:8px; color:#64748b; font-size:11px; font-weight:800; letter-spacing:.13em; }
+.wishlist-heading h1 { margin:0; color:#111827; font-size:clamp(28px,3vw,38px); letter-spacing:-.04em; }
+.wishlist-heading p { margin:9px 0 0; max-width:620px; color:#64748b; line-height:1.65; }
+.wishlist-continue { flex:0 0 auto; border-radius:10px; padding:12px 16px; }
+.wishlist-summary { margin:0 0 14px; color:#64748b; font-size:13px; font-weight:700; }
+.wishlist-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; }
+.wishlist-card { min-width:0; }
+.wishlist-product-image { position:relative; height:220px!important; flex-basis:220px!important; display:flex; align-items:center; justify-content:center; }
+.wishlist-product-image img { width:100%; height:100%; object-fit:contain; padding:12px!important; transition:transform .22s ease; }
+.wishlist-card:hover .wishlist-product-image img { transform:scale(1.04); }
+.wishlist-heart { position:absolute; z-index:2; top:12px; right:12px; display:grid; place-items:center; width:36px; height:36px; border-radius:50%; color:#e11d48; background:#fff; box-shadow:0 3px 12px rgba(15,23,42,.12); font-size:21px; }
+.wishlist-product-info { display:flex; flex-direction:column; align-items:stretch; }
+.wishlist-category { color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.wishlist-product-info .product-title { margin:2px 0 0; min-height:2.7em; color:#172033; font-size:15px; line-height:1.4; }
+.wishlist-rating { color:#b7791f; font-size:12px; font-weight:800; }
+.wishlist-rating span { color:#718096; font-weight:500; }
+.wishlist-product-info .price { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:4px 0; font-size:21px; }
+.wishlist-product-info .price-old { color:#94a3b8; font-size:14px; font-weight:500; text-decoration:line-through; }
+.wishlist-actions { display:flex; flex-direction:column; align-items:stretch; gap:8px; margin-top:auto; padding-top:12px; }
+.wishlist-actions form { width:100%; }
+.wishlist-actions .btn-add-to-cart, .wishlist-actions .wishlist-view { display:flex; align-items:center; justify-content:center; width:100%; min-height:43px; border-radius:9px; text-align:center; }
+.wishlist-actions .wishlist-view { padding:10px 14px; }
+.wishlist-remove-form { margin-top:10px; text-align:center; }
+.wishlist-remove { border:0; background:transparent; color:#64748b; font:inherit; font-size:12px; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.wishlist-remove:hover { color:#be123c; }
+.wishlist-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:360px; padding:36px 20px; border:1px dashed #cbd5e1; border-radius:20px; background:rgba(255,255,255,.78); text-align:center; }
+.wishlist-empty-icon { display:grid; place-items:center; width:76px; height:76px; margin-bottom:12px; border-radius:50%; background:#fff1f2; color:#e11d48; font-size:42px; }
+.wishlist-empty h2 { margin:8px 0; color:#172033; }
+.wishlist-empty p { max-width:440px; margin:0 0 22px; color:#64748b; line-height:1.65; }
+@media(max-width:1100px) { .wishlist-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:760px) { .wishlist-page { width:calc(100% - 28px); margin-top:24px; } .wishlist-heading { align-items:flex-start; flex-direction:column; gap:16px; } .wishlist-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } .wishlist-product-image { height:180px!important; flex-basis:180px!important; } }
+@media(max-width:480px) { .wishlist-grid { grid-template-columns:1fr; } .wishlist-product-image { height:230px!important; flex-basis:230px!important; } .wishlist-heading h1 { font-size:29px; } }

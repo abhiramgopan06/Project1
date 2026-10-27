@@ -1,3 +1,71 @@
-{% extends 'base.html' %}{% block title %}My Wishlist{% endblock %}{% block content %}
-<section class="container" style="max-width:1100px;margin:36px auto;padding:0 18px"><h1>My Wishlist</h1><p>Products you saved to shop later.</p>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:24px">{% for item in items %}<article style="border:1px solid #e2e8f0;border-radius:16px;padding:18px">{% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%;height:160px;object-fit:contain">{% endif %}<h3>{{ item.product.name }}</h3><p>₹{{ item.product.discounted_price }}</p><a class="btn btn-primary" href="{% url 'products:product_detail' item.product.id %}">View product</a><form method="post" action="{% url 'storeextras:wishlist_toggle' item.product.id %}" style="margin-top:8px">{% csrf_token %}<button class="btn btn-outline">Remove</button></form></article>{% empty %}<p>Your wishlist is empty. Save products you like and find them here.</p>{% endfor %}</div></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}My Wishlist | E-Commerce Shop{% endblock %}
+{% block content %}
+<section class="container wishlist-page">
+    <div class="wishlist-heading">
+        <div>
+            <span class="wishlist-eyebrow">YOUR SAVED COLLECTION</span>
+            <h1>My Wishlist</h1>
+            <p>Keep the products you love in one place and come back to them anytime.</p>
+        </div>
+        <a class="btn btn-outline wishlist-continue" href="{% url 'products:home' %}">← Continue shopping</a>
+    </div>
+
+    {% if items %}
+        <div class="wishlist-summary">{{ items|length }} saved item{{ items|length|pluralize }}</div>
+        <div class="product-grid wishlist-grid">
+            {% for item in items %}
+                <article class="product-card wishlist-card">
+                    <a class="product-image wishlist-product-image" href="{% url 'products:product_detail' item.product.id %}" aria-label="View {{ item.product.name }}">
+                        {% if item.product.effective_discount_percent %}<span class="offer-ribbon">{{ item.product.effective_discount_percent }}% OFF</span>{% endif %}
+                        <span class="wishlist-heart" aria-hidden="true">♥</span>
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                            <span class="product-image-placeholder">📦</span>
+                        {% endif %}
+                    </a>
+                    <div class="product-info wishlist-product-info">
+                        <div class="wishlist-category">{{ item.product.category.name }}</div>
+                        <h2 class="product-title">{{ item.product.name }}</h2>
+                        {% if item.product.rating_count %}<div class="wishlist-rating">★ {{ item.product.rating_average|floatformat:1 }} <span>({{ item.product.rating_count }} ratings)</span></div>{% endif %}
+                        <div class="price">
+                            ₹{{ item.product.discounted_price|floatformat:2 }}
+                            {% if item.product.effective_discount_percent %}<span class="price-old">₹{{ item.product.price|floatformat:2 }}</span>{% endif %}
+                        </div>
+                        {% if item.product.stock > 0 and item.product.is_available %}
+                            <span class="stock">✓ In stock</span>
+                        {% else %}
+                            <span class="stock stock-out">Currently unavailable</span>
+                        {% endif %}
+                        <div class="product-actions wishlist-actions">
+                            {% if item.product.stock > 0 and item.product.is_available %}
+                                <form method="post" action="{% url 'cart:add_to_cart' item.product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'storeextras:wishlist' %}">
+                                    <button class="btn-add-to-cart" type="submit">🛒 Add to Cart</button>
+                                </form>
+                            {% else %}
+                                <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled>Unavailable</button>
+                            {% endif %}
+                            <a class="btn btn-outline wishlist-view" href="{% url 'products:product_detail' item.product.id %}">View details</a>
+                        </div>
+                        <form class="wishlist-remove-form" method="post" action="{% url 'storeextras:wishlist_toggle' item.product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'storeextras:wishlist' %}">
+                            <button class="wishlist-remove" type="submit">Remove from wishlist</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="wishlist-empty">
+            <div class="wishlist-empty-icon">♡</div>
+            <h2>Your wishlist is waiting</h2>
+            <p>Save products with the heart button and they’ll be collected here for your next visit.</p>
+            <a class="btn btn-primary" href="{% url 'products:home' %}">Explore products</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

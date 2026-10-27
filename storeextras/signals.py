@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from orders.models import Order
 from products.models import Product
 from .models import ActivityLog, Notification, PaymentRecord, StockMovement
+from .actor_context import get_current_actor
 
 @receiver(pre_save, sender=Order)
 def remember_order_status(sender, instance, **kwargs):
@@ -19,7 +20,8 @@ def record_order_events(sender, instance, created, **kwargs):
     else:
         old_status = getattr(instance, '_old_order_status', None)
         if old_status and old_status != instance.status:
-            ActivityLog.objects.create(action='Order status changed', object_type='Order', object_id=instance.pk, details=f'{old_status} to {instance.status}')
+            actor = get_current_actor()
+            ActivityLog.objects.create(actor=actor if actor and actor.is_authenticated else None, action='Order status changed', object_type='Order', object_id=instance.pk, details=f'{old_status} to {instance.status}')
             Notification.objects.create(user=instance.user, title=f'Order #{instance.pk} updated', message=f'Your order status is now {instance.status}.', link=f'/orders/{instance.pk}/')
 
 @receiver(pre_save, sender=Product)
@@ -29,8 +31,9 @@ def remember_stock(sender, instance, **kwargs):
 @receiver(post_save, sender=Product)
 def record_stock_changes(sender, instance, created, **kwargs):
     old_stock = getattr(instance, '_old_stock_value', None)
+    actor = get_current_actor()
+    actor = actor if actor and actor.is_authenticated and actor.is_staff else None
     if created:
-        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock, stock_after=instance.stock, reason='Product created')
-        ActivityLog.objects.create(action='Product created', object_type='Product', object_id=instance.pk, details=instance.name)
+        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock, stock_after=instance.stock, reason='Product created', changed_by=actor)
     elif old_stock is not None and old_stock != instance.stock:
-        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock-old_stock, stock_after=instance.stock, reason='Stock updated')
+        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock-old_stock, stock_after=instance.stock, reason='Stock updated', changed_by=actor)

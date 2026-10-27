@@ -21,6 +21,8 @@ def _record_search(request, q, category, min_price, max_price):
         if q:
             from .models import ProductHistory
             matches = Product.objects.filter(
+                is_available=True
+            ).filter(
                 Q(name__icontains=q) |
                 Q(description__icontains=q) |
                 Q(category__name__icontains=q)

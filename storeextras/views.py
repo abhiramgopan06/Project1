@@ -57,15 +57,15 @@ def invoice(request, order_id):
     order = get_object_or_404(Order.objects.prefetch_related('items__product'), pk=order_id, user=request.user)
     return render(request, 'storeextras/invoice.html', {'order': order})
 
-@user_passes_test(lambda user: user.is_staff)
+@user_passes_test(lambda user: user.is_superuser)
 def activity_history(request):
     records = ActivityLog.objects.select_related('actor')[:250]
-    return render(request, 'storeextras/activity_history.html', {'records': records})
+    return render(request, 'storeextras/activity_history.html', {'records': records, 'active': 'activity_history'})
 
-@user_passes_test(lambda user: user.is_staff)
+@user_passes_test(lambda user: user.is_superuser)
 def stock_history(request):
     records = StockMovement.objects.select_related('changed_by', 'product')[:250]
-    return render(request, 'storeextras/stock_history.html', {'records': records})
+    return render(request, 'storeextras/stock_history.html', {'records': records, 'active': 'stock_history'})
 
 @user_passes_test(lambda user: user.is_staff)
 def return_management(request):
@@ -129,4 +129,4 @@ def return_management(request):
         ActivityLog.objects.create(actor=request.user, action='Return workflow updated', object_type='ReturnReplaceRequest', object_id=item.pk, details=f'{item.request_type} request: {item.status}; condition: {item.product_condition}; refund: {item.refund_status}.')
         Notification.objects.create(user=item.order_item.order.user, title='Return or refund update', message=f'Your {item.request_type.lower()} request for {item.order_item.product.name} is now {item.status}. Refund status: {item.refund_status}.', link='/account/returns/')
         return redirect('storeextras:return_management')
-    return render(request, 'storeextras/return_management.html', {'requests': requests})
+    return render(request, 'storeextras/return_management.html', {'requests': requests, 'active': 'returns'})

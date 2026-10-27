@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
-from django.db.models import Count, Sum
+from django.contrib.auth.decorators import user_passes_test
+from django.views.decorators.http import require_POST
+from django.db.models import Count, Sum, Q
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -10,23 +12,26 @@ from datetime import timedelta
 from orders.models import Order
 from products.models import Product, Category, ProductOfferHistory, CategoryOfferHistory
 from products.forms import ProductForm
+from storeextras.models import ActivityLog, StockMovement
 
 @staff_member_required
 def dashboard_home(request):
+    if not request.user.is_superuser:
+        return redirect('dashboard:staff_home')
     total_orders = Order.objects.count()
 
     total_revenue = Order.objects.filter(
         payment_status='Paid'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
 
-    total_products = Product.objects.count()
+    total_products = Product.objects.filter(is_available=True).count()
     total_users = User.objects.count()
 
     recent_orders = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')[:5]
 
     low_stock_products = Product.objects.filter(
-        stock__lte=5
-    ).order_by('stock')[:5]
+        is_available=True, stock__lte=5
+    ).select_related('category').order_by('stock', 'name')[:5]
 
     context = {
         'active': 'home',
@@ -36,9 +41,34 @@ def dashboard_home(request):
         'total_users': total_users,
         'recent_orders': recent_orders,
         'low_stock_products': low_stock_products,
+        'total_categories': Category.objects.count(),
+        'total_staff': User.objects.filter(is_staff=True, is_superuser=False).count(),
+        'recent_activity': ActivityLog.objects.select_related('actor').filter(actor__is_staff=True, actor__is_superuser=False).order_by('-created_at')[:6],
     }
 
     return render(request, 'dashboard/home.html', context)
+
+
+@staff_member_required
+def staff_dashboard_home(request):
+    if request.user.is_superuser:
+        return redirect('dashboard:home')
+
+    from products.models import ProductOfferHistory, CategoryOfferHistory
+
+    recent_activity = ActivityLog.objects.filter(actor=request.user).order_by('-created_at')[:8]
+    low_stock_products = Product.objects.filter(is_available=True, stock__lte=5).select_related('category').order_by('stock', 'name')[:6]
+    context = {
+        'active': 'staff_home',
+        'total_products': Product.objects.filter(is_available=True).count(),
+        'total_categories': Category.objects.count(),
+        'total_orders': Order.objects.count(),
+        'low_stock_products': low_stock_products,
+        'recent_activity': recent_activity,
+        'active_product_offers': Product.objects.filter(discount_percent__gt=0, discount_ends_at__gt=timezone.now()).count(),
+        'active_category_offers': Category.objects.filter(offer_percent__gt=0, offer_ends_at__gt=timezone.now()).count(),
+    }
+    return render(request, 'dashboard/staff_home.html', context)
 
 @staff_member_required
 def dashboard_orders(request):
@@ -59,6 +89,7 @@ def dashboard_orders(request):
     return render(request, 'dashboard/orders.html', context)
 
 @staff_member_required
+@require_POST
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
@@ -67,8 +98,10 @@ def update_order_status(request, order_id):
         valid_statuses = dict(Order.STATUS_CHOICES)
 
         if new_status in valid_statuses:
+            previous_status = order.status
             order.status = new_status
             order.save(update_fields=['status'])
+            ActivityLog.objects.create(actor=request.user, action='Order status changed', object_type='Order', object_id=order.pk, details=f'Order #{order.pk} status changed from {previous_status} to {new_status}.')
             messages.success(
                 request,
                 f'Order #{order.id} status updated to {valid_statuses[new_status]}.'
@@ -78,7 +111,7 @@ def update_order_status(request, order_id):
 
     return redirect('dashboard:orders')
 
-@staff_member_required
+@user_passes_test(lambda user: user.is_superuser)
 def dashboard_users(request):
     users = User.objects.annotate(
         order_count=Count('order')
@@ -127,6 +160,7 @@ def dashboard_product_add(request):
 
         if form.is_valid():
             product = form.save()
+            ActivityLog.objects.create(actor=request.user, action='Product created', object_type='Product', object_id=product.pk, details=f'Added product {product.name}; category: {product.category.name}; price: {product.price}; starting stock: {product.stock}.')
             messages.success(request, f'"{product.name}" was added to the catalog.')
             return redirect('dashboard:products')
     else:
@@ -148,7 +182,10 @@ def dashboard_product_edit(request, product_id):
         form = ProductForm(request.POST, request.FILES, instance=product)
 
         if form.is_valid():
-            form.save()
+            old = Product.objects.get(pk=product.pk)
+            old_stock = old.stock
+            product = form.save()
+            ActivityLog.objects.create(actor=request.user, action='Product updated', object_type='Product', object_id=product.pk, details=f'Updated {product.name}; category: {product.category.name}; price: {product.price}; stock: {old_stock} -> {product.stock}; available: {product.is_available}.')
             messages.success(request, f'"{product.name}" was updated.')
             return redirect('dashboard:products')
     else:
@@ -164,12 +201,14 @@ def dashboard_product_edit(request, product_id):
     return render(request, 'dashboard/product_form.html', context)
 
 @staff_member_required
+@require_POST
 def dashboard_product_toggle(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
     if request.method == 'POST':
         product.is_available = not product.is_available
         product.save(update_fields=['is_available'])
+        ActivityLog.objects.create(actor=request.user, action='Product availability changed', object_type='Product', object_id=product.pk, details=f'{product.name} availability set to {product.is_available}.')
         state = 'activated' if product.is_available else 'deactivated'
         messages.success(request, f'"{product.name}" was {state}.')
 
@@ -199,6 +238,7 @@ def dashboard_product_offers(request):
             CategoryOfferHistory.objects.filter(
                 category=category, ends_at__gt=now
             ).update(ends_at=now)
+            ActivityLog.objects.create(actor=request.user, action='Category offer cancelled', object_type='Category', object_id=category.pk, details=f'Cancelled category offer for {category.name}.')
             category.offer_percent = 0
             category.offer_ends_at = None
             category.save(update_fields=['offer_percent', 'offer_ends_at'])
@@ -220,6 +260,7 @@ def dashboard_product_offers(request):
                 started_at=now,
                 ends_at=category.offer_ends_at,
             )
+            ActivityLog.objects.create(actor=request.user, action='Category offer created', object_type='Category', object_id=category.pk, details=f'{percent}% offer on {category.name} for {duration} day(s), ending {category.offer_ends_at}.')
             messages.success(request, f'{percent}% offer set for {category.name} for {duration} day(s).')
         return redirect('dashboard:category_offers')
 
@@ -251,8 +292,10 @@ def dashboard_product_offers(request):
                         started_at=now,
                         ends_at=selected_product.discount_ends_at,
                     )
+                    ActivityLog.objects.create(actor=request.user, action='Product offer created', object_type='Product', object_id=selected_product.pk, details=f'{percent}% offer on {selected_product.name} for {duration} day(s), ending {selected_product.discount_ends_at}.')
                     messages.success(request, f'{percent}% offer saved for "{selected_product.name}" for {duration} day(s).')
                 else:
+                    ActivityLog.objects.create(actor=request.user, action='Product offer cancelled', object_type='Product', object_id=selected_product.pk, details=f'Removed offer from {selected_product.name}.')
                     messages.success(request, f'Offer removed from "{selected_product.name}".')
                 return redirect('dashboard:product_offers')
 
@@ -285,7 +328,7 @@ def dashboard_category_offers(request):
         ends_at__lte=now
     ).order_by('-ends_at')
     return render(request, 'dashboard/category_offers.html', {
-        'active': 'offers',
+        'active': 'category_offers',
         'categories': categories,
         'present_offers': present_offers,
         'legacy_present_categories': legacy_present_categories,
@@ -333,3 +376,113 @@ def dashboard_offer_history(request):
         'category_page': category_page,
         'now': timezone.now(),
     })
+
+
+@user_passes_test(lambda user: user.is_superuser)
+@require_POST
+def toggle_staff_role(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+    if target.is_superuser:
+        messages.error(request, 'Superuser access cannot be changed here.')
+    elif target.pk == request.user.pk:
+        messages.error(request, 'You cannot change your own staff role.')
+    else:
+        target.is_staff = not target.is_staff
+        target.save(update_fields=['is_staff'])
+        role = 'staff' if target.is_staff else 'customer'
+        ActivityLog.objects.create(actor=request.user, action='User role changed', object_type='User', object_id=target.pk, details=f'{target.username} was changed to {role}.')
+        messages.success(request, f'{target.username} is now a {role}.')
+    return redirect('dashboard:users')
+
+@staff_member_required
+@require_POST
+def dashboard_product_delete(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    name = product.name
+    product.is_available = False
+    product.save(update_fields=['is_available'])
+    ActivityLog.objects.create(actor=request.user, action='Product archived', object_type='Product', object_id=product.pk, details=f'Archived {name}; order and offer history was preserved.')
+    messages.success(request, f'{name} was archived. Existing order and offer history has been preserved.')
+    return redirect('dashboard:products')
+
+@staff_member_required
+def dashboard_categories(request):
+    categories = Category.objects.annotate(product_count=Count('products')).order_by('name')
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            name = request.POST.get('name', '').strip()
+            if not name:
+                messages.error(request, 'Enter a category name.')
+            elif Category.objects.filter(name__iexact=name).exists():
+                messages.error(request, 'That category already exists.')
+            else:
+                category = Category.objects.create(name=name)
+                ActivityLog.objects.create(actor=request.user, action='Category created', object_type='Category', object_id=category.pk, details=f'Created category {category.name}.')
+                messages.success(request, f'Category {name} was created.')
+            return redirect('dashboard:categories')
+        if action == 'delete':
+            category = get_object_or_404(Category, pk=request.POST.get('category_id'))
+            if category.products.exists():
+                messages.error(request, 'This category has products. Move or delete those products before deleting the category.')
+            else:
+                name = category.name
+                ActivityLog.objects.create(actor=request.user, action='Category deleted', object_type='Category', object_id=category.pk, details=f'Deleted category {name}.')
+                category.delete()
+                messages.success(request, f'Category {name} was deleted.')
+            return redirect('dashboard:categories')
+    return render(request, 'dashboard/categories.html', {'active': 'categories', 'categories': categories})
+
+
+@user_passes_test(lambda user: user.is_superuser)
+def dashboard_staff_activity(request):
+    staff_members = User.objects.filter(is_staff=True, is_superuser=False).order_by('username')
+    staff_actions = [
+        'Product created', 'Product updated', 'Product availability changed',
+        'Product archived', 'Category created', 'Category deleted',
+        'Product offer created', 'Product offer cancelled',
+        'Category offer created', 'Category offer cancelled',
+        'Order status changed', 'Return workflow updated',
+    ]
+    records = ActivityLog.objects.select_related('actor').filter(
+        Q(actor__is_staff=True, actor__is_superuser=False) | Q(action__in=staff_actions)
+    ).exclude(actor__is_superuser=True).order_by('-created_at')
+    movements = StockMovement.objects.select_related('changed_by', 'product').filter(
+        changed_by__isnull=False, changed_by__is_superuser=False
+    ).order_by('-created_at')
+    staff_id = request.GET.get('staff', '').strip()
+    search = request.GET.get('q', '').strip()
+    if staff_id.isdigit():
+        records = records.filter(actor_id=int(staff_id))
+        movements = movements.filter(changed_by_id=int(staff_id))
+    if search:
+        records = records.filter(
+            Q(action__icontains=search) | Q(object_type__icontains=search) |
+            Q(details__icontains=search) | Q(actor__username__icontains=search)
+        )
+        movements = movements.filter(
+            Q(product_name__icontains=search) | Q(reason__icontains=search) |
+            Q(changed_by__username__icontains=search)
+        )
+    activity_page = Paginator(records, 25).get_page(request.GET.get('page'))
+    stock_page = Paginator(movements, 25).get_page(request.GET.get('stock_page'))
+    context = {
+        'active': 'staff_activity',
+        'staff_members': staff_members,
+        'selected_staff': staff_id,
+        'search_query': search,
+        'activity_page': activity_page,
+        'stock_page': stock_page,
+        'total_staff': User.objects.filter(is_staff=True, is_superuser=False).count(),
+        'total_actions': ActivityLog.objects.filter(
+            Q(actor__is_staff=True, actor__is_superuser=False) | Q(action__in=staff_actions)
+        ).exclude(actor__is_superuser=True).count(),
+        'today_actions': ActivityLog.objects.filter(
+            Q(actor__is_staff=True, actor__is_superuser=False) | Q(action__in=staff_actions),
+            created_at__date=timezone.localdate()
+        ).exclude(actor__is_superuser=True).count(),
+        'today_stock_updates': StockMovement.objects.filter(
+            changed_by__isnull=False, changed_by__is_superuser=False, created_at__date=timezone.localdate()
+        ).count(),
+    }
+    return render(request, 'dashboard/staff_activity.html', context)

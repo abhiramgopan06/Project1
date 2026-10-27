@@ -1,0 +1,36 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Staff Workspace | E-Commerce Shop{% endblock %}
+{% block dashboard_content %}
+<div class="staff-welcome-panel">
+    <div>
+        <span class="staff-eyebrow">STAFF WORKSPACE</span>
+        <h2>Welcome back, {{ request.user.first_name|default:request.user.username }}!</h2>
+        <p>Manage the catalog, keep stock accurate, and help orders move smoothly.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'dashboard:product_add' %}">＋ Add product</a>
+</div>
+<div class="stat-cards staff-stat-cards">
+    <a class="stat-card staff-stat-link" href="{% url 'dashboard:products' %}"><div class="stat-card-value">{{ total_products }}</div><div class="stat-card-label">Products in catalog</div></a>
+    <a class="stat-card staff-stat-link" href="{% url 'dashboard:categories' %}"><div class="stat-card-value">{{ total_categories }}</div><div class="stat-card-label">Categories</div></a>
+    <a class="stat-card staff-stat-link" href="{% url 'dashboard:orders' %}"><div class="stat-card-value">{{ total_orders }}</div><div class="stat-card-label">Orders to manage</div></a>
+    <a class="stat-card staff-stat-link" href="{% url 'dashboard:product_offers' %}"><div class="stat-card-value">{{ active_product_offers|add:active_category_offers }}</div><div class="stat-card-label">Active offers</div></a>
+</div>
+<div class="staff-action-grid">
+    <a class="staff-action-card" href="{% url 'dashboard:product_add' %}"><span class="staff-action-icon">＋</span><span><strong>Add a product</strong><small>Enter product details, price, image, and starting stock.</small></span><span class="staff-action-arrow">→</span></a>
+    <a class="staff-action-card" href="{% url 'dashboard:categories' %}"><span class="staff-action-icon">▦</span><span><strong>Manage categories</strong><small>Create categories and keep the catalog organized.</small></span><span class="staff-action-arrow">→</span></a>
+    <a class="staff-action-card" href="{% url 'dashboard:product_offers' %}"><span class="staff-action-icon">％</span><span><strong>Product offers</strong><small>Set discounts with a duration or cancel an offer.</small></span><span class="staff-action-arrow">→</span></a>
+    <a class="staff-action-card" href="{% url 'dashboard:category_offers' %}"><span class="staff-action-icon">◇</span><span><strong>Category offers</strong><small>Apply time-limited discounts to a category.</small></span><span class="staff-action-arrow">→</span></a>
+    <a class="staff-action-card" href="{% url 'dashboard:orders' %}"><span class="staff-action-icon">▣</span><span><strong>Review orders</strong><small>Check order details and update order status.</small></span><span class="staff-action-arrow">→</span></a>
+    <a class="staff-action-card" href="{% url 'storeextras:return_management' %}"><span class="staff-action-icon">↺</span><span><strong>Returns & replacements</strong><small>Review return requests and record inspections.</small></span><span class="staff-action-arrow">→</span></a>
+</div>
+<div class="staff-bottom-grid">
+    <section class="checkout-card">
+        <div class="staff-card-heading"><div><h3>Low-stock watch</h3><p>Products with five or fewer items remaining.</p></div><a href="{% url 'dashboard:products' %}">View products →</a></div>
+        {% if low_stock_products %}<div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th></th></tr></thead><tbody>{% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category.name }}</td><td><span class="low-stock-badge">{{ product.stock }} left</span></td><td><a href="{% url 'dashboard:product_edit' product.id %}">Update</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="staff-empty-state">No low-stock products right now. Stock levels look good.</p>{% endif %}
+    </section>
+    <section class="checkout-card">
+        <div class="staff-card-heading"><div><h3>Your recent activity</h3><p>Recent changes recorded under your account.</p></div></div>
+        {% if recent_activity %}<div class="staff-activity-list">{% for item in recent_activity %}<div class="staff-activity-item"><span class="staff-activity-dot"></span><div><strong>{{ item.action }}</strong><p>{{ item.details|default:item.object_type }}</p><small>{{ item.created_at|date:"d M Y, h:i A" }}</small></div></div>{% endfor %}</div>{% else %}<p class="staff-empty-state">Your changes will appear here as you work.</p>{% endif %}
+    </section>
+</div>
+{% endblock %}

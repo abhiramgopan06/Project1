@@ -1,94 +1,22 @@
 {% extends "dashboard/base_dashboard.html" %}
-{% block title %}Admin Dashboard | E-Commerce Store{% endblock %}
-
+{% block title %}Admin Dashboard | E-Commerce Shop{% endblock %}
 {% block dashboard_content %}
-<div class="section-head">
-    <div>
-        <h2>Overview</h2>
-        <p>Quick snapshot of store activity.</p>
-    </div>
+<div class="analytics-welcome"><div><span class="analytics-eyebrow">STORE OVERVIEW</span><h2>Good to see you, {{ request.user.first_name|default:request.user.username }}</h2><p>Monitor sales, inventory, orders, and staff activity from one place.</p></div><a class="btn btn-primary" href="{% url 'dashboard:staff_activity' %}">View staff operations ↗</a></div>
+<div class="analytics-stats">
+    <article class="analytics-stat"><div class="analytics-stat-top"><span class="analytics-icon icon-blue">▣</span><span class="analytics-note">Store-wide</span></div><small>Total orders</small><strong>{{ total_orders }}</strong><p>All customer orders</p></article>
+    <article class="analytics-stat"><div class="analytics-stat-top"><span class="analytics-icon icon-purple">₹</span><span class="analytics-note">Paid only</span></div><small>Total revenue</small><strong>₹{{ total_revenue|floatformat:2 }}</strong><p>From successful payments</p></article>
+    <article class="analytics-stat"><div class="analytics-stat-top"><span class="analytics-icon icon-orange">▦</span><span class="analytics-note">Catalog</span></div><small>Products</small><strong>{{ total_products }}</strong><p>{{ total_categories }} categories</p></article>
+    <article class="analytics-stat"><div class="analytics-stat-top"><span class="analytics-icon icon-green">♙</span><span class="analytics-note">Team access</span></div><small>Staff accounts</small><strong>{{ total_staff }}</strong><p>{{ total_users }} registered users</p></article>
 </div>
-
-<div class="stat-cards">
-    <div class="stat-card">
-        <div class="stat-card-value">{{ total_orders }}</div>
-        <div class="stat-card-label">Total Orders</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-value">₹{{ total_revenue|floatformat:2 }}</div>
-        <div class="stat-card-label">Revenue (Paid Orders)</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-value">{{ total_products }}</div>
-        <div class="stat-card-label">Products</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-value">{{ total_users }}</div>
-        <div class="stat-card-label">Registered Users</div>
-    </div>
+<div class="analytics-main-grid">
+    <section class="checkout-card analytics-panel"><div class="analytics-panel-heading"><div><h3>Recent orders</h3><p>Latest customer purchases and current status.</p></div><a href="{% url 'dashboard:orders' %}">View all →</a></div>
+    {% if recent_orders %}<div class="table-scroll"><table class="dashboard-table analytics-table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Placed</th><th></th></tr></thead><tbody>{% for order in recent_orders %}<tr><td><strong>#{{ order.id }}</strong></td><td>{{ order.name }}<small class="analytics-subline">{{ order.user.username }}</small></td><td>₹{{ order.total_amount|floatformat:2 }}</td><td><span class="pill order-status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td><td>{{ order.created_at|date:'d M, h:i A' }}</td><td><a href="{% url 'dashboard:order_detail' order.id %}">Open</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="monitor-empty"><strong>No orders yet</strong><p>Customer orders will appear here.</p></div>{% endif %}</section>
+    <section class="checkout-card analytics-panel"><div class="analytics-panel-heading"><div><h3>Staff activity</h3><p>Latest operations by your team.</p></div><a href="{% url 'dashboard:staff_activity' %}">Monitor →</a></div>
+    {% if recent_activity %}<div class="analytics-activity-list">{% for item in recent_activity %}<div class="analytics-activity-row"><span class="analytics-activity-mark">{{ item.actor.username|first|upper }}</span><div><strong>{{ item.action }}</strong><p>{{ item.actor.username }} · {{ item.details|default:item.object_type|truncatechars:90 }}</p><small>{{ item.created_at|date:'d M, h:i A' }}</small></div></div>{% endfor %}</div>{% else %}<div class="monitor-empty"><strong>No staff operations yet</strong><p>Staff actions will be recorded as they work in the dashboard.</p></div>{% endif %}</section>
 </div>
-
-<div class="checkout-card">
-    <h2 class="section-title">Recent Orders</h2>
-    {% if recent_orders %}
-    <div class="table-scroll">
-    <table class="dashboard-table">
-        <thead>
-            <tr>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Placed</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in recent_orders %}
-            <tr>
-                <td><a href="{% url 'dashboard:order_detail' order.id %}">#{{ order.id }}</a></td>
-                <td>{{ order.name }}<br><span class="order-row-meta">{{ order.user.username }}</span></td>
-                <td>{{ order.items.count }}</td>
-                <td>₹{{ order.total_amount|floatformat:2 }}</td>
-                <td><span class="pill order-status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td>
-                <td>{{ order.created_at|date:"d M Y, h:i A" }}</td>
-                <td><a class="btn btn-outline" href="{% url 'dashboard:order_detail' order.id %}">View</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% else %}
-        <p>No orders placed yet.</p>
-    {% endif %}
-</div>
-
-<div class="checkout-card">
-    <h2 class="section-title">Low Stock Products</h2>
-    {% if low_stock_products %}
-    <div class="table-scroll">
-    <table class="dashboard-table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Stock</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in low_stock_products %}
-            <tr>
-                <td>{{ product.name }}</td>
-                <td>{{ product.category.name }}</td>
-                <td><span class="low-stock-badge">{{ product.stock }} left</span></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% else %}
-        <p>All products are well stocked.</p>
-    {% endif %}
+<div class="analytics-bottom-grid">
+    <section class="checkout-card analytics-panel"><div class="analytics-panel-heading"><div><h3>Low-stock alerts</h3><p>Products that may need replenishment soon.</p></div><a href="{% url 'dashboard:products' %}">Manage catalog →</a></div>
+    {% if low_stock_products %}<div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Category</th><th>Remaining stock</th><th></th></tr></thead><tbody>{% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category.name }}</td><td><span class="low-stock-badge">{{ product.stock }} left</span></td><td><a href="{% url 'dashboard:product_edit' product.id %}">Update</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="staff-empty-state">All products are currently above the low-stock threshold.</p>{% endif %}</section>
+    <section class="checkout-card analytics-panel analytics-shortcuts"><div class="analytics-panel-heading"><div><h3>Quick actions</h3><p>Common admin tasks.</p></div></div><a href="{% url 'dashboard:product_add' %}"><span>＋</span><div><strong>Add product</strong><small>Create a catalog listing</small></div><b>→</b></a><a href="{% url 'dashboard:users' %}"><span>♙</span><div><strong>Manage users & staff</strong><small>Review account roles</small></div><b>→</b></a><a href="{% url 'dashboard:staff_activity' %}"><span>↗</span><div><strong>Staff monitoring</strong><small>Audit changes and stock updates</small></div><b>→</b></a></section>
 </div>
 {% endblock %}

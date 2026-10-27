@@ -1,0 +1,37 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Staff Monitoring | E-Commerce Shop{% endblock %}
+{% block dashboard_content %}
+<div class="monitor-heading">
+    <div><span class="monitor-eyebrow">ADMINISTRATION / AUDIT</span><h2>Staff operations</h2><p>Review who changed products, stock, categories, offers, and other store records.</p></div>
+    <a class="btn btn-outline" href="{% url 'storeextras:activity_history' %}">Full activity history</a>
+</div>
+<div class="monitor-stats">
+    <article class="monitor-stat"><span class="monitor-stat-icon">♙</span><div><small>Active staff accounts</small><strong>{{ total_staff }}</strong></div></article>
+    <article class="monitor-stat"><span class="monitor-stat-icon">↗</span><div><small>Recorded staff actions</small><strong>{{ total_actions }}</strong></div></article>
+    <article class="monitor-stat"><span class="monitor-stat-icon">◷</span><div><small>Actions today</small><strong>{{ today_actions }}</strong></div></article>
+    <article class="monitor-stat"><span class="monitor-stat-icon">▤</span><div><small>Stock updates today</small><strong>{{ today_stock_updates }}</strong></div></article>
+</div>
+<section class="checkout-card monitor-filter-card">
+    <form method="get" class="monitor-filters">
+        <label>Staff member<select name="staff"><option value="">All staff</option>{% for member in staff_members %}<option value="{{ member.id }}" {% if selected_staff == member.id|stringformat:'s' %}selected{% endif %}>{{ member.get_full_name|default:member.username }}</option>{% endfor %}</select></label>
+        <label class="monitor-search">Search actions, products or details<input type="search" name="q" value="{{ search_query }}" placeholder="e.g. offer, stock, product name"></label>
+        <button class="btn btn-primary" type="submit">Apply filters</button>
+        <a class="btn btn-outline" href="{% url 'dashboard:staff_activity' %}">Reset</a>
+    </form>
+</section>
+<section class="checkout-card monitor-section">
+    <div class="monitor-section-heading"><div><h3>Staff activity timeline</h3><p>Detailed changes recorded by the application.</p></div><span class="monitor-count">{{ activity_page.paginator.count }} records</span></div>
+    {% if activity_page.object_list %}
+    <div class="table-scroll"><table class="dashboard-table monitor-table"><thead><tr><th>Staff member</th><th>Operation</th><th>Item / section</th><th>Details</th><th>Date &amp; time</th></tr></thead><tbody>
+    {% for item in activity_page %}<tr><td><div class="monitor-person"><span class="monitor-avatar">{{ item.actor.username|first|upper }}</span><div><strong>{{ item.actor.get_full_name|default:item.actor.username }}</strong><small>@{{ item.actor.username }}</small></div></div></td><td><span class="monitor-action">{{ item.action }}</span></td><td>{{ item.object_type|default:'Store' }}{% if item.object_id %}<small class="monitor-subline">Reference #{{ item.object_id }}</small>{% endif %}</td><td class="monitor-detail">{{ item.details|default:'No extra details were recorded.' }}</td><td><strong>{{ item.created_at|date:'d M Y' }}</strong><small class="monitor-subline">{{ item.created_at|date:'h:i A' }}</small></td></tr>{% endfor %}
+    </tbody></table></div>
+    <div class="monitor-pagination">{% if activity_page.has_previous %}<a href="?page={{ activity_page.previous_page_number }}&staff={{ selected_staff }}&q={{ search_query|urlencode }}">← Previous</a>{% endif %}<span>Page {{ activity_page.number }} of {{ activity_page.paginator.num_pages }}</span>{% if activity_page.has_next %}<a href="?page={{ activity_page.next_page_number }}&staff={{ selected_staff }}&q={{ search_query|urlencode }}">Next →</a>{% endif %}</div>
+    {% else %}<div class="monitor-empty"><span>✓</span><strong>No staff activity found</strong><p>Try clearing the filters, or new staff operations will appear here as they are recorded.</p></div>{% endif %}
+</section>
+<section class="checkout-card monitor-section">
+    <div class="monitor-section-heading"><div><h3>Stock changes</h3><p>Stock increases and decreases attributed to staff accounts.</p></div><span class="monitor-count">{{ stock_page.paginator.count }} records</span></div>
+    {% if stock_page.object_list %}<div class="table-scroll"><table class="dashboard-table monitor-table"><thead><tr><th>Staff member</th><th>Product</th><th>Reason</th><th>Change</th><th>Stock after</th><th>Time</th></tr></thead><tbody>{% for movement in stock_page %}<tr><td>{{ movement.changed_by.get_full_name|default:movement.changed_by.username }}</td><td>{{ movement.product_name }}</td><td>{{ movement.reason }}</td><td><span class="stock-change {% if movement.change > 0 %}stock-up{% elif movement.change < 0 %}stock-down{% endif %}">{% if movement.change > 0 %}+{% endif %}{{ movement.change }}</span></td><td>{{ movement.stock_after }}</td><td>{{ movement.created_at|date:'d M Y, h:i A' }}</td></tr>{% endfor %}</tbody></table></div>
+    <div class="monitor-pagination">{% if stock_page.has_previous %}<a href="?stock_page={{ stock_page.previous_page_number }}&staff={{ selected_staff }}&q={{ search_query|urlencode }}">← Previous</a>{% endif %}<span>Page {{ stock_page.number }} of {{ stock_page.paginator.num_pages }}</span>{% if stock_page.has_next %}<a href="?stock_page={{ stock_page.next_page_number }}&staff={{ selected_staff }}&q={{ search_query|urlencode }}">Next →</a>{% endif %}</div>
+    {% else %}<div class="monitor-empty"><strong>No staff stock changes found</strong><p>Stock changes made through staff product forms will be listed here.</p></div>{% endif %}
+</section>
+{% endblock %}

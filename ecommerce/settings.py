@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'storeextras.actor_context.StoreActorMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -117,7 +118,7 @@ MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'abhiramgopan06@gmail.com').strip()
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '').strip()
                                                                    
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 

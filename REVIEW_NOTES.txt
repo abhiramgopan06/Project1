@@ -1,0 +1,28 @@
+PROJECT 1 - REVIEW AND UI IMPROVEMENTS
+
+This version keeps the existing Django app structure and adds a responsive style layer for the storefront, forms, product cards, and admin/staff dashboards. Primary buttons use black with white text; secondary buttons use white with dark text and a grey border. Layouts are adjusted for smaller phones, tablets, and desktop screens. Tables can scroll horizontally on narrow screens instead of forcing the entire page wider than the device. Keyboard focus and reduced-motion preferences are supported.
+
+Beginner-friendly local setup
+1. Create and activate your virtual environment.
+2. Install the packages listed in requirements.txt.
+3. Run: python manage.py check
+4. Run: python manage.py migrate
+5. Run: python manage.py runserver
+
+Important checks to perform locally
+- Register and verify an account using the configured email backend.
+- Sign in, sign out, update profile, and test password validation.
+- Add/edit/archive products and categories.
+- Create and expire product/category offers.
+- Add items to cart, update quantities, checkout, and review order history.
+- Test payment only with the configured payment test credentials.
+- Submit a return/replacement request and review it as staff/admin.
+- Verify that staff cannot access administrator-only user management or monitoring pages.
+- Check pages at 320px, 360px, 390px, 768px, 1024px, and desktop widths using browser dev tools.
+
+Verification performed while preparing this archive
+- Python source compilation passed.
+- ZIP integrity will be checked after packaging.
+- Full Django checks and end-to-end tests were not run because Django is not installed in the build environment.
+
+Keep a backup of your existing project, database, and media directory before replacing files. Do not put real payment keys, email passwords, or other secrets in a shared ZIP.

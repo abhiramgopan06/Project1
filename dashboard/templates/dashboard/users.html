@@ -20,6 +20,7 @@
                 <th>Orders</th>
                 <th>Joined</th>
                 <th>Role</th>
+                {% if request.user.is_superuser %}<th>Staff access</th>{% endif %}
             </tr>
         </thead>
         <tbody>
@@ -38,6 +39,7 @@
                         <span class="pill order-status-pending">Customer</span>
                     {% endif %}
                 </td>
+                {% if request.user.is_superuser %}<td>{% if not u.is_superuser and u.id != request.user.id %}<form method="post" action="{% url 'dashboard:toggle_staff_role' u.id %}">{% csrf_token %}<button class="btn {% if u.is_staff %}btn-outline{% else %}btn-primary{% endif %}" type="submit">{% if u.is_staff %}Remove staff{% else %}Make staff{% endif %}</button></form>{% else %}<span class="offer-muted">Protected account</span>{% endif %}</td>{% endif %}
             </tr>
             {% endfor %}
         </tbody>

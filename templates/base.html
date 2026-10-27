@@ -41,15 +41,14 @@
                     <details class="nav-dropdown">
                         <summary aria-label="Open admin tools">Admin Tools <span aria-hidden="true">▾</span></summary>
                         <div class="nav-dropdown-menu">
-                            <a href="{% url 'dashboard:home' %}">Dashboard overview</a>
+                            <a href="{% if user.is_superuser %}{% url 'dashboard:home' %}{% else %}{% url 'dashboard:staff_home' %}{% endif %}">Dashboard overview</a>
                             <a href="{% url 'dashboard:products' %}">Manage products</a>
                             <a href="{% url 'dashboard:product_offers' %}">Product offers</a>
                             <a href="{% url 'dashboard:category_offers' %}">Category offers</a>
                             <a href="{% url 'dashboard:orders' %}">Manage orders</a>
-                            <a href="{% url 'dashboard:users' %}">Manage users</a>
+                            {% if user.is_superuser %}<a href="{% url 'dashboard:users' %}">Manage users</a><a href="{% url 'dashboard:staff_activity' %}">Staff monitoring</a>{% endif %}
                             <a href="{% url 'storeextras:return_management' %}">Returns &amp; replacements</a>
-                            <a href="{% url 'storeextras:stock_history' %}">Stock history</a>
-                            <a href="{% url 'storeextras:activity_history' %}">Activity history</a>
+                            {% if user.is_superuser %}<a href="{% url 'storeextras:stock_history' %}">Stock history</a><a href="{% url 'storeextras:activity_history' %}">Activity history</a>{% endif %}
                             <a href="{% url 'admin:index' %}">Django admin</a>
                         </div>
                     </details>

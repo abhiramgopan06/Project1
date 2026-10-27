@@ -61,6 +61,7 @@
                                 <button class="btn btn-primary" type="submit">Activate</button>
                             {% endif %}
                         </form>
+                        <form method="post" action="{% url 'dashboard:product_delete' product.id %}" onsubmit="return confirm('Delete this product permanently?');">{% csrf_token %}<button class="btn btn-danger" type="submit">Delete</button></form>
                     </div>
                 </td>
             </tr>

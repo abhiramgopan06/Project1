@@ -1,0 +1,23 @@
+PROJECT 1 - FINAL UI AND STRUCTURE REVIEW
+
+Improvements in this revision
+- Refined global typography, spacing, form controls, buttons, cards, tables, navigation, footer, and focus states.
+- Improved responsive behavior for dashboard sidebars, authentication cards, and page containers.
+- Added reduced-motion support for users who prefer less animation.
+- Fixed active navigation highlighting for Returns & Replacements, Stock History, and Activity History.
+- Removed source comments from Python, HTML, CSS, and JavaScript files.
+
+Local verification
+- Python source compilation passed.
+- The ZIP archive should be checked after creation.
+- Django's full system checks could not run in this environment because Django is not installed here.
+
+Before deployment
+1. Activate the project's virtual environment and install requirements.txt.
+2. Run: python manage.py check
+3. Run: python manage.py migrate
+4. Test registration and email OTP, login/logout, product/category CRUD, offers, stock movements, cart, checkout, payments, order status, returns/replacements, role permissions, and staff monitoring.
+5. Configure DJANGO_SECRET_KEY, DJANGO_DEBUG=False, DJANGO_ALLOWED_HOSTS, and email credentials in the environment before production deployment.
+6. Back up the database and media before replacing an existing working copy.
+
+This is a beginner-friendly development project. A successful Python compile does not prove every Django route or workflow works end-to-end.

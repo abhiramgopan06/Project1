@@ -2,3 +2,4 @@ Django==6.1.1
 Pillow>=10.0
 razorpay>=1.4
 requests>=2.31
+whitenoise==6.12.0

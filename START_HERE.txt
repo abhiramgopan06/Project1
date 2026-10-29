@@ -1,32 +1,35 @@
 PROJECT 1 - DJANGO E-COMMERCE SHOP
+BEGINNER SETUP GUIDE
 
-Setup
-1. Extract the ZIP and open the project1 folder in VS Code.
-2. Create a virtual environment: python -m venv venv
-3. Activate it on Windows: venv\Scripts\activate
-4. Install dependencies: pip install -r requirements.txt
-5. Copy .env.example to .env if you need email, Google sign-in, or payment settings.
-6. Run: python manage.py check
-7. Run: python manage.py migrate
-8. Run: python manage.py runserver
-9. Open http://127.0.0.1:8000/
+1. Extract this ZIP.
+2. Open the extracted project1 folder in VS Code.
+3. Open Terminal in that folder (the folder containing manage.py).
+4. Create a virtual environment:
+   python -m venv venv
+5. Activate it on Windows:
+   venv\Scripts\activate
+6. Install the required packages:
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+7. If you need email OTP, Google sign-in, or Razorpay, copy .env.example to a new file named .env and enter your own settings. Never share real passwords or payment secrets.
+8. Check the project:
+   python manage.py check
+9. Apply database migrations:
+   python manage.py migrate
+10. Start the development server:
+    python manage.py runserver
+11. Open http://127.0.0.1:8000/ in your browser.
 
-Important
-- Keep a backup of db.sqlite3 and the media folder before replacing an existing project.
-- Do not put real email passwords or payment keys in a shared ZIP.
-- The application is intended for local development until production settings and payment/email integrations are tested.
-- Run the Django checks above and manually test registration/OTP, product management, cart, checkout, payments, returns, and staff permissions.
-- The build environment does not have Django installed, so full Django checks and browser-based end-to-end tests could not be run here.
+IF A COMMAND FAILS
+- Confirm the terminal is inside the project1 folder.
+- Confirm the virtual environment is activated; the terminal usually shows (venv).
+- If Django is missing, run: pip install -r requirements.txt
+- If database fields are missing, back up db.sqlite3 first, then run: python manage.py migrate
+- Stop the server with Ctrl+C.
 
-
-UI and code review
-- Product-card action buttons now stay together with a consistent 8px gap.
-- Product information no longer stretches to create a large empty area between actions.
-- Product images use consistent contain sizing in the storefront grids and featured carousel.
-- Shared spacing, focus states, and responsive layouts are applied across the storefront.
-- Full end-to-end testing must be completed locally for email OTP, checkout, payment, returns, and staff permissions.
-
-Latest layout fixes
-- Product action buttons now use a fixed small 8px gap and cannot stretch apart vertically.
-- Product pagination is moved outside the sidebar/content row and centered across the full shop layout.
-- Program comments have been removed from Python, HTML, CSS, and standalone JavaScript source files.
+IMPORTANT
+- This is a local development project, not a production-ready deployment.
+- Keep .env private. Do not put email app passwords, Google secrets, or Razorpay keys into a shared ZIP.
+- Back up db.sqlite3 and media before replacing files.
+- Test registration and email OTP, login/logout, product management, cart, checkout, payment success/failure, returns, and role permissions locally.
+- Python source compilation passed during review. A full Django system check and browser-based end-to-end testing could not be run in the build environment because Django dependencies were not installed.

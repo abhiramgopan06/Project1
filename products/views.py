@@ -74,9 +74,12 @@ def home(request):
         products = Product.objects.none()
 
     _record_search(request, q, category, min_price, max_price)
+    sort = request.GET.get('sort', 'newest')
+    sort_options = {'price_asc': 'price', 'price_desc': '-price', 'rating': '-rating_average', 'popular': '-rating_count', 'newest': '-created_at', 'name': 'name'}
+    products = products.order_by(sort_options.get(sort, '-created_at'), 'id')
     categories = Category.objects.all()
     product_count = products.count()
-    paginator = Paginator(products.order_by('created_at'), 12)
+    paginator = Paginator(products, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
     featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('created_at')[:12]
     recommendations = recommended_products(request.user, limit=8) if request.user.is_authenticated else []
@@ -93,6 +96,7 @@ def home(request):
         'recommendations': recommendations,
         'wishlist_product_ids': wishlist_product_ids,
         'price_error': price_error,
+        'sort': sort,
     })
 
 def product_detail(request, id):
@@ -107,9 +111,11 @@ def product_detail(request, id):
         record_product_history(request.user, product, 'view')
 
     reviews = product.reviews.select_related('user').all()
+    gallery_images = product.gallery_images.all()
+    variants = product.variants.filter(is_active=True, stock__gt=0)
     recommendations = recommended_products(request.user, exclude_id=product.id, limit=12) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
     wishlist_product_ids = set()
     if request.user.is_authenticated and not request.user.is_staff:
         from storeextras.models import WishlistItem
         wishlist_product_ids = set(WishlistItem.objects.filter(user=request.user).values_list('product_id', flat=True))
-    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations, 'wishlist_product_ids': wishlist_product_ids})
+    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations, 'wishlist_product_ids': wishlist_product_ids, 'gallery_images': gallery_images, 'variants': variants})

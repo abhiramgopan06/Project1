@@ -12,6 +12,9 @@ class OrderAdmin(admin.ModelAdmin):
         'address',
         'total_amount',
         'status',
+        'tracking_number',
+        'courier_name',
+        'estimated_delivery',
         'created_at',
     )
 
@@ -66,3 +69,6 @@ class ReturnReplaceRequestAdmin(admin.ModelAdmin):
     @admin.display(description='Customer email')
     def customer_email(self, obj):
         return obj.order_item.order.email
+
+from .models import Coupon
+admin.site.register(Coupon)

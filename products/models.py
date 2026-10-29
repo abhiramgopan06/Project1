@@ -207,3 +207,34 @@ class CategoryOfferHistory(models.Model):
 
     def __str__(self):
         return f'{self.category_name} - {self.discount_percent}% offer'
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='gallery_images')
+    image = models.ImageField(upload_to='products/gallery/')
+    alt_text = models.CharField(max_length=180, blank=True)
+    sort_order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f'{self.product.name} image {self.pk}'
+
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    sku = models.CharField(max_length=80, unique=True)
+    size = models.CharField(max_length=40, blank=True)
+    color = models.CharField(max_length=40, blank=True)
+    price_adjustment = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    stock = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['size', 'color']
+
+    def __str__(self):
+        label = ' / '.join(value for value in [self.size, self.color] if value)
+        return f'{self.product.name} - {label or self.sku}'

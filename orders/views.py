@@ -4,14 +4,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Avg, F
+from django.utils import timezone
 from decimal import Decimal
+from django.conf import settings
+from django.core.mail import send_mail
 
 from cart.models import Cart
 from products.models import Product, ProductReview
 from products.recommendations import record_product_history
 from products.forms import ProductReviewForm
 from accounts.checkout_helpers import resolve_checkout_address
-from .models import Order, OrderItem, ReturnReplaceRequest
+from .models import Order, OrderItem, ReturnReplaceRequest, Coupon
 
 @login_required
 def checkout(request):
@@ -23,11 +26,30 @@ def checkout(request):
         return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': 0, 'addresses': addresses})
 
     total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    applied_coupon = None
+    coupon_discount = Decimal('0.00')
+    coupon_code = request.session.get('applied_coupon', '')
+    if coupon_code:
+        applied_coupon = Coupon.objects.filter(code=coupon_code, is_active=True).first()
+        if applied_coupon:
+            now = timezone.now()
+            valid_time = not (applied_coupon.starts_at and applied_coupon.starts_at > now or applied_coupon.expires_at and applied_coupon.expires_at < now)
+            valid_uses = not applied_coupon.usage_limit or applied_coupon.used_count < applied_coupon.usage_limit
+            if valid_time and valid_uses and total >= applied_coupon.minimum_order_amount:
+                if applied_coupon.discount_percent:
+                    coupon_discount = (total * Decimal(applied_coupon.discount_percent) / Decimal('100')).quantize(Decimal('0.01'))
+                else:
+                    coupon_discount = min(applied_coupon.discount_amount, total)
+            else:
+                applied_coupon = None
+                request.session.pop('applied_coupon', None)
+        else:
+            request.session.pop('applied_coupon', None)
     shipping_method = request.POST.get('shipping_method', Order.SHIPPING_FREE)
     if shipping_method not in (Order.SHIPPING_FREE, Order.SHIPPING_EXPRESS):
         shipping_method = Order.SHIPPING_FREE
     shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
-    grand_total = total + shipping_cost
+    grand_total = max(Decimal('0.00'), total - coupon_discount) + shipping_cost
 
     if request.method == 'POST':
         payment = request.POST.get('payment', 'cod')
@@ -37,7 +59,7 @@ def checkout(request):
             return render(request, 'orders/checkout.html', {
                 'cart_items': cart_items, 'total': total, 'addresses': addresses,
                 'error': error, 'shipping_method': shipping_method,
-                'shipping_cost': shipping_cost, 'grand_total': grand_total
+                'shipping_cost': shipping_cost, 'grand_total': grand_total, 'applied_coupon': applied_coupon, 'coupon_discount': coupon_discount
             })
 
         if payment == 'online':
@@ -45,7 +67,7 @@ def checkout(request):
                 'cart_items': cart_items, 'total': total, 'addresses': addresses,
                 'error': 'Please use the Online Payment button to complete payment.',
                 'shipping_method': shipping_method, 'shipping_cost': shipping_cost,
-                'grand_total': grand_total
+                'grand_total': grand_total, 'applied_coupon': applied_coupon, 'coupon_discount': coupon_discount
             })
 
         try:
@@ -82,6 +104,22 @@ def checkout(request):
                     locked_products[item.product_id].discounted_price * item.quantity
                     for item in locked_items
                 )
+                current_coupon_discount = Decimal('0.00')
+                current_coupon = None
+                session_coupon_code = request.session.get('applied_coupon', '')
+                if session_coupon_code:
+                    current_coupon = Coupon.objects.select_for_update().filter(code=session_coupon_code, is_active=True).first()
+                    if current_coupon:
+                        now = timezone.now()
+                        time_ok = not (current_coupon.starts_at and current_coupon.starts_at > now or current_coupon.expires_at and current_coupon.expires_at < now)
+                        uses_ok = not current_coupon.usage_limit or current_coupon.used_count < current_coupon.usage_limit
+                        if time_ok and uses_ok and current_total >= current_coupon.minimum_order_amount:
+                            if current_coupon.discount_percent:
+                                current_coupon_discount = (current_total * Decimal(current_coupon.discount_percent) / Decimal('100')).quantize(Decimal('0.01'))
+                            else:
+                                current_coupon_discount = min(current_coupon.discount_amount, current_total)
+                        else:
+                            current_coupon = None
                 current_shipping_cost = Decimal('99.00') if shipping_method == Order.SHIPPING_EXPRESS else Decimal('0.00')
 
                 order = Order.objects.create(
@@ -90,7 +128,9 @@ def checkout(request):
                     email=email,
                     phone=phone,
                     address=address,
-                    total_amount=current_total + current_shipping_cost,
+                    total_amount=max(Decimal('0.00'), current_total - current_coupon_discount) + current_shipping_cost,
+                    coupon=current_coupon,
+                    discount_amount=current_coupon_discount,
                     shipping_method=shipping_method,
                     shipping_cost=current_shipping_cost,
                     payment_method='cod',
@@ -110,6 +150,9 @@ def checkout(request):
                     product.stock -= item.quantity
                     product.save(update_fields=['stock'])
 
+                if current_coupon and current_coupon_discount > 0:
+                    current_coupon.used_count += 1
+                    current_coupon.save(update_fields=['used_count'])
                 cart.items.all().delete()
 
         except ValueError as exc:
@@ -122,12 +165,23 @@ def checkout(request):
                 'shipping_cost': shipping_cost, 'grand_total': grand_total
             })
 
+        request.session.pop('applied_coupon', None)
+        try:
+            send_mail(
+                subject=f'Order confirmation #{order.pk}',
+                message=f'Hello {order.name}, your order #{order.pk} has been placed. Total: ₹{order.total_amount}. You can review its status in your account.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
         return redirect('order_success')
 
     return render(request, 'orders/checkout.html', {
         'cart_items': cart_items, 'total': total, 'addresses': addresses,
         'shipping_method': shipping_method, 'shipping_cost': shipping_cost,
-        'grand_total': grand_total,
+        'grand_total': grand_total, 'applied_coupon': applied_coupon, 'coupon_discount': coupon_discount,
     })
 
 @login_required

@@ -29,3 +29,7 @@ class ProductHistoryAdmin(admin.ModelAdmin):
     list_display = ('user', 'product', 'viewed_count', 'search_count', 'cart_count', 'ordered_count', 'last_interacted')
     list_filter = ('last_interacted',)
     search_fields = ('user__username', 'product__name')
+
+from .models import ProductImage, ProductVariant
+admin.site.register(ProductImage)
+admin.site.register(ProductVariant)

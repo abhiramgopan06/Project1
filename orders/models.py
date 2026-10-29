@@ -66,6 +66,12 @@ class Order(models.Model):
 
     razorpay_order_id = models.CharField(max_length=100, blank=True, default='')
     razorpay_payment_id = models.CharField(max_length=100, blank=True, default='')
+    tracking_number = models.CharField(max_length=120, blank=True, default='')
+    courier_name = models.CharField(max_length=120, blank=True, default='')
+    estimated_delivery = models.DateField(null=True, blank=True)
+    coupon = models.ForeignKey('orders.Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cancellation_reason = models.CharField(max_length=255, blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -185,3 +191,20 @@ class ReturnReplaceRequest(models.Model):
 
     def __str__(self):
         return f'{self.request_type} request for {self.order_item}'
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=40, unique=True)
+    discount_percent = models.PositiveSmallIntegerField(default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    usage_limit = models.PositiveIntegerField(default=0, help_text='Use 0 for unlimited uses.')
+    used_count = models.PositiveIntegerField(default=0)
+    starts_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['code']
+
+    def __str__(self):
+        return self.code

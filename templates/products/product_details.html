@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }} | E-Commerce Store{% endblock %}
 {% block content %}
+<style>.product-gallery-thumbs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.75rem 0}.product-gallery-thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #ddd}.variant-list{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.variant-chip{padding:.45rem .7rem;border:1px solid #ccc;border-radius:999px;background:transparent}</style>
 {% if user.is_authenticated and not user.is_staff %}<form class="detail-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-outline detail-wishlist-button" type="submit"><span aria-hidden="true">♡</span> {% if product.id in wishlist_product_ids %}Remove from Wishlist{% else %}Save to Wishlist{% endif %}</button></form>{% endif %}
 
 <div class="container">
@@ -145,4 +146,5 @@
     </section>
     {% endif %}
 </div>
+<section class="container" style="padding:1rem 0"><h2>Product gallery</h2><div class="product-gallery-thumbs">{% if product.image %}<a href="{{ product.image.url }}" target="_blank" rel="noopener"><img src="{{ product.image.url }}" alt="{{ product.name }} main image"></a>{% endif %}{% for image in gallery_images %}<a href="{{ image.image.url }}" target="_blank" rel="noopener"><img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}"></a>{% endfor %}</div>{% if variants %}<h2>Available options</h2><div class="variant-list">{% for variant in variants %}<span class="variant-chip">{% if variant.size %}Size: {{ variant.size }}{% endif %}{% if variant.color %} Color: {{ variant.color }}{% endif %} · {{ variant.stock }} in stock{% if variant.price_adjustment %} · {% if variant.price_adjustment > 0 %}+{% endif %}₹{{ variant.price_adjustment }}{% endif %}</span>{% endfor %}</div><p>Variant options are displayed for reference. Complete variant selection through cart and checkout before using variant-specific inventory in live sales.</p>{% endif %}</section>
 {% endblock %}

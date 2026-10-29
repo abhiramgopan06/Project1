@@ -3,6 +3,8 @@
 {% block title %}Checkout | ShopEasy{% endblock %}
 
 {% block content %}
+<section class="container" style="margin:1rem auto;padding:1rem;border:1px solid #ddd;border-radius:12px;max-width:900px"><h3>Promotional code</h3>{% if applied_coupon %}<p>Applied: <strong>{{ applied_coupon.code }}</strong> · Discount ₹{{ coupon_discount|floatformat:2 }}</p><form method="post" action="{% url 'storeextras:remove_coupon' %}">{% csrf_token %}<button type="submit" class="btn btn-outline">Remove coupon</button></form>{% else %}<form method="post" action="{% url 'storeextras:apply_coupon' %}" style="display:flex;gap:.5rem;flex-wrap:wrap">{% csrf_token %}<label for="coupon_code">Coupon code</label><input id="coupon_code" name="coupon_code" maxlength="40" required placeholder="Enter coupon code"><button type="submit" class="btn btn-outline">Apply</button></form>{% endif %}</section>
+
 <div class="checkout-container">
     <div class="checkout-header">
         <h1>Checkout</h1>

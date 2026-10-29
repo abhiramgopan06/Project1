@@ -26,12 +26,13 @@ class CartItem(models.Model):
     )
 
     quantity = models.PositiveIntegerField(default=1)
+    variant = models.ForeignKey('products.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='cart_items')
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['cart', 'product'],
-                name='unique_product_per_cart',
+                fields=['cart', 'product', 'variant'],
+                name='unique_cart_product_variant',
             )
         ]
 
@@ -41,4 +42,8 @@ class CartItem(models.Model):
     @property
     def total_price(self):
     
-        return self.product.discounted_price * self.quantity
+        unit_price = self.product.discounted_price
+        if self.variant_id:
+            unit_price += self.variant.price_adjustment
+        return unit_price * self.quantity
+

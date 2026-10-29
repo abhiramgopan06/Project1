@@ -88,6 +88,7 @@ class OrderItem(models.Model):
         'products.Product',
         on_delete=models.CASCADE
     )
+    variant = models.ForeignKey('products.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='order_items')
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 

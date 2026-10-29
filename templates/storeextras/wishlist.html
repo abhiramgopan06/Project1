@@ -53,7 +53,7 @@
                         <form class="wishlist-remove-form" method="post" action="{% url 'storeextras:wishlist_toggle' item.product.id %}">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{% url 'storeextras:wishlist' %}">
-                            <button class="wishlist-remove" type="submit">Remove from wishlist</button>
+                            <button class="wishlist-remove wishlist-remove-icon" type="submit" aria-label="Remove {{ item.product.name }} from wishlist" title="Remove from wishlist">♡</button>
                         </form>
                     </div>
                 </article>

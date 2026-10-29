@@ -9,12 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from orders.models import Coupon, Order, OrderItem
-from products.models import Product, ProductHistory
-
-@login_required
-def recently_viewed(request):
-    history = ProductHistory.objects.filter(user=request.user).select_related('product', 'product__category').order_by('-last_viewed', '-last_interacted')[:30]
-    return render(request, 'storeextras/recently_viewed.html', {'history': history})
+from products.models import Product
 
 @login_required
 @require_POST
@@ -93,3 +88,66 @@ def export_stock_csv(request):
     for product in Product.objects.select_related('category').order_by('name'):
         writer.writerow([product.pk, product.name, product.category.name, product.stock, product.price, product.is_available])
     return response
+
+
+@staff_member_required
+def export_sales_excel(request):
+    from openpyxl import Workbook
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="sales-report.xlsx"'
+    workbook = Workbook(); sheet = workbook.active; sheet.title = 'Sales'
+    sheet.append(['Order ID', 'Customer', 'Email', 'Status', 'Payment Status', 'Total', 'Created'])
+    for order in Order.objects.select_related('user').order_by('-created_at'):
+        sheet.append([order.pk, order.name, order.email, order.status, order.payment_status, float(order.total_amount), order.created_at.replace(tzinfo=None)])
+    workbook.save(response); return response
+
+@staff_member_required
+def export_inventory_excel(request):
+    from openpyxl import Workbook
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="inventory-report.xlsx"'
+    workbook = Workbook(); sheet = workbook.active; sheet.title = 'Inventory'
+    sheet.append(['Product ID', 'Product', 'Category', 'Stock', 'Price', 'Available'])
+    for product in Product.objects.select_related('category').order_by('name'):
+        sheet.append([product.pk, product.name, product.category.name, product.stock, float(product.price), product.is_available])
+    workbook.save(response); return response
+
+@staff_member_required
+def export_refunds_excel(request):
+    from openpyxl import Workbook
+    from orders.models import ReturnReplaceRequest
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="refunds-report.xlsx"'
+    workbook = Workbook(); sheet = workbook.active; sheet.title = 'Returns and refunds'
+    sheet.append(['Request ID', 'Order ID', 'Customer', 'Product', 'Type', 'Status', 'Refund status', 'Refund amount', 'Created'])
+    rows = ReturnReplaceRequest.objects.select_related('order_item__order__user', 'order_item__product').order_by('-created_at')
+    for item in rows:
+        sheet.append([item.pk, item.order_item.order_id, item.order_item.order.user.username, item.order_item.product.name, item.request_type, item.status, item.refund_status, float(item.refund_amount), item.created_at.replace(tzinfo=None)])
+    workbook.save(response); return response
+
+@staff_member_required
+def import_products_csv(request):
+    if request.method != 'POST' or not request.FILES.get('csv_file'):
+        messages.error(request, 'Choose a CSV file and submit it using the import form.')
+        return redirect('dashboard:products')
+    import io
+    from products.models import Category
+    try:
+        decoded = request.FILES['csv_file'].read().decode('utf-8-sig')
+        reader = csv.DictReader(io.StringIO(decoded))
+        required = {'name', 'category', 'description', 'price', 'stock'}
+        if not reader.fieldnames or not required.issubset(set(reader.fieldnames)):
+            raise ValueError('CSV must contain name, category, description, price and stock columns.')
+        created = 0
+        for row in reader:
+            name = (row.get('name') or '').strip()[:200]
+            category_name = (row.get('category') or '').strip()[:100]
+            if not name or not category_name:
+                continue
+            category, _ = Category.objects.get_or_create(name=category_name)
+            Product.objects.create(name=name, category=category, description=(row.get('description') or '').strip(), price=Decimal(row['price']), stock=max(0, int(row['stock'])), is_available=True)
+            created += 1
+        messages.success(request, f'Imported {created} products. Review the catalog before publishing.')
+    except (UnicodeDecodeError, ValueError, KeyError, TypeError, ArithmeticError) as exc:
+        messages.error(request, f'Import stopped: {exc}')
+    return redirect('dashboard:products')

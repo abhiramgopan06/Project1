@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.db.models import Sum, Count
+from cart.models import Cart
 from products.models import Product
 from orders.models import Order, ReturnReplaceRequest
 from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog
@@ -130,3 +132,16 @@ def return_management(request):
         Notification.objects.create(user=item.order_item.order.user, title='Return or refund update', message=f'Your {item.request_type.lower()} request for {item.order_item.product.name} is now {item.status}. Refund status: {item.refund_status}.', link='/account/returns/')
         return redirect('storeextras:return_management')
     return render(request, 'storeextras/return_management.html', {'requests': requests, 'active': 'returns'})
+
+
+@login_required
+def customer_dashboard(request):
+    orders = Order.objects.filter(user=request.user).prefetch_related('items__product').order_by('-created_at')[:8]
+    context = {
+        'orders': orders,
+        'orders_count': Order.objects.filter(user=request.user).count(),
+        'wishlist_count': WishlistItem.objects.filter(user=request.user).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
+        'returns_count': ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).count(),
+    }
+    return render(request, 'storeextras/customer_dashboard.html', context)

@@ -6755,3 +6755,33 @@ input, select, textarea, button {
     .home-page-polish .hero-image img { height: 200px; max-height: 200px; }
 }
 @media (prefers-reduced-motion: reduce) { .home-page-polish .hero-content .btn { transition: none; } }
+
+
+@media (min-width: 1201px) {
+  .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+}
+.product-grid .product-image { height: 171px; flex-basis: 171px; }
+.product-grid .product-info { padding: 13px; gap: 6px; }
+.product-grid .price { font-size: 19px; }
+.product-carousel.recommendation-carousel {
+  display: flex; gap: 16px; overflow-x: auto; overflow-y: hidden; padding: 6px 2px 18px;
+  scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.recommendation-carousel .product-carousel-card {
+  flex: 0 0 clamp(210px, 22vw, 250px); width: clamp(210px, 22vw, 250px);
+  scroll-snap-align: start;
+}
+.recommendation-carousel .product-image { height: 171px; flex-basis: 171px; }
+.recommendation-carousel:focus-visible { outline: 3px solid rgba(37,99,235,.4); outline-offset: 3px; }
+.wishlist-remove-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+  border: 1px solid #e2e8f0; border-radius: 50%; background: #fff; color: #b42318;
+  font-size: 22px; line-height: 1; cursor: pointer; text-decoration: none;
+}
+.wishlist-remove-icon:hover { background: #fff1f0; border-color: #f2b8b5; }
+.wishlist-remove-form { display: flex; justify-content: flex-end; margin-top: 8px; }
+@media (max-width: 760px) {
+  .product-grid .product-image { height: 154px; flex-basis: 154px; }
+  .recommendation-carousel .product-carousel-card { flex-basis: 220px; width: 220px; }
+}

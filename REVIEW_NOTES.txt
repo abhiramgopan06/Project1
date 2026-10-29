@@ -26,3 +26,5 @@ Verification performed while preparing this archive
 - Full Django checks and end-to-end tests were not run because Django is not installed in the build environment.
 
 Keep a backup of your existing project, database, and media directory before replacing files. Do not put real payment keys, email passwords, or other secrets in a shared ZIP.
+
+UI refinement update: removed the Recently viewed navigation and its dedicated page route/view/template. Product detail no longer shows the separate Product gallery section. Related products use a horizontally scrollable, snap-aligned carousel. Desktop product cards are narrower with shorter image areas, and wishlist removal is now a compact accessible heart control rather than a full text link. ProductHistory model remains because browsing history may support recommendations and should not be removed without checking its migrations and other dependencies.

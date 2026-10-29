@@ -68,3 +68,21 @@ class ActivityLog(models.Model):
         ordering = ['-created_at']
     def __str__(self):
         return f'{self.action} - {self.created_at:%Y-%m-%d %H:%M}'
+
+
+class StockReservation(models.Model):
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='reservations')
+    variant = models.ForeignKey('products.ProductVariant', on_delete=models.CASCADE, null=True, blank=True, related_name='reservations')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stock_reservations')
+    quantity = models.PositiveIntegerField()
+    reference = models.CharField(max_length=100, unique=True)
+    expires_at = models.DateTimeField()
+    released = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['expires_at']
+        indexes = [models.Index(fields=['released', 'expires_at'], name='stx_res_exp_idx')]
+
+    def __str__(self):
+        return f'{self.product.name}: {self.quantity} reserved'

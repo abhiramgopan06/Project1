@@ -9,6 +9,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 from cart.models import Cart
 from orders.models import Order, OrderItem
@@ -235,3 +236,45 @@ def verify_payment(request):
 
     except Cart.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Cart not found.'}, status=404)
+
+
+@csrf_exempt
+@require_POST
+def razorpay_webhook(request):
+    webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', '')
+    signature = request.headers.get('X-Razorpay-Signature', '')
+    if not webhook_secret or not signature:
+        return JsonResponse({'success': False, 'error': 'Webhook verification is not configured.'}, status=503)
+    import hmac, hashlib, json
+    expected = hmac.new(webhook_secret.encode(), request.body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, signature):
+        return JsonResponse({'success': False, 'error': 'Invalid webhook signature.'}, status=400)
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        event = payload.get('event', '')
+        payment = payload.get('payload', {}).get('payment', {}).get('entity', {})
+        provider_order_id = payment.get('order_id', '')
+        payment_id = payment.get('id', '')
+    except (ValueError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid webhook payload.'}, status=400)
+    if not provider_order_id or not payment_id:
+        return JsonResponse({'success': True, 'ignored': True})
+    from orders.models import Order
+    from storeextras.models import PaymentRecord, ActivityLog
+    order = Order.objects.filter(razorpay_order_id=provider_order_id).first()
+    if not order:
+        return JsonResponse({'success': True, 'ignored': True})
+    if event == 'payment.captured':
+        expected_amount = int(order.total_amount * 100)
+        if payment.get('currency') != 'INR' or payment.get('amount') != expected_amount:
+            return JsonResponse({'success': False, 'error': 'Payment amount or currency does not match the order.'}, status=400)
+        order.razorpay_payment_id = payment_id
+        order.payment_status = 'Paid'
+        order.save(update_fields=['razorpay_payment_id', 'payment_status'])
+        PaymentRecord.objects.update_or_create(order=order, reference=payment_id, defaults={'user': order.user, 'method': 'razorpay', 'amount': order.total_amount, 'status': PaymentRecord.STATUS_SUCCESS, 'note': 'Confirmed by Razorpay webhook'})
+    elif event == 'payment.failed' and order.payment_status != 'Paid':
+        order.payment_status = 'Failed'
+        order.save(update_fields=['payment_status'])
+        PaymentRecord.objects.update_or_create(order=order, reference=payment_id, defaults={'user': order.user, 'method': 'razorpay', 'amount': order.total_amount, 'status': PaymentRecord.STATUS_FAILED, 'note': 'Failure confirmed by Razorpay webhook'})
+    ActivityLog.objects.create(actor=None, action='Razorpay webhook processed', object_type='Order', object_id=str(order.pk), details=f'Event: {event}; payment: {payment_id}')
+    return JsonResponse({'success': True})

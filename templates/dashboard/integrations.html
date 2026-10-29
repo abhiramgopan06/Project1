@@ -1,0 +1,7 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Integrations{% endblock %}
+{% block dashboard_content %}
+<div class="section-head"><div><span class="dash-eyebrow">CONNECTED SERVICES</span><h1>Integrations</h1><p>Check the setup status of services used by your store. Secret values are never displayed here.</p></div></div>
+<div class="dash-panel"><div class="dash-panel-head"><div><h2>Service connections</h2><p>Configuration status is read from the server environment.</p></div></div>{% for integration in integrations %}<div class="integration-row"><div class="integration-symbol">{% if 'Razorpay' in integration.name %}₹{% elif 'Google' in integration.name %}G{% else %}✉{% endif %}</div><div class="integration-description"><strong>{{ integration.name }}</strong><p>{{ integration.description }}</p><small>{{ integration.details }}</small></div><span class="integration-state {% if integration.configured %}connected{% else %}not-connected{% endif %}">{% if integration.configured %}Configured{% else %}Setup needed{% endif %}</span></div>{% endfor %}</div>
+<div class="dash-panel"><h2>Before going live</h2><p class="dash-muted">Keep API keys and email passwords in environment variables, never in templates or committed source files. After changing configuration, restart the development server and test the relevant workflow with a test account.</p></div>
+{% endblock %}

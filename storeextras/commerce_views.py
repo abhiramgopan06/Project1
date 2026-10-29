@@ -66,7 +66,7 @@ def cancel_order_request(request, order_id):
 @staff_member_required
 def analytics(request):
     paid_orders = Order.objects.filter(payment_status='Paid').exclude(status=Order.STATUS_CANCELLED)
-    context = {'orders_count': Order.objects.count(), 'paid_revenue': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0, 'customers_count': Order.objects.values('user_id').distinct().count(), 'low_stock': Product.objects.filter(is_available=True, stock__lte=5).order_by('stock')[:12], 'top_products': OrderItem.objects.values('product__name').annotate(units=Sum('quantity'), revenue=Sum('price')).order_by('-units')[:10]}
+    context = {'orders_count': Order.objects.count(), 'paid_revenue': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0, 'customers_count': Order.objects.values('user_id').distinct().count(), 'low_stock': Product.objects.filter(is_available=True, stock__lte=5).order_by('stock')[:12], 'low_stock_count': Product.objects.filter(is_available=True, stock__lte=5).count(), 'top_products': OrderItem.objects.values('product__name').annotate(units=Sum('quantity'), revenue=Sum('price')).order_by('-units')[:10]}
     return render(request, 'dashboard/analytics.html', context)
 
 @staff_member_required

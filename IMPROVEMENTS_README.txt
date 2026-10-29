@@ -24,3 +24,14 @@ Please verify locally
 Security
 - Never share a real .env file or payment/email credentials.
 - Before public deployment, configure a strong DJANGO_SECRET_KEY, DEBUG=False, allowed hosts, HTTPS/security settings, and production email/payment credentials.
+
+LATEST HOME PAGE UPDATE
+- Removed the extra "Find your products" filter panel from the top of the home page.
+- Kept the main product listing and its search, category, price, and sort controls so shoppers can still filter products.
+- Compiled Python source files successfully during this update. A live Django check still requires installing requirements.txt in the local environment.
+
+HOME PAGE UPDATE - 2026-10-29
+- Removed the home page product search and filtering panel shown above the product listing.
+- Expanded the product listing to use the full available content width and adjusted responsive grid columns.
+- Kept category navigation, product cards, wishlist, cart actions, and pagination.
+- Removed the now-unreachable price-filter error message from the home page template.

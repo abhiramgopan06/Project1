@@ -149,6 +149,11 @@ def dashboard_products(request):
     context = {
         'active': 'products',
         'products': products,
+        'total_products': Product.objects.count(),
+        'active_products': Product.objects.filter(is_available=True).count(),
+        'in_stock_products': Product.objects.filter(is_available=True, stock__gt=5).count(),
+        'low_stock_products_count': Product.objects.filter(is_available=True, stock__gt=0, stock__lte=5).count(),
+        'out_of_stock_products': Product.objects.filter(stock=0).count(),
     }
 
     return render(request, 'dashboard/products.html', context)
@@ -486,3 +491,14 @@ def dashboard_staff_activity(request):
         ).count(),
     }
     return render(request, 'dashboard/staff_activity.html', context)
+
+
+@staff_member_required
+def dashboard_integrations(request):
+    from django.conf import settings
+    integrations = [
+        {'name': 'Razorpay payments', 'description': 'Payment checkout and transaction processing.', 'configured': bool(getattr(settings, 'RAZORPAY_KEY_ID', '') and getattr(settings, 'RAZORPAY_KEY_SECRET', '')), 'details': 'Payment keys are configured in the server environment.' if getattr(settings, 'RAZORPAY_KEY_ID', '') and getattr(settings, 'RAZORPAY_KEY_SECRET', '') else 'Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment.'},
+        {'name': 'Google sign-in', 'description': 'Optional Google account sign-in.', 'configured': bool(getattr(settings, 'GOOGLE_CLIENT_ID', '') and getattr(settings, 'GOOGLE_CLIENT_SECRET', '')), 'details': 'OAuth credentials are configured in the server environment.' if getattr(settings, 'GOOGLE_CLIENT_ID', '') and getattr(settings, 'GOOGLE_CLIENT_SECRET', '') else 'Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment.'},
+        {'name': 'Email delivery', 'description': 'Account verification and transactional email.', 'configured': bool(getattr(settings, 'EMAIL_HOST_USER', '') and getattr(settings, 'EMAIL_HOST_PASSWORD', '')), 'details': 'Email account settings are configured.' if getattr(settings, 'EMAIL_HOST_USER', '') and getattr(settings, 'EMAIL_HOST_PASSWORD', '') else 'Configure EMAIL_HOST_USER and EMAIL_HOST_PASSWORD for real email delivery.'},
+    ]
+    return render(request, 'dashboard/integrations.html', {'active': 'integrations', 'integrations': integrations})

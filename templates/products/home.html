@@ -154,18 +154,7 @@
     </section>
     {% endif %}
 
-    <section class="shop-filter-panel" id="products" style="margin:2rem 0;padding:1.25rem;border:1px solid var(--border-color, #ddd);border-radius:16px">
-        <h2>Find your products</h2>
-        <form method="get" class="shop-filter-form" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:end">
-            <label>Search<input type="search" name="q" value="{{ request.GET.q }}" placeholder="Product name or keyword"></label>
-            <label>Category<select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
-            <label>Min price<input type="number" min="0" step="0.01" name="min_price" value="{{ request.GET.min_price }}"></label>
-            <label>Max price<input type="number" min="0" step="0.01" name="max_price" value="{{ request.GET.max_price }}"></label>
-            <label>Sort by<select name="sort"><option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option><option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: low to high</option><option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: high to low</option><option value="rating" {% if sort == 'rating' %}selected{% endif %}>Highest rated</option><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most rated</option><option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option></select></label>
-            <button class="btn btn-primary" type="submit">Apply filters</button><a class="btn btn-outline" href="{% url 'products:home' %}">Clear</a>
-        </form>
-        {% if price_error %}<p role="alert">{{ price_error }}</p>{% endif %}<p>{{ product_count }} product{{ product_count|pluralize }} found</p>
-    </section>
+
 
     <div class="section-head" id="categories">
         <div>
@@ -316,69 +305,9 @@
     </div>
 
     <div class="shop-layout">
-        <aside class="filters">
-            <h3>Filters</h3>
 
-            <form method="get" action="{% url 'products:home' %}">
-                <label for="q">Search</label>
-                <input class="input"
-                       id="q"
-                       type="text"
-                       name="q"
-                       value="{{ request.GET.q }}"
-                       placeholder="Product name">
-
-                <label for="category">Category</label>
-                <select class="select" id="category" name="category">
-                    <option value="">All Categories</option>
-                    {% for category in categories %}
-                        <option value="{{ category.id }}"
-                            {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <label for="min_price">Minimum price</label>
-                <input class="input"
-                       id="min_price"
-                       type="number"
-                       name="min_price"
-                       min="0"
-                       step="0.01"
-                       value="{{ request.GET.min_price }}"
-                       placeholder="₹0">
-
-                <label for="max_price">Maximum price</label>
-                <input class="input"
-                       id="max_price"
-                       type="number"
-                       name="max_price"
-                       min="0"
-                       step="0.01"
-                       value="{{ request.GET.max_price }}"
-                       placeholder="₹100000">
-
-                <button class="btn btn-primary filter-button"
-                        type="submit">
-                    Apply Filters
-                </button>
-
-                <a class="btn btn-outline filter-button"
-                   href="{% url 'products:home' %}">
-                    Clear
-                </a>
-            </form>
-        </aside>
 
         <section>
-            {% if price_error %}
-                <div class="empty filter-error">
-                    <h3>Invalid price filter</h3>
-                    <p>{{ price_error }}</p>
-                </div>
-            {% endif %}
-
             {% if products %}
                 <div class="product-grid">
                     {% for product in products %}
@@ -489,20 +418,8 @@
                     <div class="empty-icon">🔎</div>
                     <h3>No products found</h3>
 
-                    {% if request.GET.q or request.GET.category or request.GET.min_price or request.GET.max_price %}
-                        <p>
-                            Try changing your search or price range, or clear the filters.
-                        </p>
-                        <a class="btn btn-primary"
-                           href="{% url 'products:home' %}">
-                            View All Products
-                        </a>
-                    {% else %}
-                        <p>
-                            There are no products available right now.
-                            Please check back later.
-                        </p>
-                    {% endif %}
+                    <p>There are no products to display in this section right now. Please check back later.</p>
+                    <a class="btn btn-primary" href="{% url 'products:home' %}">Browse all products</a>
                 </div>
             {% endif %}
         </section>

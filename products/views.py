@@ -90,7 +90,11 @@ def home(request):
             user_history__user=request.user,
             user_history__viewed_count__gt=0,
             is_available=True,
-        ).exclude(id__in=[p.id for p in page_obj.object_list]).distinct().order_by('-user_history__last_interacted')[:8]
+        ).select_related('category').distinct().order_by(
+            '-user_history__last_viewed',
+            '-user_history__last_interacted',
+            '-id',
+        )[:8]
     wishlist_product_ids = set()
     if request.user.is_authenticated and not request.user.is_staff:
         from storeextras.models import WishlistItem

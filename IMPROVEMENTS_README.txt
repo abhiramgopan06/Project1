@@ -35,3 +35,10 @@ HOME PAGE UPDATE - 2026-10-29
 - Expanded the product listing to use the full available content width and adjusted responsive grid columns.
 - Kept category navigation, product cards, wishlist, cart actions, and pagination.
 - Removed the now-unreachable price-filter error message from the home page template.
+
+Recently Viewed update (2 Nov 2026)
+- The home page now lists up to 8 available products the signed-in customer has actually opened.
+- Recently Viewed is filtered to the current signed-in user and sorted by most recent product view, not general cart/search interaction.
+- Products are no longer hidden from Recently Viewed merely because they also appear in the current All Products page.
+- Anonymous visitors do not see another account's history; the section appears after they sign in and view products.
+- Added automated tests for account isolation, newest-first ordering, and anonymous visitors.

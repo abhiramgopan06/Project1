@@ -26,3 +26,19 @@ If you are using an existing database, make a backup of `db.sqlite3` before runn
 Python files compile and the included SQLite database passes its integrity check. Django's full system check and browser-based workflow tests were not run in this build environment because Django is not installed here. After installing requirements, test registration/email OTP, login/logout, product/category management, filters, pagination, cart, checkout, payment configuration, orders, returns/replacements, and staff permissions.
 
 This project is intended for local development. Before deploying publicly, set a strong `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, and appropriate `DJANGO_ALLOWED_HOSTS`; configure email/payment credentials securely; and review production security settings.
+
+
+## Wishlist, variants, and stock alerts
+
+See [FEATURES_GUIDE.md](FEATURES_GUIDE.md) for beginner-friendly instructions for managing product options, variant-specific prices and stock, back-in-stock email alerts, and the updated wishlist.
+
+## Additional review fixes in this revision
+
+- The cart summary now totals the selected variant price, not the base product price, so variant prices remain consistent from product selection to the cart.
+- The Add/Edit Product form now submits the `enable_variants` setting correctly. Previously the checkbox had no form name, so variant changes could be ignored and existing variants could be deactivated on save.
+- Product cards now use content-based spacing. The price no longer uses automatic top spacing that pushed the actions far apart, and carousel cards no longer force a tall empty information area.
+- Pagination spans the full product-list area and is centered instead of sitting at the left edge of the grid.
+- Responsive wishlist, product detail, form, and keyboard-focus styling has been refined.
+- Added cart pricing regression tests for variant-specific totals.
+
+The environment used to prepare this ZIP does not have Django installed and cannot download packages. Python syntax, inline JavaScript syntax for the storefront and product form, CSS brace balance, SQLite integrity, and ZIP integrity were checked locally. Run `python manage.py check` and `python manage.py test` after installing the requirements to complete framework-level verification.

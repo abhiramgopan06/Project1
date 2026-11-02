@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/reports/refunds.xlsx', commerce_views.export_refunds_excel, name='export_refunds_excel'),
     path('admin/products/import-csv/', commerce_views.import_products_csv, name='import_products_csv'),
     path('wishlist/', views.wishlist, name='wishlist'),
+    path('stock-alert/<int:product_id>/', views.request_stock_alert, name='request_stock_alert'),
     path('coupons/apply/', commerce_views.apply_coupon, name='apply_coupon'),
     path('coupons/remove/', commerce_views.remove_coupon, name='remove_coupon'),
     path('orders/<int:order_id>/cancel-request/', commerce_views.cancel_order_request, name='cancel_order_request'),

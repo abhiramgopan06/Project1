@@ -3,13 +3,13 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from orders.models import Coupon, Order, OrderItem
-from products.models import Product
+from products.models import Product, ProductVariant
 
 @login_required
 @require_POST
@@ -54,10 +54,14 @@ def cancel_order_request(request, order_id):
     order.cancellation_reason = reason or 'Customer requested cancellation'
     order.status = Order.STATUS_CANCELLED
     order.save(update_fields=['status', 'cancellation_reason'])
-    for item in order.items.select_related('product'):
+    for item in order.items.select_related('product', 'variant'):
         if not item.is_cancelled:
-            item.product.stock += item.quantity
-            item.product.save(update_fields=['stock'])
+            if item.variant_id:
+                item.variant.stock += item.quantity
+                item.variant.save(update_fields=['stock'])
+            else:
+                item.product.stock += item.quantity
+                item.product.save(update_fields=['stock'])
             item.is_cancelled = True
             item.save(update_fields=['is_cancelled'])
     messages.success(request, 'Cancellation request processed. Any prepaid refund must be handled through the payment provider.')
@@ -66,7 +70,19 @@ def cancel_order_request(request, order_id):
 @staff_member_required
 def analytics(request):
     paid_orders = Order.objects.filter(payment_status='Paid').exclude(status=Order.STATUS_CANCELLED)
-    context = {'orders_count': Order.objects.count(), 'paid_revenue': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0, 'customers_count': Order.objects.values('user_id').distinct().count(), 'low_stock': Product.objects.filter(is_available=True, stock__lte=5).order_by('stock')[:12], 'low_stock_count': Product.objects.filter(is_available=True, stock__lte=5).count(), 'top_products': OrderItem.objects.values('product__name').annotate(units=Sum('quantity'), revenue=Sum('price')).order_by('-units')[:10]}
+    context = {
+        'orders_count': Order.objects.count(),
+        'paid_revenue': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
+        'customers_count': Order.objects.values('user_id').distinct().count(),
+        'low_stock': Product.objects.filter(is_available=True, stock__lte=5).order_by('stock')[:12],
+        'low_stock_count': Product.objects.filter(is_available=True, stock__lte=5).count(),
+        'low_stock_variants': ProductVariant.objects.filter(is_active=True, stock__lte=5).select_related('product', 'product__category').order_by('stock')[:12],
+        'low_stock_variant_count': ProductVariant.objects.filter(is_active=True, stock__lte=5).count(),
+        'top_products': OrderItem.objects.values('product__name').annotate(
+            units=Sum('quantity'),
+            revenue=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField(max_digits=14, decimal_places=2))),
+        ).order_by('-units')[:10],
+    }
     return render(request, 'dashboard/analytics.html', context)
 
 @staff_member_required
@@ -84,9 +100,11 @@ def export_stock_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="stock-report.csv"'
     writer = csv.writer(response)
-    writer.writerow(['Product ID', 'Product', 'Category', 'Stock', 'Price', 'Available'])
+    writer.writerow(['Product ID', 'Record type', 'Product', 'Category', 'Option', 'SKU', 'Stock', 'Price', 'Available'])
     for product in Product.objects.select_related('category').order_by('name'):
-        writer.writerow([product.pk, product.name, product.category.name, product.stock, product.price, product.is_available])
+        writer.writerow([product.pk, 'Product', product.name, product.category.name, '', '', product.stock, product.price, product.is_available])
+    for variant in ProductVariant.objects.select_related('product', 'product__category').order_by('product__name', 'option_type', 'option_value'):
+        writer.writerow([variant.product_id, 'Variant', variant.product.name, variant.product.category.name, f'{variant.get_option_type_display()}: {variant.display_value}', variant.sku, variant.stock, variant.effective_price, variant.is_active])
     return response
 
 
@@ -107,9 +125,11 @@ def export_inventory_excel(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="inventory-report.xlsx"'
     workbook = Workbook(); sheet = workbook.active; sheet.title = 'Inventory'
-    sheet.append(['Product ID', 'Product', 'Category', 'Stock', 'Price', 'Available'])
+    sheet.append(['Product ID', 'Record type', 'Product', 'Category', 'Option', 'SKU', 'Stock', 'Price', 'Available'])
     for product in Product.objects.select_related('category').order_by('name'):
-        sheet.append([product.pk, product.name, product.category.name, product.stock, float(product.price), product.is_available])
+        sheet.append([product.pk, 'Product', product.name, product.category.name, '', '', product.stock, float(product.price), product.is_available])
+    for variant in ProductVariant.objects.select_related('product', 'product__category').order_by('product__name', 'option_type', 'option_value'):
+        sheet.append([variant.product_id, 'Variant', variant.product.name, variant.product.category.name, f'{variant.get_option_type_display()}: {variant.display_value}', variant.sku, variant.stock, float(variant.effective_price), variant.is_active])
     workbook.save(response); return response
 
 @staff_member_required

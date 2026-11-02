@@ -1,2 +1,133 @@
-{% extends "dashboard/base.html" %}
-{% block dashboard_content %}<div class="section-head"><div><span class="dash-eyebrow">CATALOG MANAGEMENT</span><h1>{% if is_new %}Add product{% else %}Edit product{% endif %}</h1><p>Keep product information accurate and easy to understand.</p></div><a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to products</a></div><div class="dash-panel dash-form-panel"><form method="post" enctype="multipart/form-data" class="dash-form">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div class="dash-form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endfor %}<div class="dash-form-actions"><button class="btn btn-primary" type="submit">{% if is_new %}Create product{% else %}Save changes{% endif %}</button><a class="btn btn-outline" href="{% url 'dashboard:products' %}">Cancel</a></div></form></div>{% endblock %}
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}{% if is_new %}Add Product{% else %}Edit Product{% endif %} | E-Commerce Store{% endblock %}
+
+{% block dashboard_content %}
+<div class="section-head">
+    <div>
+        <h2>{% if is_new %}Add Product{% else %}Edit Product{% endif %}</h2>
+        <p>{% if is_new %}Add a new product to the catalog.{% else %}Update "{{ product.name }}".{% endif %}</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'dashboard:products' %}">← Back to Products</a>
+</div>
+
+<div class="profile-card" style="margin:20px 0 0 0;max-width:640px">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if not is_new and product.image %}
+        <div style="margin-bottom:18px">
+            <label style="display:block;margin-bottom:7px;color:#334155;font-size:14px;font-weight:600">Current Image</label>
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0">
+        </div>
+        {% endif %}
+        {{ form.as_p }}
+        <label class="variant-enable-toggle"><input type="checkbox" id="enable-variants" name="enable_variants" name="enable_variants" {% if variants %}checked{% endif %}> This product has selectable options (sizes, colors, storage, etc.)</label>
+        <section class="variant-editor" id="variant-editor" hidden>
+            <div class="variant-editor-heading">
+                <h3>Product options and variant stock</h3>
+                <p>Use this section for clothing sizes, shoe sizes, colors, storage capacities, or other options. Leave it empty for products without variants.</p>
+            </div>
+            <div id="variant-rows">
+                {% for variant in variants %}
+                <div class="variant-row">
+                    <label>Option type
+                        <select name="variant_option_type" class="select variant-type">
+                            <option value="size" {% if variant.option_type == 'size' %}selected{% endif %}>Size</option>
+                            <option value="color" {% if variant.option_type == 'color' %}selected{% endif %}>Color</option>
+                            <option value="storage" {% if variant.option_type == 'storage' %}selected{% endif %}>Storage capacity</option>
+                            <option value="other" {% if variant.option_type == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </label>
+                    <label>Option value
+                        <input class="input" name="variant_option_value" value="{{ variant.option_value|default:variant.size|default:variant.color }}" placeholder="e.g. XL, Black, 256 GB">
+                    </label>
+                    <label>Price (₹)
+                        <input class="input" name="variant_price" type="number" min="0" step="0.01" value="{{ variant.price_override|default_if_none:'' }}" placeholder="Use base price">
+                    </label>
+                    <label>Stock
+                        <input class="input" name="variant_stock" type="number" min="0" step="1" value="{{ variant.stock }}">
+                    </label>
+                    <label>SKU (optional)
+                        <input class="input" name="variant_sku" value="{{ variant.sku }}" placeholder="Auto-generated if blank">
+                    </label>
+                    <button type="button" class="btn btn-outline remove-variant-row">Remove</button>
+                </div>
+                {% empty %}
+                <div class="variant-row">
+                    <label>Option type
+                        <select name="variant_option_type" class="select variant-type">
+                            <option value="size">Size</option>
+                            <option value="color">Color</option>
+                            <option value="storage">Storage capacity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label>Option value
+                        <input class="input" name="variant_option_value" placeholder="e.g. XL, Black, 256 GB">
+                    </label>
+                    <label>Price (₹)
+                        <input class="input" name="variant_price" type="number" min="0" step="0.01" placeholder="Use base price">
+                    </label>
+                    <label>Stock
+                        <input class="input" name="variant_stock" type="number" min="0" step="1" value="0">
+                    </label>
+                    <label>SKU (optional)
+                        <input class="input" name="variant_sku" placeholder="Auto-generated if blank">
+                    </label>
+                    <button type="button" class="btn btn-outline remove-variant-row">Remove</button>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-outline" id="add-variant-row">+ Add another option</button>
+        </section>
+        <button class="btn btn-primary" type="submit">{% if is_new %}Add Product{% else %}Save Changes{% endif %}</button>
+    </form>
+</div>
+<style>
+.variant-editor{margin:22px 0;padding:18px;border:1px solid #dbe4f0;border-radius:16px;background:#f8fafc}
+.variant-editor-heading h3{margin:0 0 6px}.variant-editor-heading p{color:#64748b;font-size:14px}
+.variant-row{display:grid;grid-template-columns:1.1fr 1.4fr 1fr .7fr 1.2fr auto;gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.variant-row label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#475569}
+.variant-row .input,.variant-row .select{width:100%;min-width:0}
+@media(max-width:900px){.variant-row{grid-template-columns:repeat(2,minmax(0,1fr))}.variant-row button{grid-column:1/-1}}
+</style>
+<script>
+(function(){
+    const category = document.getElementById('id_category');
+    const editor = document.getElementById('variant-editor');
+    const toggle = document.getElementById('enable-variants');
+    const rows = document.getElementById('variant-rows');
+    const addButton = document.getElementById('add-variant-row');
+    if(!category || !editor || !toggle || !rows) return;
+    const relevant = /cloth|apparel|fashion|shoe|footwear|electronics|mobile|phone|laptop|computer|watch|accessor/i;
+    function updateEditor(){
+        const selected = category.options[category.selectedIndex];
+        const categoryNeedsOptions = relevant.test(selected ? selected.text : '');
+        if(categoryNeedsOptions && toggle.dataset.userChanged !== 'true') toggle.checked = true;
+        editor.hidden = !toggle.checked;
+    }
+    toggle.addEventListener('change',function(){
+        toggle.dataset.userChanged='true';
+        editor.hidden=!toggle.checked;
+    });
+    function bindRemove(button){
+        button.addEventListener('click',function(){
+            const all = rows.querySelectorAll('.variant-row');
+            if(all.length > 1){button.closest('.variant-row').remove();}
+            else{button.closest('.variant-row').querySelectorAll('input').forEach(input=>{if(input.name==='variant_stock')input.value='0';else input.value='';});}
+        });
+    }
+    rows.querySelectorAll('.remove-variant-row').forEach(bindRemove);
+    addButton.addEventListener('click',function(){
+        const first = rows.querySelector('.variant-row');
+        const clone = first.cloneNode(true);
+        clone.querySelectorAll('input').forEach(input=>{input.value=input.name==='variant_stock'?'0':'';});
+        clone.querySelectorAll('select').forEach(select=>{select.value='size';});
+        bindRemove(clone.querySelector('.remove-variant-row'));
+        rows.appendChild(clone);
+        editor.hidden=false;
+    });
+    category.addEventListener('change',updateEditor);
+    updateEditor();
+})();
+</script>
+{% endblock %}

@@ -28,51 +28,79 @@
             <div class="meta">
                 <span class="pill">🚚 Fast delivery</span>
                 <span class="pill">↩ Easy returns</span>
-                {% if product.stock > 0 and product.is_available %}
-                    <span class="pill" style="color:#15803d">✓ In stock</span>
+                {% if variants %}
+                <div class="variant-picker" id="variant-picker">
+                    <h3>{% if has_size_variants %}Select size{% else %}Select an option{% endif %}</h3>
+                    <div class="variant-options">
+                        {% if has_size_variants %}
+                            {% for option in size_options %}
+                                {% if option.variant %}
+                                    {% if option.variant.stock > 0 %}
+                                        <label class="variant-choice">
+                                            <input type="radio" name="variant_id" form="variant-cart-form" value="{{ option.variant.id }}" data-price="{{ option.variant.effective_price }}" data-stock="{{ option.variant.stock }}">
+                                            <span>{{ option.value }}</span>
+                                        </label>
+                                    {% else %}
+                                        <span class="variant-choice variant-unavailable" title="Out of stock">{{ option.value }}</span>
+                                        <form class="variant-alert-form" method="post" action="{% url 'storeextras:request_stock_alert' product.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="variant_id" value="{{ option.variant.id }}">
+                                            <input type="email" name="email" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" placeholder="Email for {{ option.value }}" aria-label="Email for {{ option.value }} stock alert" required>
+                                            <button type="submit">Notify me</button>
+                                        </form>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="variant-choice variant-unavailable" title="Not offered in this product"> {{ option.value }} </span>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            {% for variant in variants %}
+                                {% if variant.stock > 0 %}
+                                    <label class="variant-choice">
+                                        <input type="radio" name="variant_id" form="variant-cart-form" value="{{ variant.id }}" data-price="{{ variant.effective_price }}" data-stock="{{ variant.stock }}">
+                                        <span>{{ variant.get_option_type_display }}: {{ variant.display_value }}</span>
+                                    </label>
+                                {% else %}
+                                    <span class="variant-choice variant-unavailable">{{ variant.get_option_type_display }}: {{ variant.display_value }}</span>
+                                    <form class="variant-alert-form" method="post" action="{% url 'storeextras:request_stock_alert' product.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="variant_id" value="{{ variant.id }}">
+                                        <input type="email" name="email" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" placeholder="Email for {{ variant.display_value }}" aria-label="Email stock alert" required>
+                                        <button type="submit">Notify me</button>
+                                    </form>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not user.is_staff %}
+                    <form id="variant-cart-form" method="post" action="{% url 'cart:add_to_cart' product.id %}" class="detail-cart-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="btn-add-to-cart" type="submit" id="variant-add-button" disabled>Select an available option</button>
+                    </form>
                 {% else %}
-                    <span class="pill" style="color:#dc2626">Out of stock</span>
+                    <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled>Staff accounts cannot purchase</button>
                 {% endif %}
-            </div>
-
-            {% if product.stock > 0 and product.is_available %}
-                <p style="font-size:13px;color:#64748b">{{ product.stock }} item{{ product.stock|pluralize }} available</p>
+            {% elif product.has_available_stock and product.is_available %}
+                {% if variants %}<p style="font-size:13px;color:#64748b">Choose an available option below.</p>{% else %}<p style="font-size:13px;color:#64748b">{{ product.stock }} item{{ product.stock|pluralize }} available</p>{% endif %}
                 {% if user.is_staff %}
-                <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart" style="width:220px">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    Add to Cart
-                </button>
+                    <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Staff accounts cannot add products to cart" style="width:220px">Add to Cart</button>
                 {% else %}
-                {% if product.id in cart_product_ids %}
-                <a class="btn-add-to-cart" href="{% url 'cart:cart' %}" style="width:220px;display:inline-flex;text-decoration:none">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    Go to Cart
-                </a>
-                {% else %}
-                <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button class="btn-add-to-cart" type="submit" style="width:220px">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="9" cy="21" r="1"></circle>
-                            <circle cx="20" cy="21" r="1"></circle>
-                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                        </svg>
-                        Add to Cart
-                    </button>
-                </form>
-                {% endif %}
+                    <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="btn-add-to-cart" type="submit" style="width:220px">🛒 Add to Cart</button>
+                    </form>
                 {% endif %}
             {% else %}
                 <button class="btn btn-outline" disabled>Currently unavailable</button>
+                <form class="stock-alert-form" method="post" action="{% url 'storeextras:request_stock_alert' product.id %}">
+                    {% csrf_token %}
+                    <label for="stock-alert-email">Get an email when this product is back in stock</label>
+                    <input id="stock-alert-email" type="email" name="email" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" placeholder="Your email address" required>
+                    <button class="btn btn-primary" type="submit">Notify me</button>
+                </form>
             {% endif %}
 
             <p style="margin-top:20px"><a href="{% url 'products:home' %}">← Continue shopping</a></p>
@@ -147,4 +175,43 @@
     {% endif %}
 </div>
 
+
+<style>
+.variant-picker{margin:22px 0}.variant-picker h3{font-size:15px;margin-bottom:10px}
+.variant-options{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.variant-choice{display:inline-flex;cursor:pointer}.variant-choice input{position:absolute;opacity:0;pointer-events:none}
+.variant-choice span,.variant-choice.variant-unavailable{display:inline-flex;min-width:44px;min-height:40px;align-items:center;justify-content:center;padding:8px 13px;border:1px solid #d8e0eb;border-radius:9px;background:#fff;color:#1f2937;font-weight:650;font-size:14px}
+.variant-choice input:checked+span{background:#111827;color:#fff;border-color:#111827}
+.variant-choice input:focus-visible+span{outline:3px solid #93c5fd;outline-offset:2px}
+.variant-choice.variant-unavailable{background:#f1f3f6;color:#a0a7b2;border-color:#e6e9ef;cursor:not-allowed;text-decoration:line-through}
+.detail-cart-form{margin-top:14px}.detail-cart-form button{width:220px;max-width:100%}
+.detail-cart-form button:disabled{opacity:.65;cursor:not-allowed}
+.stock-alert-form,.variant-alert-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}
+.stock-alert-form label{width:100%;font-size:13px;color:#475569}.stock-alert-form input,.variant-alert-form input{min-width:0;flex:1;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px}
+.stock-alert-form button,.variant-alert-form button{border:0;border-radius:8px;padding:9px 12px;background:#111827;color:white;cursor:pointer}
+.variant-alert-form{flex-basis:100%;margin:0 0 8px 0;background:#fff}
+@media(max-width:600px){.variant-choice span,.variant-choice.variant-unavailable{min-width:40px;padding:7px 10px}.stock-alert-form input{flex-basis:100%}}
+</style>
+<script>
+(function(){
+    const picker=document.getElementById('variant-picker');
+    const cartForm=document.getElementById('variant-cart-form');
+    if(!picker||!cartForm)return;
+    const price=document.querySelector('.detail-price');
+    const button=document.getElementById('variant-add-button');
+    const choices=picker.querySelectorAll('input[name="variant_id"]');
+    function update(){
+        const selected=picker.querySelector('input[name="variant_id"]:checked');
+        button.disabled=!selected;
+        button.textContent=selected?'🛒 Add to Cart':'Select an available option';
+        if(selected&&price){
+            const amount=Number(selected.dataset.price);
+            if(Number.isFinite(amount))price.textContent='₹'+amount.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+    }
+    choices.forEach(choice=>choice.addEventListener('change',update));
+    const first=picker.querySelector('input[name="variant_id"]:not(:disabled)');
+    if(first){first.checked=true;update();}
+})();
+</script>
 {% endblock %}

@@ -19,26 +19,36 @@ def add_to_cart(request, id):
         is_available=True
     )
 
-    if product.stock <= 0:
-        messages.error(request, 'This product is out of stock.')
+    from products.models import ProductVariant
+    variant_id = request.POST.get('variant_id', '').strip()
+    variant = None
+    active_variants = ProductVariant.objects.filter(product=product, is_active=True)
+    if active_variants.exists():
+        if not variant_id:
+            messages.error(request, 'Please select an option before adding this product to your cart.')
+            return redirect('products:product_detail', id=id)
+        variant = get_object_or_404(active_variants, pk=variant_id)
+        available_stock = variant.stock
+    else:
+        available_stock = product.stock
+
+    if available_stock <= 0:
+        messages.error(request, 'This product option is out of stock.')
         return redirect('products:product_detail', id=id)
 
     cart, created = Cart.objects.get_or_create(user=request.user)
-
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
-        product=product
+        product=product,
+        variant=variant,
     )
 
     if not created:
-        if cart_item.quantity < product.stock:
+        if cart_item.quantity < available_stock:
             cart_item.quantity += 1
-            cart_item.save()
+            cart_item.save(update_fields=['quantity'])
         else:
-            messages.error(
-                request,
-                'You cannot add more than the available stock.'
-            )
+            messages.error(request, 'You cannot add more than the available stock.')
             next_url = request.POST.get('next', '')
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
                 return redirect(next_url)
@@ -56,8 +66,8 @@ def add_to_cart(request, id):
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
-    cart_items = cart.items.select_related('product')
-    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    cart_items = cart.items.select_related('product', 'variant', 'product__category')
+    total = sum(item.total_price for item in cart_items)
 
     context = {
         'cart': cart,
@@ -75,7 +85,7 @@ def remove_from_cart(request, id):
     cart_item = get_object_or_404(
         CartItem,
         cart=cart,
-        product_id=id
+        id=id
     )
 
     cart_item.delete()
@@ -89,10 +99,11 @@ def increase_quantity(request, id):
     cart_item = get_object_or_404(
         CartItem,
         cart=cart,
-        product_id=id
+        id=id
     )
 
-    if cart_item.quantity < cart_item.product.stock:
+    available_stock = cart_item.variant.stock if cart_item.variant_id else cart_item.product.stock
+    if cart_item.quantity < available_stock:
         cart_item.quantity += 1
         cart_item.save()
     else:
@@ -110,7 +121,7 @@ def decrease_quantity(request, id):
     cart_item = get_object_or_404(
         CartItem,
         cart=cart,
-        product_id=id
+        id=id
     )
 
     if cart_item.quantity > 1:
@@ -140,7 +151,7 @@ def update_cart(request, id):
         if quantity < 1:
             cart_item.delete()
 
-        elif quantity > cart_item.product.stock:
+        elif quantity > (cart_item.variant.stock if cart_item.variant_id else cart_item.product.stock):
             messages.error(
                 request,
                 'You cannot add more than the available stock.'

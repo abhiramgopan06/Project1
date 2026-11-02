@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Avg, F
+from django.db.models import Avg
 from django.utils import timezone
 from decimal import Decimal
 from django.conf import settings
@@ -19,13 +19,13 @@ from .models import Order, OrderItem, ReturnReplaceRequest, Coupon
 @login_required
 def checkout(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.select_related('product')
+    cart_items = cart.items.select_related('product', 'variant')
     addresses = request.user.addresses.all()
 
     if not cart_items.exists():
         return render(request, 'orders/checkout.html', {'cart_items': cart_items, 'total': 0, 'addresses': addresses})
 
-    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    total = sum(item.total_price for item in cart_items)
     applied_coupon = None
     coupon_discount = Decimal('0.00')
     coupon_code = request.session.get('applied_coupon', '')
@@ -73,7 +73,7 @@ def checkout(request):
         try:
             with transaction.atomic():
                 locked_items = list(
-                    cart.items.select_related('product').select_for_update()
+                    cart.items.select_related('product', 'variant').select_for_update()
                 )
                 product_ids = [item.product_id for item in locked_items]
                 locked_products = {
@@ -83,7 +83,7 @@ def checkout(request):
 
                 if not locked_items:
                     return render(request, 'orders/checkout.html', {
-                        'cart_items': cart.items.select_related('product'), 'total': 0,
+                        'cart_items': cart.items.select_related('product', 'variant'), 'total': 0,
                         'addresses': addresses,
                         'error': 'Your cart is empty.', 'shipping_method': shipping_method,
                         'shipping_cost': shipping_cost, 'grand_total': grand_total
@@ -95,13 +95,19 @@ def checkout(request):
                         raise ValueError(
                             f'Sorry, {item.product.name} is no longer available.'
                         )
-                    if item.quantity > product.stock:
-                        raise ValueError(
-                            f'Sorry, only {product.stock} units of {product.name} are available.'
-                        )
+                    if item.variant_id:
+                        from products.models import ProductVariant
+                        variant = ProductVariant.objects.select_for_update().filter(pk=item.variant_id, product=product, is_active=True).first()
+                        if variant is None:
+                            raise ValueError(f'The selected option for {product.name} is no longer available.')
+                        if item.quantity > variant.stock:
+                            raise ValueError(f'Sorry, only {variant.stock} units of {product.name} ({variant.display_value}) are available.')
+                        item._locked_variant = variant
+                    elif item.quantity > product.stock:
+                        raise ValueError(f'Sorry, only {product.stock} units of {product.name} are available.')
 
                 current_total = sum(
-                    locked_products[item.product_id].discounted_price * item.quantity
+                    (item._locked_variant.effective_price if getattr(item, '_locked_variant', None) else locked_products[item.product_id].discounted_price) * item.quantity
                     for item in locked_items
                 )
                 current_coupon_discount = Decimal('0.00')
@@ -140,15 +146,22 @@ def checkout(request):
 
                 for item in locked_items:
                     product = locked_products[item.product_id]
+                    selected_variant = getattr(item, '_locked_variant', None)
+                    unit_price = selected_variant.effective_price if selected_variant else product.discounted_price
                     OrderItem.objects.create(
                         order=order,
                         product=product,
+                        variant=selected_variant,
                         quantity=item.quantity,
-                        price=product.discounted_price
+                        price=unit_price
                     )
                     record_product_history(request.user, product, 'order')
-                    product.stock -= item.quantity
-                    product.save(update_fields=['stock'])
+                    if selected_variant:
+                        selected_variant.stock -= item.quantity
+                        selected_variant.save(update_fields=['stock'])
+                    else:
+                        product.stock -= item.quantity
+                        product.save(update_fields=['stock'])
 
                 if current_coupon and current_coupon_discount > 0:
                     current_coupon.used_count += 1
@@ -158,7 +171,7 @@ def checkout(request):
         except ValueError as exc:
             messages.error(request, str(exc))
             return render(request, 'orders/checkout.html', {
-                'cart_items': cart.items.select_related('product'),
+                'cart_items': cart.items.select_related('product', 'variant'),
                 'total': total,
                 'addresses': addresses,
                 'error': str(exc), 'shipping_method': shipping_method,
@@ -268,8 +281,15 @@ def cancel_order(request, order_id):
 
         if order.status in cancellable:
             with transaction.atomic():
-                for item in order.items.filter(is_cancelled=False):
-                    Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
+                for item in order.items.select_related('product', 'variant').filter(is_cancelled=False):
+                    if item.variant_id:
+                        item.variant.stock += item.quantity
+                        item.variant.save(update_fields=['stock'])
+                    else:
+                        item.product.stock += item.quantity
+                        item.product.save(update_fields=['stock'])
+                    item.is_cancelled = True
+                    item.save(update_fields=['is_cancelled'])
                 order.status = Order.STATUS_CANCELLED
                 order.save(update_fields=['status'])
             messages.success(request, f'Order #{order.id} was cancelled.')
@@ -292,7 +312,13 @@ def cancel_order_item(request, order_id, item_id):
             messages.error(request, 'This product can no longer be cancelled.')
         else:
             with transaction.atomic():
-                Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
+                item = OrderItem.objects.select_for_update().select_related('product', 'variant').get(pk=item.pk)
+                if item.variant_id:
+                    item.variant.stock += item.quantity
+                    item.variant.save(update_fields=['stock'])
+                else:
+                    item.product.stock += item.quantity
+                    item.product.save(update_fields=['stock'])
 
                 item.is_cancelled = True
                 item.save(update_fields=['is_cancelled'])

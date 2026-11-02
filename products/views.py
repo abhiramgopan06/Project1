@@ -83,6 +83,14 @@ def home(request):
     page_obj = paginator.get_page(request.GET.get('page'))
     featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('created_at')[:12]
     recommendations = recommended_products(request.user, limit=8) if request.user.is_authenticated else []
+    recently_viewed = []
+    if request.user.is_authenticated:
+        from .models import ProductHistory
+        recently_viewed = Product.objects.filter(
+            user_history__user=request.user,
+            user_history__viewed_count__gt=0,
+            is_available=True,
+        ).exclude(id__in=[p.id for p in page_obj.object_list]).distinct().order_by('-user_history__last_interacted')[:8]
     wishlist_product_ids = set()
     if request.user.is_authenticated and not request.user.is_staff:
         from storeextras.models import WishlistItem
@@ -94,13 +102,14 @@ def home(request):
         'featured_products': featured_products,
         'categories': categories,
         'recommendations': recommendations,
+        'recently_viewed': recently_viewed,
         'wishlist_product_ids': wishlist_product_ids,
         'price_error': price_error,
         'sort': sort,
     })
 
 def product_detail(request, id):
-    product = get_object_or_404(Product.objects.select_related('category'), id=id)
+    product = get_object_or_404(Product.objects.select_related('category'), id=id, is_available=True)
     if not product.vector_data:
         product.refresh_vector()
         product.save(update_fields=['vector_data'])
@@ -112,10 +121,16 @@ def product_detail(request, id):
 
     reviews = product.reviews.select_related('user').all()
     gallery_images = product.gallery_images.all()
-    variants = product.variants.filter(is_active=True, stock__gt=0)
+    variants = product.variants.filter(is_active=True)
+    variant_list = list(variants)
+    standard_sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+    size_options = []
+    for size in standard_sizes:
+        match = next((item for item in variant_list if item.option_type == 'size' and item.display_value.upper() == size), None)
+        size_options.append({'value': size, 'variant': match})
     recommendations = recommended_products(request.user, exclude_id=product.id, limit=12) if request.user.is_authenticated else list(Product.objects.filter(is_available=True).exclude(id=product.id).order_by('-rating_average')[:4])
     wishlist_product_ids = set()
     if request.user.is_authenticated and not request.user.is_staff:
         from storeextras.models import WishlistItem
         wishlist_product_ids = set(WishlistItem.objects.filter(user=request.user).values_list('product_id', flat=True))
-    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations, 'wishlist_product_ids': wishlist_product_ids, 'gallery_images': gallery_images, 'variants': variants})
+    return render(request, 'products/product_details.html', {'product': product, 'reviews': reviews, 'recommendations': recommendations, 'wishlist_product_ids': wishlist_product_ids, 'gallery_images': gallery_images, 'variants': variant_list, 'standard_sizes': standard_sizes, 'size_options': size_options, 'has_size_variants': any(item.option_type == 'size' for item in variant_list)})

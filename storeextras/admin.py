@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog
+from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog, BackInStockAlert
 
 @admin.register(WishlistItem)
 class WishlistItemAdmin(admin.ModelAdmin):
@@ -26,3 +26,10 @@ class ActivityLogAdmin(admin.ModelAdmin):
     list_display = ('actor', 'action', 'object_type', 'object_id', 'created_at')
     list_filter = ('action', 'object_type', 'created_at')
     search_fields = ('actor__username', 'details', 'object_id')
+
+
+@admin.register(BackInStockAlert)
+class BackInStockAlertAdmin(admin.ModelAdmin):
+    list_display = ('product', 'variant', 'email', 'is_notified', 'created_at', 'notified_at')
+    list_filter = ('is_notified', 'created_at')
+    search_fields = ('product__name', 'email')

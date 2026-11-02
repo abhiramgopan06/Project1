@@ -20,7 +20,7 @@ from orders.models import Coupon
 
 def _cart_total(cart_items):
     return sum(
-        (item.product.discounted_price * item.quantity for item in cart_items),
+        (item.total_price for item in cart_items),
         Decimal('0.00')
     )
 
@@ -36,7 +36,7 @@ def create_payment_order(request):
     except Cart.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Cart not found.'}, status=404)
 
-    cart_items = list(cart.items.select_related('product'))
+    cart_items = list(cart.items.select_related('product', 'variant'))
     if not cart_items:
         return JsonResponse({'success': False, 'error': 'Your cart is empty.'}, status=400)
 
@@ -46,7 +46,10 @@ def create_payment_order(request):
                 'success': False,
                 'error': f'{item.product.name} is no longer available.'
             }, status=400)
-        if item.quantity > item.product.stock:
+        stock = item.variant.stock if item.variant_id else item.product.stock
+        if item.variant_id and not item.variant.is_active:
+            return JsonResponse({'success': False, 'error': f'The selected option for {item.product.name} is no longer available.'}, status=400)
+        if item.quantity > stock:
             return JsonResponse({
                 'success': False,
                 'error': f'Not enough stock for {item.product.name}.'
@@ -136,7 +139,7 @@ def verify_payment(request):
         with transaction.atomic():
             cart = Cart.objects.select_for_update().get(user=request.user)
             cart_items = list(
-                cart.items.select_related('product').select_for_update()
+                cart.items.select_related('product', 'variant').select_for_update()
             )
 
             if not cart_items:
@@ -159,15 +162,19 @@ def verify_payment(request):
                         'success': False,
                         'error': f'{item.product.name} is no longer available.'
                     }, status=400)
-                if item.quantity > product.stock:
-                    return JsonResponse({
-                        'success': False,
-                        'error': (
-                            f'Sorry, only {product.stock} units of '
-                            f'{product.name} are available.'
-                        )
-                    }, status=400)
-                total += product.discounted_price * item.quantity
+                if item.variant_id:
+                    from products.models import ProductVariant
+                    variant = ProductVariant.objects.select_for_update().filter(pk=item.variant_id, product=product, is_active=True).first()
+                    if variant is None or item.quantity > variant.stock:
+                        available = variant.stock if variant else 0
+                        return JsonResponse({'success': False, 'error': f'Sorry, only {available} units of {product.name} ({item.variant.display_value}) are available.'}, status=400)
+                    item._locked_variant = variant
+                    unit_price = variant.effective_price
+                else:
+                    if item.quantity > product.stock:
+                        return JsonResponse({'success': False, 'error': f'Sorry, only {product.stock} units of {product.name} are available.'}, status=400)
+                    unit_price = product.discounted_price
+                total += unit_price * item.quantity
 
             coupon = Coupon.objects.select_for_update().filter(code=request.session.get('applied_coupon', ''), is_active=True).first() if request.session.get('applied_coupon') else None
             discount = Decimal('0.00')
@@ -199,15 +206,22 @@ def verify_payment(request):
 
             for item in cart_items:
                 product = products[item.product_id]
+                selected_variant = getattr(item, '_locked_variant', None)
+                unit_price = selected_variant.effective_price if selected_variant else product.discounted_price
                 OrderItem.objects.create(
                     order=order,
                     product=product,
+                    variant=selected_variant,
                     quantity=item.quantity,
-                    price=product.discounted_price,
+                    price=unit_price,
                 )
                 record_product_history(request.user, product, 'order')
-                product.stock -= item.quantity
-                product.save(update_fields=['stock'])
+                if selected_variant:
+                    selected_variant.stock -= item.quantity
+                    selected_variant.save(update_fields=['stock'])
+                else:
+                    product.stock -= item.quantity
+                    product.save(update_fields=['stock'])
 
             if coupon and discount > 0:
                 coupon.used_count += 1

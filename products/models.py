@@ -56,6 +56,17 @@ class Product(models.Model):
             return discounted.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return self.price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
+    @property
+    def has_variants(self):
+        return self.variants.filter(is_active=True).exists()
+
+    @property
+    def has_available_stock(self):
+        active_variants = self.variants.filter(is_active=True)
+        if active_variants.exists():
+            return active_variants.filter(stock__gt=0).exists()
+        return self.stock > 0
+
     def refresh_vector(self):
         from .recommendations import build_product_vector
         self.vector_data = build_product_vector(self)
@@ -224,17 +235,41 @@ class ProductImage(models.Model):
 
 
 class ProductVariant(models.Model):
+    OPTION_SIZE = 'size'
+    OPTION_COLOR = 'color'
+    OPTION_STORAGE = 'storage'
+    OPTION_OTHER = 'other'
+    OPTION_TYPE_CHOICES = [
+        (OPTION_SIZE, 'Size'),
+        (OPTION_COLOR, 'Color'),
+        (OPTION_STORAGE, 'Storage capacity'),
+        (OPTION_OTHER, 'Other option'),
+    ]
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     sku = models.CharField(max_length=80, unique=True)
     size = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=40, blank=True)
+    option_type = models.CharField(max_length=20, choices=OPTION_TYPE_CHOICES, default=OPTION_SIZE)
+    option_value = models.CharField(max_length=80, blank=True)
     price_adjustment = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    price_override = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['size', 'color']
+        ordering = ['option_type', 'option_value', 'size', 'color']
+
+    @property
+    def display_value(self):
+        return self.option_value or self.size or self.color or self.sku
+
+    @property
+    def effective_price(self):
+        if self.price_override is not None:
+            return self.price_override
+        return self.product.discounted_price + self.price_adjustment
 
     def __str__(self):
-        label = ' / '.join(value for value in [self.size, self.color] if value)
-        return f'{self.product.name} - {label or self.sku}'
+        label = self.display_value
+        return f'{self.product.name} - {label}'

@@ -41,6 +41,8 @@
 
 
 
+
+
     {% if products %}
     <div class="section-head">
         <div>
@@ -93,7 +95,7 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
                     </a>
                     {% endif %}
-<div class="product-info">
+                    <div class="product-info">
                         <h3 class="product-title">{{ product.name }}</h3>
 
                         {% if product.rating_count > 0 %}
@@ -106,8 +108,10 @@
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
-                            {% if product.stock > 0 and product.is_available %}
-                                {% if user.is_authenticated %}
+                            {% if product.has_available_stock and product.is_available %}
+                                {% if product.has_variants %}
+                                    <a class="btn-add-to-cart" href="{% url 'products:product_detail' product.id %}">Choose options</a>
+                                {% elif user.is_authenticated %}
                                     {% if user.is_staff %}
                                     <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart">
                                         🛒 Add to Cart
@@ -243,7 +247,7 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
                     </a>
                     {% endif %}
-<div class="product-info">
+                    <div class="product-info">
                         <h3 class="product-title">{{ product.name }}</h3>
 
                         {% if product.rating_count > 0 %}
@@ -256,8 +260,10 @@
                         <div class="product-delivery">🚚 Free delivery</div>
 
                         <div class="product-actions">
-                            {% if product.stock > 0 and product.is_available %}
-                                {% if user.is_staff %}
+                            {% if product.has_available_stock and product.is_available %}
+                                {% if product.has_variants %}
+                                    <a class="btn-add-to-cart" href="{% url 'products:product_detail' product.id %}">Choose options</a>
+                                {% elif user.is_staff %}
                                     <button class="btn-add-to-cart btn-add-to-cart-disabled" type="button" disabled title="Admins can't add products to cart">
                                         🛒 Add to Cart
                                     </button>
@@ -305,9 +311,29 @@
     </div>
 
     <div class="shop-layout">
+        <aside class="filter-sidebar" aria-label="Product filters">
+            <form method="get" action="{% url 'products:home' %}" class="filter-form">
+                <h3>Filters</h3>
+                <label for="filter-search">Search</label>
+                <input id="filter-search" type="search" name="q" value="{{ request.GET.q }}" placeholder="Product name">
+                <label for="filter-category">Category</label>
+                <select id="filter-category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="filter-min-price">Minimum price</label>
+                <input id="filter-min-price" type="number" min="0" step="0.01" name="min_price" value="{{ request.GET.min_price }}" placeholder="₹0">
+                <label for="filter-max-price">Maximum price</label>
+                <input id="filter-max-price" type="number" min="0" step="0.01" name="max_price" value="{{ request.GET.max_price }}" placeholder="₹100000">
+                {% if price_error %}<p class="filter-error">{{ price_error }}</p>{% endif %}
+                <button class="filter-submit" type="submit">Apply Filters</button>
+                <a class="filter-clear" href="{% url 'products:home' %}">Clear</a>
+            </form>
+        </aside>
 
-
-        <section>
+        <section class="all-products-content">
             {% if products %}
                 <div class="product-grid">
                     {% for product in products %}
@@ -370,15 +396,17 @@
                             <div class="price">{% if product.effective_discount_percent %}<span class="price-old">₹{{ product.price|floatformat:2 }}</span> ₹{{ product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ product.effective_discount_percent }}% off</span>{% else %}₹{{ product.price|floatformat:2 }}{% endif %}</div>
                             <div class="product-delivery">🚚 Free delivery</div>
 
-                            {% if product.stock > 0 and product.is_available %}
+                            {% if product.has_available_stock and product.is_available %}
                                 <span class="stock">✓ In stock</span>
                             {% else %}
                                 <span class="stock stock-out">Out of stock</span>
                             {% endif %}
 
                             <div class="product-actions">
-                                {% if product.stock > 0 and product.is_available %}
-                                    {% if user.is_staff %}
+                                {% if product.has_available_stock and product.is_available %}
+                                    {% if product.has_variants %}
+                                        <a class="btn-add-to-cart" href="{% url 'products:product_detail' product.id %}">Choose options</a>
+                                    {% elif user.is_staff %}
                                         <button class="btn-add-to-cart btn-add-to-cart-disabled"
                                                 type="button"
                                                 disabled
@@ -446,12 +474,43 @@
                 </nav>
                 {% endif %}
     </div>
+
+    {% if recently_viewed %}
+    <section class="recently-viewed-section">
+        <div class="section-head">
+            <div>
+                <h2>Recently Viewed</h2>
+                <p>Pick up where you left off. Drag to browse.</p>
+            </div>
+        </div>
+        <section class="product-carousel recently-viewed-carousel" aria-label="Recently Viewed">
+            <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous recently viewed products">&#10094;</button>
+            <div class="product-carousel-viewport">
+                <div class="product-carousel-track">
+                    {% for product in recently_viewed %}
+                    <article class="product-card product-carousel-card">
+                        <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span class="product-image-placeholder">📦</span>{% endif %}
+                        </a>
+                        <div class="product-info">
+                            <h3 class="product-title">{{ product.name }}</h3>
+                            <div class="price">₹{{ product.discounted_price|floatformat:2 }}</div>
+                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View product</a>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next recently viewed products">&#10095;</button>
+        </section>
+    </section>
+    {% endif %}
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".product-desc").forEach(function (description) {
-        const fullText = description.dataset.description.trim();
+        const fullText = description.dataset.description.replace(/\\u([0-9a-fA-F]{4})/g, function (_, code) { return String.fromCharCode(parseInt(code, 16)); }).trim();
         const textElement = description.querySelector(".desc-text");
         const moreButton = description.querySelector(".desc-more");
         const words = fullText.split(/\s+/).filter(Boolean);
@@ -527,7 +586,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function toggleDescription(button) {
     const description = button.closest(".product-desc");
     const textElement = description.querySelector(".desc-text");
-    const fullText = description.dataset.description.trim();
+    const fullText = description.dataset.description.replace(/\\u([0-9a-fA-F]{4})/g, function (_, code) { return String.fromCharCode(parseInt(code, 16)); }).trim();
     const words = fullText.split(/\s+/).filter(Boolean);
     const wordLimit = 12;
 

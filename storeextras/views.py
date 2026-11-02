@@ -9,7 +9,40 @@ from django.db.models import Sum, Count
 from cart.models import Cart
 from products.models import Product
 from orders.models import Order, ReturnReplaceRequest
-from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog
+from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog, BackInStockAlert
+
+
+@require_POST
+def request_stock_alert(request, product_id):
+    product = get_object_or_404(Product, pk=product_id, is_available=True)
+    variant_id = request.POST.get('variant_id', '').strip()
+    variant = None
+    if variant_id:
+        from products.models import ProductVariant
+        variant = get_object_or_404(ProductVariant, pk=variant_id, product=product, is_active=True)
+        available = variant.stock > 0
+    else:
+        available = product.stock > 0
+    if available:
+        messages.info(request, 'This option is already in stock.')
+        return redirect('products:product_detail', id=product.id)
+    email = (request.POST.get('email') or (request.user.email if request.user.is_authenticated else '')).strip().lower()
+    from django.core.validators import validate_email
+    from django.core.exceptions import ValidationError
+    try:
+        validate_email(email)
+    except ValidationError:
+        messages.error(request, 'Enter a valid email address for the stock alert.')
+        return redirect('products:product_detail', id=product.id)
+    alert, created = BackInStockAlert.objects.get_or_create(
+        product=product, variant=variant, email=email, is_notified=False,
+        defaults={'user': request.user if request.user.is_authenticated else None},
+    )
+    if created:
+        messages.success(request, f'We will email {email} when this item is available.')
+    else:
+        messages.info(request, 'You already have an active alert for this item.')
+    return redirect('products:product_detail', id=product.id)
 
 @login_required
 def wishlist(request):
@@ -102,6 +135,13 @@ def return_management(request):
                 item.save(update_fields=['product_condition', 'status', 'refund_status', 'inspection_note', 'inspected_by', 'received_at', 'updated_at'])
                 messages.warning(request, 'The product was marked damaged. The return was rejected and the refund process was stopped.')
             elif condition == ReturnReplaceRequest.CONDITION_GOOD:
+                order_item = item.order_item
+                if order_item.variant_id:
+                    order_item.variant.stock += order_item.quantity
+                    order_item.variant.save(update_fields=['stock'])
+                else:
+                    order_item.product.stock += order_item.quantity
+                    order_item.product.save(update_fields=['stock'])
                 item.product_condition = condition
                 item.inspection_note = note
                 item.inspected_by = request.user

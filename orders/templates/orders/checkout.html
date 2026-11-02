@@ -127,7 +127,8 @@
                         {% endif %}
                         <div class="order-item-info">
                             <div class="product-name">{{ item.product.name }}</div>
-                            <div class="product-price">Price: ₹{{ item.product.price }}</div>
+                            <div class="product-price">Price: ₹{% if item.variant %}{{ item.variant.effective_price|floatformat:2 }}{% else %}{{ item.product.discounted_price|floatformat:2 }}{% endif %}</div>
+                            {% if item.variant %}<div class="product-variant">{{ item.variant.get_option_type_display }}: {{ item.variant.display_value }}</div>{% endif %}
                             <div class="product-quantity">Quantity: {{ item.quantity }}</div>
                         </div>
                         <div class="product-subtotal">₹{{ item.total_price|floatformat:2 }}</div>
@@ -173,7 +174,7 @@
     const shippingOptions = form.querySelectorAll('input[name=shipping_method]');
     const shippingCostDisplay = document.getElementById('checkout-shipping-cost');
     const grandTotalDisplay = document.getElementById('checkout-grand-total');
-    const subtotal = Number('{{ total|floatformat:2 }}');
+    const subtotal = Number('{{ total|floatformat:2 }}');\n    const couponDiscount = Number('{{ coupon_discount|default:0|floatformat:2 }}');
 
     function updateShippingPrice() {
         const selected = form.querySelector('input[name=shipping_method]:checked');
@@ -184,7 +185,7 @@
             shippingCostDisplay.classList.toggle('free', !express);
         }
         if (grandTotalDisplay) {
-            grandTotalDisplay.textContent = '₹' + (subtotal + shippingCost).toFixed(2);
+            grandTotalDisplay.textContent = '₹' + Math.max(0, subtotal - couponDiscount + shippingCost).toFixed(2);
         }
     }
 

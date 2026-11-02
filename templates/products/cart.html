@@ -30,24 +30,25 @@
                 <div>
                     <h3>{{ item.product.name }}</h3>
                     <div style="font-size:13px;color:#64748b">{{ item.product.category.name }}</div>
-                    <div style="font-weight:700;margin-top:5px">{% if item.product.effective_discount_percent %}<span class="price-old">₹{{ item.product.price|floatformat:2 }}</span> ₹{{ item.product.discounted_price|floatformat:2 }} <span class="offer-percent">{{ item.product.effective_discount_percent }}% off</span>{% else %}₹{{ item.product.price|floatformat:2 }}{% endif %}</div>
+                    {% if item.variant %}<div style="font-size:13px;color:#475569;margin-top:4px">{{ item.variant.get_option_type_display }}: {{ item.variant.display_value }}</div>{% endif %}
+                    <div style="font-weight:700;margin-top:5px">₹{% if item.variant %}{{ item.variant.effective_price|floatformat:2 }}{% else %}{{ item.product.discounted_price|floatformat:2 }}{% endif %}</div>
                     <div class="qty-form" style="margin-top:9px;display:flex;align-items:center;gap:9px">
                         <span style="font-size:12px;color:#64748b">Qty</span>
-                        <form method="post" action="{% url 'cart:decrease_quantity' item.product.id %}" class="quantity-step-form">
+                        <form method="post" action="{% url 'cart:decrease_quantity' item.id %}" class="quantity-step-form">
                             {% csrf_token %}
                             <button class="quantity-step" type="submit" aria-label="Decrease quantity" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
                         </form>
                         <span class="quantity-value">{{ item.quantity }}</span>
-                        <form method="post" action="{% url 'cart:increase_quantity' item.product.id %}" class="quantity-step-form">
+                        <form method="post" action="{% url 'cart:increase_quantity' item.id %}" class="quantity-step-form">
                             {% csrf_token %}
-                            <button class="quantity-step" type="submit" aria-label="Increase quantity" {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                            <button class="quantity-step" type="submit" aria-label="Increase quantity" {% if item.quantity >= item.variant.stock %}disabled{% elif not item.variant and item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="item-total" style="text-align:right">
                     <strong>₹{{ item.total_price|floatformat:2 }}</strong>
-                    <form method="post" action="{% url 'cart:remove_from_cart' item.product.id %}" style="margin-top:10px">
+                    <form method="post" action="{% url 'cart:remove_from_cart' item.id %}" style="margin-top:10px">
                         {% csrf_token %}
                         <button class="btn btn-danger" type="submit">Remove</button>
                     </form>

@@ -33,13 +33,15 @@
                             ₹{{ item.product.discounted_price|floatformat:2 }}
                             {% if item.product.effective_discount_percent %}<span class="price-old">₹{{ item.product.price|floatformat:2 }}</span>{% endif %}
                         </div>
-                        {% if item.product.stock > 0 and item.product.is_available %}
+                        {% if item.product.has_available_stock and item.product.is_available %}
                             <span class="stock">✓ In stock</span>
                         {% else %}
                             <span class="stock stock-out">Currently unavailable</span>
                         {% endif %}
                         <div class="product-actions wishlist-actions">
-                            {% if item.product.stock > 0 and item.product.is_available %}
+                            {% if item.product.has_variants %}
+                                <a class="btn-add-to-cart" href="{% url 'products:product_detail' item.product.id %}">Choose options</a>
+                            {% elif item.product.has_available_stock and item.product.is_available %}
                                 <form method="post" action="{% url 'cart:add_to_cart' item.product.id %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{% url 'storeextras:wishlist' %}">
@@ -59,6 +61,35 @@
                 </article>
             {% endfor %}
         </div>
+        <aside class="wishlist-drawer">
+            <div class="wishlist-drawer-head">
+                <div>
+                    <span class="wishlist-eyebrow">YOUR COLLECTION</span>
+                    <h2>Saved for later <span>{{ items|length }}</span></h2>
+                </div>
+                <a href="{% url 'products:home' %}" aria-label="Continue shopping">＋</a>
+            </div>
+            <div class="wishlist-drawer-items">
+                {% for item in items %}
+                <div class="wishlist-drawer-item">
+                    <a class="wishlist-drawer-thumb" href="{% url 'products:product_detail' item.product.id %}">
+                        {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<span>📦</span>{% endif %}
+                    </a>
+                    <div class="wishlist-drawer-copy">
+                        <a href="{% url 'products:product_detail' item.product.id %}">{{ item.product.name }}</a>
+                        <strong>₹{{ item.product.discounted_price|floatformat:2 }}</strong>
+                        {% if item.product.has_available_stock and item.product.is_available %}<span class="wishlist-availability">In stock</span>{% else %}<span class="wishlist-unavailable">Out of stock</span>{% endif %}
+                    </div>
+                    <form method="post" action="{% url 'storeextras:wishlist_toggle' item.product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'storeextras:wishlist' %}">
+                        <button class="wishlist-drawer-remove" type="submit" aria-label="Remove {{ item.product.name }}">×</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            <a class="btn btn-primary wishlist-drawer-continue" href="{% url 'products:home' %}">Continue shopping</a>
+        </aside>
     {% else %}
         <div class="wishlist-empty">
             <div class="wishlist-empty-icon">♡</div>

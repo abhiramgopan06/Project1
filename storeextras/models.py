@@ -86,3 +86,22 @@ class StockReservation(models.Model):
 
     def __str__(self):
         return f'{self.product.name}: {self.quantity} reserved'
+
+
+class BackInStockAlert(models.Model):
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='stock_alerts')
+    variant = models.ForeignKey('products.ProductVariant', on_delete=models.CASCADE, null=True, blank=True, related_name='stock_alerts')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='stock_alerts')
+    email = models.EmailField()
+    is_notified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'variant', 'email', 'is_notified'], name='unique_stock_alert_state')
+        ]
+
+    def __str__(self):
+        return f'{self.product.name} stock alert for {self.email}'

@@ -1,39 +1,91 @@
-from django.db.models.signals import post_save, pre_save
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from orders.models import Order
-from products.models import Product
-from .models import ActivityLog, Notification, PaymentRecord, StockMovement
-from .actor_context import get_current_actor
+from django.utils import timezone
 
-@receiver(pre_save, sender=Order)
-def remember_order_status(sender, instance, **kwargs):
-    instance._old_order_status = None
-    if instance.pk:
-        instance._old_order_status = sender.objects.filter(pk=instance.pk).values_list('status', flat=True).first()
+from products.models import Product, ProductVariant
+from .models import BackInStockAlert, Notification, StockMovement
 
-@receiver(post_save, sender=Order)
-def record_order_events(sender, instance, created, **kwargs):
-    if created:
-        PaymentRecord.objects.get_or_create(order=instance, user=instance.user, defaults={'amount': instance.total_amount, 'method': instance.payment_method, 'status': PaymentRecord.STATUS_PENDING, 'note': 'Initial order payment record'})
-        Notification.objects.create(user=instance.user, title=f'Order #{instance.pk} placed', message='Your order was created successfully. You can follow its progress from My Orders.', link=f'/orders/{instance.pk}/')
-        ActivityLog.objects.create(actor=instance.user, action='Order created', object_type='Order', object_id=instance.pk, details=f'Order total: {instance.total_amount}')
-    else:
-        old_status = getattr(instance, '_old_order_status', None)
-        if old_status and old_status != instance.status:
-            actor = get_current_actor()
-            ActivityLog.objects.create(actor=actor if actor and actor.is_authenticated else None, action='Order status changed', object_type='Order', object_id=instance.pk, details=f'{old_status} to {instance.status}')
-            Notification.objects.create(user=instance.user, title=f'Order #{instance.pk} updated', message=f'Your order status is now {instance.status}.', link=f'/orders/{instance.pk}/')
+
+def send_stock_alert(alert, subject, message, notification_title, notification_message, product_id):
+    if alert.user_id:
+        Notification.objects.create(
+            user=alert.user,
+            title=notification_title,
+            message=notification_message,
+            link=f'/product/{product_id}/',
+        )
+    sent = send_mail(
+        subject=subject,
+        message=message,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+        recipient_list=[alert.email],
+        fail_silently=True,
+    )
+    if sent:
+        alert.is_notified = True
+        alert.notified_at = timezone.now()
+        alert.save(update_fields=['is_notified', 'notified_at'])
+
 
 @receiver(pre_save, sender=Product)
-def remember_stock(sender, instance, **kwargs):
-    instance._old_stock_value = sender.objects.filter(pk=instance.pk).values_list('stock', flat=True).first() if instance.pk else None
+def remember_product_stock(sender, instance, **kwargs):
+    instance._previous_stock = sender.objects.filter(pk=instance.pk).values_list('stock', flat=True).first() if instance.pk else 0
+
 
 @receiver(post_save, sender=Product)
-def record_stock_changes(sender, instance, created, **kwargs):
-    old_stock = getattr(instance, '_old_stock_value', None)
-    actor = get_current_actor()
-    actor = actor if actor and actor.is_authenticated and actor.is_staff else None
-    if created:
-        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock, stock_after=instance.stock, reason='Product created', changed_by=actor)
-    elif old_stock is not None and old_stock != instance.stock:
-        StockMovement.objects.create(product=instance, product_name=instance.name, change=instance.stock-old_stock, stock_after=instance.stock, reason='Stock updated', changed_by=actor)
+def record_product_stock_change(sender, instance, created, **kwargs):
+    previous = getattr(instance, '_previous_stock', 0) or 0
+    change = instance.stock - previous
+    if change:
+        StockMovement.objects.create(
+            product=instance,
+            product_name=instance.name,
+            change=change,
+            stock_after=instance.stock,
+            reason='Product stock increased' if change > 0 else 'Product stock decreased',
+        )
+    if change <= 0:
+        return
+    alerts = BackInStockAlert.objects.filter(product=instance, variant__isnull=True, is_notified=False)
+    for alert in alerts:
+        send_stock_alert(
+            alert,
+            f'{instance.name} is back in stock',
+            f'Good news! {instance.name} is available again. Visit ShopEasy to order: {getattr(settings, "SITE_URL", "")}/product/{instance.pk}/',
+            'Product back in stock',
+            f'{instance.name} is available again.',
+            instance.pk,
+        )
+
+
+@receiver(pre_save, sender=ProductVariant)
+def remember_variant_stock(sender, instance, **kwargs):
+    instance._previous_stock = sender.objects.filter(pk=instance.pk).values_list('stock', flat=True).first() if instance.pk else 0
+
+
+@receiver(post_save, sender=ProductVariant)
+def record_variant_stock_change(sender, instance, created, **kwargs):
+    previous = getattr(instance, '_previous_stock', 0) or 0
+    change = instance.stock - previous
+    if change:
+        StockMovement.objects.create(
+            product=instance.product,
+            product_name=f'{instance.product.name} - {instance.display_value}',
+            change=change,
+            stock_after=instance.stock,
+            reason='Variant stock increased' if change > 0 else 'Variant stock decreased',
+        )
+    if change <= 0:
+        return
+    alerts = BackInStockAlert.objects.filter(product=instance.product, variant=instance, is_notified=False)
+    for alert in alerts:
+        send_stock_alert(
+            alert,
+            f'{instance.product.name} ({instance.display_value}) is back in stock',
+            f'Good news! {instance.product.name} ({instance.display_value}) is available again. Visit ShopEasy to order.',
+            'Selected option back in stock',
+            f'{instance.product.name} ({instance.display_value}) is available again.',
+            instance.product_id,
+        )

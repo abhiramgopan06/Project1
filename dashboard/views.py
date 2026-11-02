@@ -8,11 +8,66 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 
 from orders.models import Order
-from products.models import Product, Category, ProductOfferHistory, CategoryOfferHistory
+from products.models import Product, Category, ProductOfferHistory, CategoryOfferHistory, ProductVariant
 from products.forms import ProductForm
 from storeextras.models import ActivityLog, StockMovement
+
+
+def _save_product_variants(request, product):
+    if request.POST.get('enable_variants') != 'on':
+        product.variants.update(is_active=False)
+        return
+    option_types = request.POST.getlist('variant_option_type')
+    option_values = request.POST.getlist('variant_option_value')
+    prices = request.POST.getlist('variant_price')
+    stocks = request.POST.getlist('variant_stock')
+    skus = request.POST.getlist('variant_sku')
+    submitted_skus = set()
+    for index, raw_value in enumerate(option_values):
+        value = raw_value.strip()[:80]
+        if not value:
+            continue
+        option_type = option_types[index] if index < len(option_types) else ProductVariant.OPTION_SIZE
+        if option_type not in dict(ProductVariant.OPTION_TYPE_CHOICES):
+            option_type = ProductVariant.OPTION_OTHER
+        try:
+            stock = max(0, int(stocks[index])) if index < len(stocks) and stocks[index].strip() else 0
+        except ValueError:
+            stock = 0
+        price_text = prices[index].strip() if index < len(prices) else ''
+        try:
+            price = Decimal(price_text) if price_text else None
+            if price is not None and price < 0:
+                price = None
+        except Exception:
+            price = None
+        sku = (skus[index].strip() if index < len(skus) else '')[:80]
+        if not sku:
+            from django.utils.text import slugify
+            sku = f'{product.pk}-{slugify(option_type + "-" + value)[:60]}'
+        existing = ProductVariant.objects.filter(sku=sku).first()
+        if existing and existing.product_id != product.pk:
+            sku = f'{product.pk}-{sku}'[:80]
+        variant, _ = ProductVariant.objects.update_or_create(
+            product=product,
+            sku=sku,
+            defaults={
+                'option_type': option_type,
+                'option_value': value,
+                'size': value if option_type == ProductVariant.OPTION_SIZE else '',
+                'color': value if option_type == ProductVariant.OPTION_COLOR else '',
+                'price_override': price,
+                'price_adjustment': 0,
+                'stock': stock,
+                'is_active': True,
+            },
+        )
+        submitted_skus.add(variant.sku)
+    product.variants.exclude(sku__in=submitted_skus).update(is_active=False)
+
 
 @staff_member_required
 def dashboard_home(request):
@@ -165,6 +220,7 @@ def dashboard_product_add(request):
 
         if form.is_valid():
             product = form.save()
+            _save_product_variants(request, product)
             ActivityLog.objects.create(actor=request.user, action='Product created', object_type='Product', object_id=product.pk, details=f'Added product {product.name}; category: {product.category.name}; price: {product.price}; starting stock: {product.stock}.')
             messages.success(request, f'"{product.name}" was added to the catalog.')
             return redirect('dashboard:products')
@@ -175,6 +231,7 @@ def dashboard_product_add(request):
         'active': 'products',
         'form': form,
         'is_new': True,
+        'variants': [],
     }
 
     return render(request, 'dashboard/product_form.html', context)
@@ -190,6 +247,7 @@ def dashboard_product_edit(request, product_id):
             old = Product.objects.get(pk=product.pk)
             old_stock = old.stock
             product = form.save()
+            _save_product_variants(request, product)
             ActivityLog.objects.create(actor=request.user, action='Product updated', object_type='Product', object_id=product.pk, details=f'Updated {product.name}; category: {product.category.name}; price: {product.price}; stock: {old_stock} -> {product.stock}; available: {product.is_available}.')
             messages.success(request, f'"{product.name}" was updated.')
             return redirect('dashboard:products')
@@ -201,6 +259,7 @@ def dashboard_product_edit(request, product_id):
         'form': form,
         'is_new': False,
         'product': product,
+        'variants': product.variants.filter(is_active=True),
     }
 
     return render(request, 'dashboard/product_form.html', context)

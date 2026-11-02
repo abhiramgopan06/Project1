@@ -7218,7 +7218,6 @@ table { border-collapse: collapse; }
     }
 }
 
-/* Restore the original vertical filter card on the ShopEasy home page. */
 .home-page-polish .shop-layout {
     grid-template-columns: 276px minmax(0, 1fr) !important;
     align-items: start;

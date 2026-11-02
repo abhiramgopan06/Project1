@@ -144,6 +144,16 @@ def checkout(request):
                     status='Pending'
                 )
 
+                from storeextras.models import PaymentRecord
+                PaymentRecord.objects.create(
+                    user=request.user,
+                    order=order,
+                    method='cod',
+                    amount=order.total_amount,
+                    status=PaymentRecord.STATUS_PENDING,
+                    note='Cash on delivery; collection is pending.'
+                )
+
                 for item in locked_items:
                     product = locked_products[item.product_id]
                     selected_variant = getattr(item, '_locked_variant', None)

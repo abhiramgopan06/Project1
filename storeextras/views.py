@@ -6,6 +6,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.db.models import Sum, Count
+from decimal import Decimal
 from cart.models import Cart
 from products.models import Product
 from orders.models import Order, ReturnReplaceRequest
@@ -80,12 +81,53 @@ def notification_read(request, notification_id):
 @login_required
 def payment_history(request):
     records = PaymentRecord.objects.filter(user=request.user).select_related('order')
-    return render(request, 'storeextras/payment_history.html', {'records': records})
+    status = request.GET.get('status', '').strip()
+    method = request.GET.get('method', '').strip()
+    query = request.GET.get('q', '').strip()
+    valid_statuses = {choice[0] for choice in PaymentRecord.STATUS_CHOICES}
+    if status in valid_statuses:
+        records = records.filter(status=status)
+    if method:
+        records = records.filter(method__iexact=method)
+    if query.isdigit():
+        records = records.filter(order_id=int(query))
+    elif query:
+        records = records.filter(reference__icontains=query)
+    summary = {
+        'total_count': records.count(),
+        'successful_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_SUCCESS), start=Decimal('0.00')),
+        'refunded_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_REFUNDED), start=Decimal('0.00')),
+    }
+    methods = PaymentRecord.objects.filter(user=request.user).values_list('method', flat=True).distinct()
+    return render(request, 'storeextras/payment_history.html', {
+        'records': records, 'summary': summary, 'selected_status': status,
+        'selected_method': method, 'query': query, 'methods': methods,
+        'status_choices': PaymentRecord.STATUS_CHOICES,
+    })
 
 @login_required
 def return_history(request):
-    requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).select_related('order_item__product', 'order_item__order')
-    return render(request, 'storeextras/return_history.html', {'requests': requests})
+    requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).select_related('order_item__product', 'order_item__order').order_by('-created_at')
+    status = request.GET.get('status', '').strip()
+    request_type = request.GET.get('type', '').strip()
+    valid_statuses = {choice[0] for choice in ReturnReplaceRequest.STATUS_CHOICES}
+    valid_types = {choice[0] for choice in ReturnReplaceRequest.REQUEST_TYPE_CHOICES}
+    if status in valid_statuses:
+        requests = requests.filter(status=status)
+    if request_type in valid_types:
+        requests = requests.filter(request_type=request_type)
+    all_requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user)
+    summary = {
+        'total': all_requests.count(),
+        'active': all_requests.filter(status__in=[ReturnReplaceRequest.STATUS_REQUESTED, ReturnReplaceRequest.STATUS_APPROVED, ReturnReplaceRequest.STATUS_RECEIVED]).count(),
+        'refunded': all_requests.filter(refund_status=ReturnReplaceRequest.REFUND_PROCESSED).count(),
+    }
+    return render(request, 'storeextras/return_history.html', {
+        'requests': requests, 'summary': summary, 'selected_status': status,
+        'selected_type': request_type,
+        'status_choices': ReturnReplaceRequest.STATUS_CHOICES,
+        'type_choices': ReturnReplaceRequest.REQUEST_TYPE_CHOICES,
+    })
 
 @login_required
 def invoice(request, order_id):

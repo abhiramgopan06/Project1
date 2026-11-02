@@ -17,3 +17,10 @@ python manage.py runserver
 ```
 
 Back up `db.sqlite3` and `.env` before replacing files. Do not delete migration files or use `--fake` to bypass migration errors.
+
+## Payment history detail upgrade
+
+- Payment history now shows customer name, email, product thumbnail, product name, quantity, transaction reference, payment date, method, amount, status, order link, and a View Details action.
+- The detail page displays all order items with images, quantities, variants, unit and line prices, customer/shipping information, transaction metadata, order status, order totals, and links to the order and invoice.
+- The detail endpoint is scoped to the signed-in customer's own payment record. Searching supports payment reference, order ID, payment record ID, customer name, and product name while retaining active status/method filters.
+- Payment amounts and statuses are application records; online settlement/refund must still be confirmed with the provider.

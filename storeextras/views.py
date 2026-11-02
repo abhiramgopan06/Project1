@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import F
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
@@ -80,7 +80,7 @@ def notification_read(request, notification_id):
 
 @login_required
 def payment_history(request):
-    records = PaymentRecord.objects.filter(user=request.user).select_related('order')
+    records = PaymentRecord.objects.filter(user=request.user).select_related('order', 'order__user').prefetch_related('order__items__product', 'order__items__variant')
     status = request.GET.get('status', '').strip()
     method = request.GET.get('method', '').strip()
     query = request.GET.get('q', '').strip()
@@ -89,10 +89,11 @@ def payment_history(request):
         records = records.filter(status=status)
     if method:
         records = records.filter(method__iexact=method)
-    if query.isdigit():
-        records = records.filter(order_id=int(query))
-    elif query:
-        records = records.filter(reference__icontains=query)
+    if query:
+        search_filter = Q(reference__icontains=query) | Q(order__items__product__name__icontains=query) | Q(order__name__icontains=query)
+        if query.isdigit():
+            search_filter |= Q(order_id=int(query)) | Q(pk=int(query))
+        records = records.filter(search_filter).distinct()
     summary = {
         'total_count': records.count(),
         'successful_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_SUCCESS), start=Decimal('0.00')),
@@ -104,6 +105,16 @@ def payment_history(request):
         'selected_method': method, 'query': query, 'methods': methods,
         'status_choices': PaymentRecord.STATUS_CHOICES,
     })
+
+@login_required
+def payment_detail(request, payment_id):
+    record = get_object_or_404(
+        PaymentRecord.objects.select_related('user', 'order', 'order__user')
+        .prefetch_related('order__items__product', 'order__items__variant'),
+        pk=payment_id,
+        user=request.user,
+    )
+    return render(request, 'storeextras/payment_detail.html', {'record': record})
 
 @login_required
 def return_history(request):

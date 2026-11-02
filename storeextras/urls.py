@@ -20,6 +20,7 @@ urlpatterns = [
     path('notifications/', views.notifications, name='notifications'),
     path('notifications/<int:notification_id>/read/', views.notification_read, name='notification_read'),
     path('payments/', views.payment_history, name='payment_history'),
+    path('payments/<int:payment_id>/', views.payment_detail, name='payment_detail'),
     path('returns/', views.return_history, name='return_history'),
     path('orders/<int:order_id>/invoice/', views.invoice, name='invoice'),
     path('admin/activity-history/', views.activity_history, name='activity_history'),

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Payment #{{ record.pk }} | ShopEasy{% endblock %}
+{% block content %}
+<style>
+.payment-detail{max-width:1080px;margin:38px auto 64px;padding:0 20px;color:#111827}.pd-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:24px}.pd-eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#64748b}.pd-top h1{font-size:clamp(1.8rem,3vw,2.5rem);margin:7px 0}.pd-top p{color:#64748b;margin:0;line-height:1.6}.pd-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 15px;border:1px solid #d1d5db;border-radius:10px;color:#111827;text-decoration:none;font-weight:800;background:#fff;white-space:nowrap}.pd-status{display:inline-flex;padding:7px 12px;border-radius:999px;font-size:.82rem;font-weight:800;background:#f1f5f9;color:#475569}.status-successful,.status-refunded{background:#dcfce7;color:#166534}.status-failed{background:#fee2e2;color:#991b1b}.status-pending{background:#fef3c7;color:#92400e}.pd-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px}.pd-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 26px #0f172a08;margin-bottom:18px}.pd-card h2{font-size:1.05rem;margin:0;padding:18px 20px;border-bottom:1px solid #eef2f7}.pd-body{padding:20px}.pd-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #f1f5f9}.pd-row:last-child{border-bottom:0}.pd-label{color:#64748b}.pd-value{text-align:right;font-weight:750;overflow-wrap:anywhere}.pd-products{display:grid;gap:14px}.pd-product{display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid #eef2f7}.pd-product:last-child{padding-bottom:0;border-bottom:0}.pd-image{width:76px;height:76px;border-radius:12px;border:1px solid #e5e7eb;background:#f8fafc;object-fit:cover}.pd-product h3{font-size:.95rem;margin:0 0 5px}.pd-muted{color:#64748b;font-size:.85rem;line-height:1.5}.pd-price{font-weight:800;white-space:nowrap}.pd-total{font-size:1.2rem;font-weight:900}.pd-note{padding:14px 16px;border-radius:12px;background:#f8fafc;color:#475569;font-size:.87rem;line-height:1.6;margin-top:14px}.pd-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}@media(max-width:760px){.payment-detail{margin-top:24px;padding:0 13px}.pd-top{display:block}.pd-top .pd-btn{margin-top:14px}.pd-grid{grid-template-columns:1fr}.pd-product{grid-template-columns:60px minmax(0,1fr)}.pd-image{width:60px;height:60px}.pd-price{grid-column:2;text-align:left}.pd-row{gap:12px}}
+</style>
+<section class="payment-detail">
+  <div class="pd-top"><div><div class="pd-eyebrow">Payment receipt</div><h1>Payment #{{ record.pk }}</h1><p>Full transaction, customer, order and item details.</p></div><a class="pd-btn" href="{% url 'storeextras:payment_history' %}">← Back to payment history</a></div>
+  <div class="pd-grid"><div>
+    <section class="pd-card"><h2>Products in this order</h2><div class="pd-body"><div class="pd-products">
+      {% for item in record.order.items.all %}<div class="pd-product">{% if item.product.image %}<img class="pd-image" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<div class="pd-image"></div>{% endif %}<div><h3>{{ item.product.name }}</h3><div class="pd-muted">Quantity: {{ item.quantity }}{% if item.variant %}<br>Option: {{ item.variant }}{% endif %}<br>Unit price: ₹{{ item.price|floatformat:2 }}</div></div><div class="pd-price">₹{{ item.line_total|floatformat:2 }}</div></div>{% empty %}<p class="pd-muted">No order items are attached to this record.</p>{% endfor %}
+    </div></div></section>
+    <section class="pd-card"><h2>Customer information</h2><div class="pd-body">
+      <div class="pd-row"><span class="pd-label">Customer name</span><span class="pd-value">{{ record.order.name|default:record.user.get_full_name|default:record.user.username }}</span></div>
+      <div class="pd-row"><span class="pd-label">Username</span><span class="pd-value">{{ record.user.username }}</span></div>
+      <div class="pd-row"><span class="pd-label">Email</span><span class="pd-value">{{ record.order.email|default:record.user.email }}</span></div>
+      <div class="pd-row"><span class="pd-label">Phone</span><span class="pd-value">{{ record.order.phone|default:'Not provided' }}</span></div>
+      <div class="pd-row"><span class="pd-label">Shipping address</span><span class="pd-value">{{ record.order.address|default:'Not provided'|linebreaksbr }}</span></div>
+    </div></section>
+  </div><div>
+    <section class="pd-card"><h2>Payment summary</h2><div class="pd-body">
+      <div class="pd-row"><span class="pd-label">Payment status</span><span class="pd-value"><span class="pd-status status-{{ record.status|slugify }}">{{ record.status }}</span></span></div>
+      <div class="pd-row"><span class="pd-label">Amount recorded</span><span class="pd-value pd-total">₹{{ record.amount|floatformat:2 }}</span></div>
+      <div class="pd-row"><span class="pd-label">Payment method</span><span class="pd-value">{{ record.method|upper }}</span></div>
+      <div class="pd-row"><span class="pd-label">Payment reference</span><span class="pd-value">{{ record.reference|default:'Not provided' }}</span></div>
+      <div class="pd-row"><span class="pd-label">Payment record ID</span><span class="pd-value">#{{ record.pk }}</span></div>
+      <div class="pd-row"><span class="pd-label">Recorded on</span><span class="pd-value">{{ record.created_at|date:'d M Y, h:i A' }}</span></div>
+      <div class="pd-row"><span class="pd-label">Last updated</span><span class="pd-value">{{ record.updated_at|date:'d M Y, h:i A' }}</span></div>
+      {% if record.note %}<div class="pd-row"><span class="pd-label">Payment note</span><span class="pd-value">{{ record.note }}</span></div>{% endif %}
+      <div class="pd-note">This page displays payment details recorded by ShopEasy. For online payments, confirm settlement or refund completion with the payment provider. A displayed status alone does not transfer money.</div>
+      <div class="pd-actions"><a class="pd-btn" href="{% url 'order_detail' record.order_id %}">View full order</a>{% if record.order_id %}<a class="pd-btn" href="{% url 'storeextras:invoice' record.order_id %}">View invoice</a>{% endif %}</div>
+    </div></section>
+    <section class="pd-card"><h2>Order totals</h2><div class="pd-body">
+      <div class="pd-row"><span class="pd-label">Order total</span><span class="pd-value">₹{{ record.order.total_amount|floatformat:2 }}</span></div>
+      <div class="pd-row"><span class="pd-label">Shipping method</span><span class="pd-value">{{ record.order.get_shipping_method_display }}</span></div>
+      <div class="pd-row"><span class="pd-label">Shipping cost</span><span class="pd-value">₹{{ record.order.shipping_cost|floatformat:2 }}</span></div>
+      <div class="pd-row"><span class="pd-label">Order status</span><span class="pd-value">{{ record.order.status }}</span></div>
+      <div class="pd-row"><span class="pd-label">Order placed</span><span class="pd-value">{{ record.order.created_at|date:'d M Y, h:i A' }}</span></div>
+    </div></section>
+  </div></div>
+</section>
+{% endblock %}

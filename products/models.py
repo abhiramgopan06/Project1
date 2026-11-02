@@ -103,10 +103,6 @@ class ProductReview(models.Model):
         choices=[(i, i) for i in range(1, 6)]
     )
     review = models.TextField(blank=True)
-    is_approved = models.BooleanField(default=False, db_index=True)
-    verified_purchase = models.BooleanField(default=False, db_index=True)
-    moderated_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='moderated_product_reviews')
-    moderated_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

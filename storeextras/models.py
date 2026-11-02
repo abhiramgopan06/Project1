@@ -105,36 +105,3 @@ class BackInStockAlert(models.Model):
 
     def __str__(self):
         return f'{self.product.name} stock alert for {self.email}'
-
-class OrderTrackingEvent(models.Model):
-    STATUS_CHOICES = [
-        ('placed', 'Order placed'),
-        ('confirmed', 'Confirmed'),
-        ('packed', 'Packed'),
-        ('shipped', 'Shipped'),
-        ('out_for_delivery', 'Out for delivery'),
-        ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled'),
-    ]
-    order = models.ForeignKey('orders.Order', on_delete=models.CASCADE, related_name='tracking_events')
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
-    note = models.CharField(max_length=255, blank=True)
-    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
-
-    class Meta:
-        ordering = ['created_at', 'id']
-
-    def __str__(self):
-        return f'Order #{self.order_id}: {self.get_status_display()}'
-
-
-class AbandonedCartConsent(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='abandoned_cart_consent')
-    email_reminders_enabled = models.BooleanField(default=False)
-    consented_at = models.DateTimeField(null=True, blank=True)
-    last_reminder_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{self.user.username}: cart reminders {self.email_reminders_enabled}'

@@ -144,6 +144,16 @@ def checkout(request):
                     status='Pending'
                 )
 
+                from storeextras.models import PaymentRecord
+                PaymentRecord.objects.create(
+                    user=request.user,
+                    order=order,
+                    method='cod',
+                    amount=order.total_amount,
+                    status=PaymentRecord.STATUS_PENDING,
+                    note='Cash on delivery; collection is pending.'
+                )
+
                 for item in locked_items:
                     product = locked_products[item.product_id]
                     selected_variant = getattr(item, '_locked_variant', None)
@@ -241,8 +251,6 @@ def order_detail(request, order_id):
             for index, label in enumerate(flow)
         ]
 
-    from storeextras.models import OrderTrackingEvent
-    tracking_events = order.tracking_events.all()
     order_items = order.items.select_related('product', 'return_request')
 
     existing_reviews = {}
@@ -270,7 +278,6 @@ def order_detail(request, order_id):
             'order': order,
             'order_items': order_items,
             'status_steps': status_steps,
-            'tracking_events': tracking_events,
             'can_cancel': can_cancel,
         }
     )
@@ -403,17 +410,13 @@ def rate_product(request, order_id, item_id):
             review = form.save(commit=False)
             review.product = item.product
             review.user = request.user
-            review.verified_purchase = True
-            review.is_approved = False
-            review.moderated_by = None
-            review.moderated_at = None
             review.save()
-            approved_reviews = ProductReview.objects.filter(product_id=item.product_id, is_approved=True)
+
             Product.objects.filter(pk=item.product_id).update(
-                rating_average=approved_reviews.aggregate(v=Avg('rating'))['v'] or 0,
-                rating_count=approved_reviews.count(),
+                rating_average=ProductReview.objects.filter(product_id=item.product_id).aggregate(v=Avg('rating'))['v'] or 0,
+                rating_count=ProductReview.objects.filter(product_id=item.product_id).count(),
             )
-            messages.success(request, f'Thanks! Your verified review for {item.product.name} was submitted for moderation.')
+            messages.success(request, f'Thanks! Your rating for {item.product.name} was saved.')
         else:
             messages.error(request, 'Please choose a star rating between 1 and 5.')
 

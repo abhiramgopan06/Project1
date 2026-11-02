@@ -119,7 +119,7 @@ def product_detail(request, id):
         add_to_user_vector(profile, f'{product.name} {product.category.name}', weight=0.25)
         record_product_history(request.user, product, 'view')
 
-    reviews = product.reviews.filter(is_approved=True).select_related('user').all()
+    reviews = product.reviews.select_related('user').all()
     gallery_images = product.gallery_images.all()
     variants = product.variants.filter(is_active=True)
     variant_list = list(variants)

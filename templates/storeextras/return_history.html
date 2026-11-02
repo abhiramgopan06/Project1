@@ -1,13 +1,39 @@
 {% extends 'base.html' %}
-{% block title %}Returns and Refunds{% endblock %}
+{% block title %}Returns and Refunds | ShopEasy{% endblock %}
 {% block content %}
-<section class="container" style="max-width:1100px;margin:36px auto;padding:0 18px">
-    <h1>Returns and Refunds</h1><p>Track your return reason, product inspection, and refund progress.</p>
-    <div style="overflow-x:auto;background:white;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:20px">
-        <table style="width:100%;border-collapse:collapse;min-width:800px"><thead><tr><th align="left">Product</th><th align="left">Order</th><th align="left">Request type</th><th align="left">Reason</th><th align="left">Condition</th><th align="left">Request status</th><th align="left">Refund status</th><th align="left">Date</th></tr></thead><tbody>
-        {% for item in requests %}<tr style="border-top:1px solid #e2e8f0"><td style="padding:12px 6px">{{ item.order_item.product.name }}</td><td>#{{ item.order_item.order_id }}</td><td>{{ item.request_type }}</td><td><strong>{{ item.get_reason_category_display }}</strong><br>{{ item.reason }}</td><td>{{ item.product_condition }}</td><td>{{ item.status }}</td><td>{{ item.refund_status }}{% if item.refund_amount %}<br>₹{{ item.refund_amount }}{% endif %}</td><td>{{ item.created_at|date:'d M Y' }}</td></tr>
-        {% empty %}<tr><td colspan="8" style="padding:18px">No return, refund, or replacement requests yet.</td></tr>{% endfor %}
-        </tbody></table>
-    </div>
+<style>
+.account-page{max-width:1180px;margin:38px auto 64px;padding:0 20px;color:#111827}.account-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:26px}.account-eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#64748b}.account-heading h1{font-size:clamp(1.8rem,3vw,2.5rem);margin:7px 0 8px;letter-spacing:-.04em}.account-heading p{color:#64748b;margin:0;line-height:1.6}.account-action{display:inline-flex;align-items:center;justify-content:center;padding:10px 15px;border:1px solid #d1d5db;border-radius:10px;color:#111827;text-decoration:none;font-weight:700;background:#fff;white-space:nowrap}.account-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:22px 0}.account-stat{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 5px 18px #0f172a08}.account-stat span{display:block;color:#64748b;font-size:.9rem}.account-stat strong{display:block;font-size:1.55rem;margin-top:8px;letter-spacing:-.03em}.account-panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 26px #0f172a08}.account-filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:18px;border-bottom:1px solid #e5e7eb;background:#fafafa}.account-filters label{display:grid;gap:6px;color:#475569;font-size:.82rem;font-weight:700}.account-filters select{min-height:42px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;padding:8px 11px;color:#111827;min-width:175px}.account-btn{min-height:42px;padding:9px 16px;border:1px solid #111827;border-radius:9px;background:#111827;color:#fff;text-decoration:none;font-weight:700;cursor:pointer}.account-clear{padding:10px 8px;color:#475569;font-weight:700;text-decoration:none}.account-table-wrap{overflow-x:auto}.account-table{width:100%;border-collapse:collapse;min-width:950px}.account-table th{padding:14px 16px;text-align:left;background:#f8fafc;color:#64748b;font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.account-table td{padding:17px 16px;border-top:1px solid #eef2f7;vertical-align:top}.account-table tbody tr:hover{background:#fafcff}.product-name{font-weight:800;color:#111827}.muted{display:block;color:#64748b;font-size:.82rem;margin-top:5px;line-height:1.45}.status-pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:800;background:#f1f5f9;color:#475569;white-space:nowrap}.status-requested,.status-pending{background:#fef3c7;color:#92400e}.status-approved,.status-product-received{background:#dbeafe;color:#1d4ed8}.status-refunded,.status-completed,.status-processed{background:#dcfce7;color:#166534}.status-rejected,.status-not-eligible{background:#fee2e2;color:#991b1b}.money{font-weight:800;white-space:nowrap}.order-ref{font-weight:800;color:#111827;text-decoration:none}.empty-state{text-align:center;padding:54px 20px}.empty-state .empty-icon{font-size:2rem}.empty-state h2{margin:12px 0 6px}.empty-state p{color:#64748b;margin:0 0 18px}.account-footnote{font-size:.84rem;color:#64748b;padding:14px 18px;border-top:1px solid #eef2f7;line-height:1.55}.progress-track{display:flex;gap:4px;margin-top:8px}.progress-track span{height:4px;flex:1;border-radius:10px;background:#e2e8f0}.progress-track span.done{background:#16a34a}@media(max-width:700px){.account-page{margin-top:24px;padding:0 13px}.account-heading{display:block}.account-heading .account-action{margin-top:15px}.account-stats{grid-template-columns:1fr;gap:10px}.account-stat{padding:15px}.account-stat strong{font-size:1.3rem}.account-filters{align-items:stretch}.account-filters label,.account-filters select{width:100%;box-sizing:border-box}.account-btn{text-align:center}}
+</style>
+<section class="account-page">
+  <div class="account-heading">
+    <div><div class="account-eyebrow">Order support</div><h1>Returns &amp; refunds</h1><p>Follow each request from submission through inspection and refund processing.</p></div>
+    <a class="account-action" href="{% url 'order_history' %}">View my orders</a>
+  </div>
+  <div class="account-stats">
+    <div class="account-stat"><span>Total requests</span><strong>{{ summary.total }}</strong></div>
+    <div class="account-stat"><span>In progress</span><strong>{{ summary.active }}</strong></div>
+    <div class="account-stat"><span>Refunds marked processed</span><strong>{{ summary.refunded }}</strong></div>
+  </div>
+  <div class="account-panel">
+    <form class="account-filters" method="get">
+      <label>Request status<select name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Request type<select name="type"><option value="">Returns and replacements</option>{% for value,label in type_choices %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <button class="account-btn" type="submit">Apply filters</button><a class="account-clear" href="{% url 'storeextras:return_history' %}">Clear</a>
+    </form>
+    {% if requests %}
+    <div class="account-table-wrap"><table class="account-table"><thead><tr><th>Product &amp; order</th><th>Request</th><th>Reason</th><th>Inspection</th><th>Request status</th><th>Refund</th><th>Submitted</th></tr></thead><tbody>
+    {% for item in requests %}<tr>
+      <td><span class="product-name">{{ item.order_item.product.name }}</span><span class="muted">Qty: {{ item.order_item.quantity }}</span><a class="order-ref" href="{% url 'order_detail' item.order_item.order_id %}">Order #{{ item.order_item.order_id }} ↗</a></td>
+      <td><strong>{{ item.request_type }}</strong><span class="muted">Request #{{ item.pk }}</span></td>
+      <td><strong>{{ item.get_reason_category_display }}</strong><span class="muted">{{ item.reason }}</span></td>
+      <td><span class="status-pill">{{ item.product_condition }}</span>{% if item.inspection_note %}<span class="muted">{{ item.inspection_note }}</span>{% endif %}{% if item.received_at %}<span class="muted">Received {{ item.received_at|date:'d M Y' }}</span>{% endif %}</td>
+      <td><span class="status-pill status-{{ item.status|slugify }}">{{ item.status }}</span><div class="progress-track" aria-label="Request progress"><span class="done"></span><span class="{% if item.status != 'Requested' %}done{% endif %}"></span><span class="{% if item.status == 'Product Received' or item.status == 'Refunded' or item.status == 'Completed' %}done{% endif %}"></span><span class="{% if item.status == 'Refunded' or item.status == 'Completed' %}done{% endif %}"></span></div></td>
+      <td><span class="status-pill status-{{ item.refund_status|slugify }}">{{ item.refund_status }}</span>{% if item.refund_amount %}<span class="muted money">₹{{ item.refund_amount|floatformat:2 }}</span>{% endif %}</td>
+      <td>{{ item.created_at|date:'d M Y' }}<span class="muted">Updated {{ item.updated_at|date:'d M Y' }}</span></td>
+    </tr>{% endfor %}
+    </tbody></table></div>
+    <div class="account-footnote">Status updates are managed by store staff. “Processed” records the store's status; for online payments, the actual transfer must also be completed and confirmed through the payment provider. Replacements may require a separate shipment.</div>
+    {% else %}<div class="empty-state"><div class="empty-icon">↩</div><h2>No matching requests</h2><p>Your return, refund and replacement requests will appear here once submitted.</p><a class="account-action" href="{% url 'order_history' %}">Find an order</a></div>{% endif %}
+  </div>
 </section>
 {% endblock %}

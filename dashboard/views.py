@@ -13,7 +13,7 @@ from decimal import Decimal
 from orders.models import Order
 from products.models import Product, Category, ProductOfferHistory, CategoryOfferHistory, ProductVariant
 from products.forms import ProductForm
-from storeextras.models import ActivityLog, StockMovement
+from storeextras.models import ActivityLog, StockMovement, PaymentRecord
 
 
 def _save_product_variants(request, product):
@@ -124,6 +124,58 @@ def staff_dashboard_home(request):
         'active_category_offers': Category.objects.filter(offer_percent__gt=0, offer_ends_at__gt=timezone.now()).count(),
     }
     return render(request, 'dashboard/staff_home.html', context)
+
+@user_passes_test(lambda user: user.is_superuser)
+def dashboard_payments(request):
+    records = PaymentRecord.objects.select_related('user', 'order', 'order__user').prefetch_related('order__items__product', 'order__items__variant').order_by('-created_at')
+    status_filter = request.GET.get('status', '').strip()
+    method_filter = request.GET.get('method', '').strip()
+    query = request.GET.get('q', '').strip()
+    valid_statuses = {value for value, label in PaymentRecord.STATUS_CHOICES}
+    if status_filter in valid_statuses:
+        records = records.filter(status=status_filter)
+    if method_filter:
+        records = records.filter(method__iexact=method_filter)
+    if query:
+        search_filter = (
+            Q(user__username__icontains=query) |
+            Q(user__email__icontains=query) |
+            Q(order__name__icontains=query) |
+            Q(order__email__icontains=query) |
+            Q(reference__icontains=query) |
+            Q(order__items__product__name__icontains=query)
+        )
+        if query.isdigit():
+            search_filter |= Q(pk=int(query)) | Q(order_id=int(query)) | Q(user_id=int(query))
+        records = records.filter(search_filter).distinct()
+    paginator = Paginator(records, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    all_records = PaymentRecord.objects.all()
+    context = {
+        'active': 'payments',
+        'page_obj': page_obj,
+        'records': page_obj.object_list,
+        'query': query,
+        'status_filter': status_filter,
+        'method_filter': method_filter,
+        'status_choices': PaymentRecord.STATUS_CHOICES,
+        'methods': PaymentRecord.objects.order_by().values_list('method', flat=True).distinct(),
+        'total_records': all_records.count(),
+        'successful_total': all_records.filter(status=PaymentRecord.STATUS_SUCCESS).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+        'pending_count': all_records.filter(status=PaymentRecord.STATUS_PENDING).count(),
+        'refunded_total': all_records.filter(status=PaymentRecord.STATUS_REFUNDED).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+    }
+    return render(request, 'dashboard/payments.html', context)
+
+@user_passes_test(lambda user: user.is_superuser)
+def dashboard_payment_detail(request, payment_id):
+    record = get_object_or_404(
+        PaymentRecord.objects.select_related('user', 'order', 'order__user')
+        .prefetch_related('order__items__product', 'order__items__variant'),
+        pk=payment_id,
+    )
+    return render(request, 'storeextras/payment_detail.html', {'record': record, 'is_admin_payment_view': True})
+
 
 @staff_member_required
 def dashboard_orders(request):

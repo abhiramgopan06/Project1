@@ -1,0 +1,41 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Payments | ShopEasy Admin{% endblock %}
+{% block dashboard_content %}
+<style>
+.payments-page{min-width:0}.payments-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.payments-stat{background:#fff;border:1px solid #e5eaee;border-radius:15px;padding:18px;min-width:0}.payments-stat span{display:block;color:#788590;font-size:12px}.payments-stat strong{display:block;font-size:clamp(19px,2vw,27px);color:#17232d;margin-top:9px;overflow-wrap:anywhere}.payments-panel{background:#fff;border:1px solid #e5eaee;border-radius:16px;overflow:hidden;min-width:0}.payments-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap;padding:16px;border-bottom:1px solid #edf0f2;background:#fbfcfd}.payments-filter label{display:grid;gap:6px;color:#52606a;font-size:12px;font-weight:700}.payments-filter input,.payments-filter select{min-height:40px;border:1px solid #dbe2e7;border-radius:9px;padding:8px 11px;font:inherit;font-size:13px;max-width:100%;background:#fff}.payments-filter input{min-width:230px}.payments-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.payments-table{width:100%;min-width:1350px;border-collapse:separate;border-spacing:0}.payments-table th{position:sticky;top:0;background:#f7f9fa;color:#697782;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;white-space:nowrap;padding:14px 15px;border-bottom:1px solid #e9eef1}.payments-table td{padding:14px 15px;border-bottom:1px solid #edf1f3;color:#34434c;font-size:12px;vertical-align:middle}.payments-table tbody tr:hover{background:#f8fbfa}.payments-table tr:last-child td{border-bottom:0}.pay-user{font-weight:750;color:#18252e;white-space:nowrap}.pay-muted{display:block;color:#87929a;font-size:11px;margin-top:4px;white-space:nowrap}.pay-product{display:flex;align-items:center;gap:10px;min-width:210px}.pay-product img,.pay-product-placeholder{width:44px;height:44px;border-radius:9px;object-fit:cover;background:#f0f3f4;border:1px solid #e4e9ec;flex-shrink:0}.pay-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-weight:750;font-size:10px;white-space:nowrap}.pay-status.status-successful,.pay-status.status-refunded{background:#e2f7ea;color:#167647}.pay-status.status-pending{background:#fff2d5;color:#98600b}.pay-status.status-failed{background:#fde7e7;color:#a12828}.pay-amount{font-weight:800;white-space:nowrap}.pay-view{display:inline-flex;padding:8px 11px;border:1px solid #d9e2e5;border-radius:8px;background:#fff;color:#263a42;font-weight:750;text-decoration:none;white-space:nowrap}.pay-view:hover{background:#eaf7f4;border-color:#a8d7ce}.pay-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;color:#74818a;font-size:12px;flex-wrap:wrap}.pay-pagination a{color:#0f766e;font-weight:750;text-decoration:none}.pay-empty{padding:42px 18px;text-align:center;color:#788590}.pay-empty strong{display:block;color:#273640;font-size:16px;margin-bottom:6px}@media(max-width:1000px){.payments-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.payments-stats{grid-template-columns:1fr}.payments-filter>*{width:100%}.payments-filter input,.payments-filter select{width:100%;box-sizing:border-box}}
+</style>
+<section class="payments-page">
+  <div class="section-head"><div><span class="dash-eyebrow">FINANCE &amp; OPERATIONS</span><h1>Payment management</h1><p>Review payment records across all customers, inspect products and follow up on pending or failed transactions.</p></div></div>
+  <div class="payments-stats">
+    <div class="payments-stat"><span>All payment records</span><strong>{{ total_records }}</strong></div>
+    <div class="payments-stat"><span>Successful payments recorded</span><strong>₹{{ successful_total|floatformat:2 }}</strong></div>
+    <div class="payments-stat"><span>Pending payments</span><strong>{{ pending_count }}</strong></div>
+    <div class="payments-stat"><span>Recorded refunds</span><strong>₹{{ refunded_total|floatformat:2 }}</strong></div>
+  </div>
+  <div class="payments-panel">
+    <form method="get" class="payments-filter">
+      <label>Search customer, product, order or reference<input type="search" name="q" value="{{ query }}" placeholder="Name, email, product, order ID..."></label>
+      <label>Payment status<select name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Payment method<select name="method"><option value="">All methods</option>{% for method in methods %}<option value="{{ method }}" {% if method_filter == method %}selected{% endif %}>{{ method|upper }}</option>{% endfor %}</select></label>
+      <button class="btn btn-primary" type="submit">Apply filters</button><a class="btn btn-outline" href="{% url 'dashboard:payments' %}">Clear</a>
+    </form>
+    {% if records %}
+    <div class="payments-table-wrap"><table class="payments-table"><thead><tr><th>Payment ID</th><th>Customer</th><th>Product(s)</th><th>Order</th><th>Transaction reference</th><th>Date &amp; time</th><th>Method</th><th>Amount</th><th>Status</th><th>Details</th></tr></thead><tbody>
+    {% for record in records %}<tr>
+      <td><strong>#{{ record.pk }}</strong></td>
+      <td><span class="pay-user">{{ record.order.name|default:record.user.get_full_name|default:record.user.username }}</span><span class="pay-muted">@{{ record.user.username }}</span><span class="pay-muted">{{ record.order.email|default:record.user.email }}</span></td>
+      <td>{% with first_item=record.order.items.all|first %}{% if first_item %}<div class="pay-product">{% if first_item.product.image %}<img src="{{ first_item.product.image.url }}" alt="{{ first_item.product.name }}">{% else %}<div class="pay-product-placeholder"></div>{% endif %}<div><strong>{{ first_item.product.name }}</strong><span class="pay-muted">Qty {{ first_item.quantity }}{% if record.order.items.count > 1 %} · +{{ record.order.items.count|add:'-1' }} more{% endif %}</span></div></div>{% else %}Product details unavailable{% endif %}{% endwith %}</td>
+      <td><a class="pay-view" href="{% url 'dashboard:order_detail' record.order_id %}">Order #{{ record.order_id }}</a></td>
+      <td>{{ record.reference|default:'Not provided' }}{% if record.note %}<span class="pay-muted">{{ record.note }}</span>{% endif %}</td>
+      <td>{{ record.created_at|date:'d M Y' }}<span class="pay-muted">{{ record.created_at|date:'h:i A' }}</span></td>
+      <td>{{ record.method|upper }}</td><td class="pay-amount">₹{{ record.amount|floatformat:2 }}</td>
+      <td><span class="pay-status status-{{ record.status|slugify }}">{{ record.status }}</span></td>
+      <td><a class="pay-view" href="{% url 'dashboard:payment_detail' record.pk %}">View details</a></td>
+    </tr>{% endfor %}
+    </tbody></table></div>
+    <div class="pay-pagination"><span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} matching record{{ page_obj.paginator.count|pluralize }}</span><span>{% if page_obj.has_previous %}<a href="?q={{ query|urlencode }}&status={{ status_filter|urlencode }}&method={{ method_filter|urlencode }}&page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}{% if page_obj.has_previous and page_obj.has_next %} &nbsp;·&nbsp; {% endif %}{% if page_obj.has_next %}<a href="?q={{ query|urlencode }}&status={{ status_filter|urlencode }}&method={{ method_filter|urlencode }}&page={{ page_obj.next_page_number }}">Next →</a>{% endif %}</span></div>
+    {% else %}<div class="pay-empty"><strong>No payment records found</strong>Try another search or clear the filters.</div>{% endif %}
+    <div class="account-footnote">This screen displays records saved in ShopEasy. Payment capture and refunds must still be confirmed through the payment provider; a database status alone does not move money.</div>
+  </div>
+</section>
+{% endblock %}

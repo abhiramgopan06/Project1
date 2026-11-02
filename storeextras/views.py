@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import F
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.db.models import Sum, Count
+from decimal import Decimal
 from cart.models import Cart
 from products.models import Product
 from orders.models import Order, ReturnReplaceRequest
@@ -79,13 +80,65 @@ def notification_read(request, notification_id):
 
 @login_required
 def payment_history(request):
-    records = PaymentRecord.objects.filter(user=request.user).select_related('order')
-    return render(request, 'storeextras/payment_history.html', {'records': records})
+    records = PaymentRecord.objects.filter(user=request.user).select_related('order', 'order__user').prefetch_related('order__items__product', 'order__items__variant')
+    status = request.GET.get('status', '').strip()
+    method = request.GET.get('method', '').strip()
+    query = request.GET.get('q', '').strip()
+    valid_statuses = {choice[0] for choice in PaymentRecord.STATUS_CHOICES}
+    if status in valid_statuses:
+        records = records.filter(status=status)
+    if method:
+        records = records.filter(method__iexact=method)
+    if query:
+        search_filter = Q(reference__icontains=query) | Q(order__items__product__name__icontains=query) | Q(order__name__icontains=query)
+        if query.isdigit():
+            search_filter |= Q(order_id=int(query)) | Q(pk=int(query))
+        records = records.filter(search_filter).distinct()
+    summary = {
+        'total_count': records.count(),
+        'successful_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_SUCCESS), start=Decimal('0.00')),
+        'refunded_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_REFUNDED), start=Decimal('0.00')),
+    }
+    methods = PaymentRecord.objects.filter(user=request.user).values_list('method', flat=True).distinct()
+    return render(request, 'storeextras/payment_history.html', {
+        'records': records, 'summary': summary, 'selected_status': status,
+        'selected_method': method, 'query': query, 'methods': methods,
+        'status_choices': PaymentRecord.STATUS_CHOICES,
+    })
+
+@login_required
+def payment_detail(request, payment_id):
+    record = get_object_or_404(
+        PaymentRecord.objects.select_related('user', 'order', 'order__user')
+        .prefetch_related('order__items__product', 'order__items__variant'),
+        pk=payment_id,
+        user=request.user,
+    )
+    return render(request, 'storeextras/payment_detail.html', {'record': record})
 
 @login_required
 def return_history(request):
-    requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).select_related('order_item__product', 'order_item__order')
-    return render(request, 'storeextras/return_history.html', {'requests': requests})
+    requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).select_related('order_item__product', 'order_item__order').order_by('-created_at')
+    status = request.GET.get('status', '').strip()
+    request_type = request.GET.get('type', '').strip()
+    valid_statuses = {choice[0] for choice in ReturnReplaceRequest.STATUS_CHOICES}
+    valid_types = {choice[0] for choice in ReturnReplaceRequest.REQUEST_TYPE_CHOICES}
+    if status in valid_statuses:
+        requests = requests.filter(status=status)
+    if request_type in valid_types:
+        requests = requests.filter(request_type=request_type)
+    all_requests = ReturnReplaceRequest.objects.filter(order_item__order__user=request.user)
+    summary = {
+        'total': all_requests.count(),
+        'active': all_requests.filter(status__in=[ReturnReplaceRequest.STATUS_REQUESTED, ReturnReplaceRequest.STATUS_APPROVED, ReturnReplaceRequest.STATUS_RECEIVED]).count(),
+        'refunded': all_requests.filter(refund_status=ReturnReplaceRequest.REFUND_PROCESSED).count(),
+    }
+    return render(request, 'storeextras/return_history.html', {
+        'requests': requests, 'summary': summary, 'selected_status': status,
+        'selected_type': request_type,
+        'status_choices': ReturnReplaceRequest.STATUS_CHOICES,
+        'type_choices': ReturnReplaceRequest.REQUEST_TYPE_CHOICES,
+    })
 
 @login_required
 def invoice(request, order_id):
@@ -185,33 +238,3 @@ def customer_dashboard(request):
         'returns_count': ReturnReplaceRequest.objects.filter(order_item__order__user=request.user).count(),
     }
     return render(request, 'storeextras/customer_dashboard.html', context)
-
-
-@login_required
-def invoice_pdf(request, order_id):
-    order = get_object_or_404(Order.objects.prefetch_related('items__product', 'items__variant'), pk=order_id, user=request.user)
-    try:
-        from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A4
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-        from reportlab.lib.styles import getSampleStyleSheet
-        from io import BytesIO
-    except ImportError:
-        messages.error(request, 'PDF support is not installed. Run: pip install reportlab')
-        return redirect('storeextras:invoice', order_id=order.pk)
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    styles = getSampleStyleSheet()
-    story = [Paragraph('ShopEasy - Order Invoice / Receipt', styles['Title']), Spacer(1, 12), Paragraph(f'Order #{order.pk} | {order.created_at:%d %b %Y}', styles['Normal']), Paragraph(f'Customer: {order.name} ({order.email})', styles['Normal']), Paragraph(f'Shipping address: {order.address}', styles['Normal']), Spacer(1, 12)]
-    rows = [['Product', 'Qty', 'Unit price (INR)', 'Line total (INR)']]
-    for item in order.items.all():
-        label = item.product.name + (f' ({item.variant.display_value})' if item.variant_id else '')
-        rows.append([label[:90], str(item.quantity), f'{item.price:.2f}', f'{item.line_total:.2f}'])
-    rows.extend([['Shipping', '', '', f'{order.shipping_cost:.2f}'], ['Discount', '', '', f'-{order.discount_amount:.2f}'], ['TOTAL', '', '', f'{order.total_amount:.2f}'], ['Payment status', '', '', order.payment_status]])
-    table = Table(rows, colWidths=[250, 45, 100, 100], repeatRows=1)
-    table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#172033')),('TEXTCOLOR',(0,0),(-1,0),colors.white),('GRID',(0,0),(-1,-1),0.4,colors.HexColor('#d8dee8')),('PADDING',(0,0),(-1,-1),7),('ALIGN',(1,1),(-1,-1),'RIGHT'),('BACKGROUND',(0,-2),(-1,-2),colors.HexColor('#eef2f7'))]))
-    story.append(table)
-    doc.build(story)
-    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="shopeasy-order-{order.pk}-invoice.pdf"'
-    return response

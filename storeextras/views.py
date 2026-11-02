@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -47,8 +48,9 @@ def request_stock_alert(request, product_id):
 
 @login_required
 def wishlist(request):
-    items = WishlistItem.objects.filter(user=request.user).select_related('product', 'product__category')
-    return render(request, 'storeextras/wishlist.html', {'items': items})
+    items = WishlistItem.objects.filter(user=request.user).select_related('product', 'product__category').order_by('-created_at')
+    page_obj = Paginator(items, 12).get_page(request.GET.get('page'))
+    return render(request, 'storeextras/wishlist.html', {'items': page_obj.object_list, 'page_obj': page_obj})
 
 @login_required
 @require_POST
@@ -67,8 +69,9 @@ def wishlist_toggle(request, product_id):
 
 @login_required
 def notifications(request):
-    items = Notification.objects.filter(user=request.user)
-    return render(request, 'storeextras/notifications.html', {'items': items})
+    items = Notification.objects.filter(user=request.user).order_by('-created_at')
+    page_obj = Paginator(items, 12).get_page(request.GET.get('page'))
+    return render(request, 'storeextras/notifications.html', {'items': page_obj.object_list, 'page_obj': page_obj})
 
 @login_required
 @require_POST
@@ -100,8 +103,9 @@ def payment_history(request):
         'refunded_total': sum((record.amount for record in records if record.status == PaymentRecord.STATUS_REFUNDED), start=Decimal('0.00')),
     }
     methods = PaymentRecord.objects.filter(user=request.user).values_list('method', flat=True).distinct()
+    page_obj = Paginator(records.order_by('-created_at'), 12).get_page(request.GET.get('page'))
     return render(request, 'storeextras/payment_history.html', {
-        'records': records, 'summary': summary, 'selected_status': status,
+        'records': page_obj.object_list, 'page_obj': page_obj, 'summary': summary, 'selected_status': status,
         'selected_method': method, 'query': query, 'methods': methods,
         'status_choices': PaymentRecord.STATUS_CHOICES,
     })
@@ -133,8 +137,9 @@ def return_history(request):
         'active': all_requests.filter(status__in=[ReturnReplaceRequest.STATUS_REQUESTED, ReturnReplaceRequest.STATUS_APPROVED, ReturnReplaceRequest.STATUS_RECEIVED]).count(),
         'refunded': all_requests.filter(refund_status=ReturnReplaceRequest.REFUND_PROCESSED).count(),
     }
+    page_obj = Paginator(requests, 12).get_page(request.GET.get('page'))
     return render(request, 'storeextras/return_history.html', {
-        'requests': requests, 'summary': summary, 'selected_status': status,
+        'requests': page_obj.object_list, 'page_obj': page_obj, 'summary': summary, 'selected_status': status,
         'selected_type': request_type,
         'status_choices': ReturnReplaceRequest.STATUS_CHOICES,
         'type_choices': ReturnReplaceRequest.REQUEST_TYPE_CHOICES,
@@ -147,13 +152,15 @@ def invoice(request, order_id):
 
 @user_passes_test(lambda user: user.is_superuser)
 def activity_history(request):
-    records = ActivityLog.objects.select_related('actor')[:250]
-    return render(request, 'storeextras/activity_history.html', {'records': records, 'active': 'activity_history'})
+    records = ActivityLog.objects.select_related('actor').order_by('-created_at')
+    page_obj = Paginator(records, 12).get_page(request.GET.get('page'))
+    return render(request, 'storeextras/activity_history.html', {'records': page_obj.object_list, 'page_obj': page_obj, 'active': 'activity_history'})
 
 @user_passes_test(lambda user: user.is_superuser)
 def stock_history(request):
-    records = StockMovement.objects.select_related('changed_by', 'product')[:250]
-    return render(request, 'storeextras/stock_history.html', {'records': records, 'active': 'stock_history'})
+    records = StockMovement.objects.select_related('changed_by', 'product').order_by('-created_at')
+    page_obj = Paginator(records, 12).get_page(request.GET.get('page'))
+    return render(request, 'storeextras/stock_history.html', {'records': page_obj.object_list, 'page_obj': page_obj, 'active': 'stock_history'})
 
 @user_passes_test(lambda user: user.is_staff)
 def return_management(request):
@@ -224,7 +231,8 @@ def return_management(request):
         ActivityLog.objects.create(actor=request.user, action='Return workflow updated', object_type='ReturnReplaceRequest', object_id=item.pk, details=f'{item.request_type} request: {item.status}; condition: {item.product_condition}; refund: {item.refund_status}.')
         Notification.objects.create(user=item.order_item.order.user, title='Return or refund update', message=f'Your {item.request_type.lower()} request for {item.order_item.product.name} is now {item.status}. Refund status: {item.refund_status}.', link='/account/returns/')
         return redirect('storeextras:return_management')
-    return render(request, 'storeextras/return_management.html', {'requests': requests, 'active': 'returns'})
+    page_obj = Paginator(requests, 12).get_page(request.GET.get('page'))
+    return render(request, 'storeextras/return_management.html', {'requests': page_obj.object_list, 'page_obj': page_obj, 'active': 'returns'})
 
 
 @login_required

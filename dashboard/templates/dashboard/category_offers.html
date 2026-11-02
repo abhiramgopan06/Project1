@@ -23,16 +23,16 @@
     <section class="offer-page-card">
         <h3>Present Offers</h3>
         <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Discount</th><th>Started</th><th>Expires</th></tr></thead><tbody>
-        {% for offer in present_offers %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% endfor %}
-        {% for category in legacy_present_categories %}<tr><td><strong>{{ category.name }}</strong></td><td>{{ category.offer_percent }}% off</td><td>Before history tracking</td><td>{{ category.offer_ends_at|date:"M d, Y H:i" }}</td></tr>{% endfor %}
-        {% if not present_offers and not legacy_present_categories %}<tr><td colspan="4">There are no present category offers.</td></tr>{% endif %}
+        {% for offer in present_page %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{% if offer.started_at %}{{ offer.started_at|date:"M d, Y H:i" }}{% else %}Before history tracking{% endif %}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4">There are no present category offers.</td></tr>{% endfor %}
         </tbody></table></div>
+        {% include "includes/pagination.html" with page_obj=present_page page_key="present_page" %}
     </section>
     <section class="offer-page-card">
         <h3>Expired Offers</h3>
         <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Discount</th><th>Started</th><th>Expired</th></tr></thead><tbody>
-        {% for offer in expired_offers %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4">There are no expired category offers yet.</td></tr>{% endfor %}
+        {% for offer in expired_page %}<tr><td><strong>{{ offer.category_name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.started_at|date:"M d, Y H:i" }}</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4">There are no expired category offers yet.</td></tr>{% endfor %}
         </tbody></table></div>
+        {% include "includes/pagination.html" with page_obj=expired_page page_key="expired_page" %}
     </section>
 </div>
 <style>.category-offer-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.offer-page-card{min-width:0;background:var(--card-bg,#fff);border:1px solid var(--border-color,#e2e8f0);border-radius:16px;padding:22px;margin:18px 0}.offer-muted{color:var(--muted-text,#64748b);font-size:13px;margin:8px 0}.category-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0}.category-fields label{display:block;margin-bottom:7px;font-weight:700}.category-fields input,.category-fields select{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:850px){.category-offer-columns{grid-template-columns:1fr}.category-fields{grid-template-columns:1fr}}</style>

@@ -1,5 +1,6 @@
 
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -221,10 +222,12 @@ def order_history(request):
         order__user=request.user
     ).select_related('product', 'order').order_by('-order__created_at', '-id')
 
+    orders_page = Paginator(orders, 12).get_page(request.GET.get('page'))
+    items_page = Paginator(order_items, 12).get_page(request.GET.get('items_page'))
     return render(
         request,
         'orders/order_history.html',
-        {'orders': orders, 'order_items': order_items}
+        {'orders': orders_page.object_list, 'orders_page': orders_page, 'order_items': items_page.object_list, 'items_page': items_page}
     )
 
 @login_required

@@ -73,4 +73,5 @@
         <p>No products yet. <a href="{% url 'dashboard:product_add' %}">Add your first product</a>.</p>
     {% endif %}
 </div>
+{% include "includes/pagination.html" with page_obj=page_obj %}
 {% endblock %}

@@ -148,7 +148,7 @@ def dashboard_payments(request):
         if query.isdigit():
             search_filter |= Q(pk=int(query)) | Q(order_id=int(query)) | Q(user_id=int(query))
         records = records.filter(search_filter).distinct()
-    paginator = Paginator(records, 25)
+    paginator = Paginator(records, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
     all_records = PaymentRecord.objects.all()
     context = {
@@ -186,9 +186,11 @@ def dashboard_orders(request):
     if status_filter:
         orders = orders.filter(status=status_filter)
 
+    page_obj = Paginator(orders, 12).get_page(request.GET.get('page'))
     context = {
         'active': 'orders',
-        'orders': orders,
+        'orders': page_obj.object_list,
+        'page_obj': page_obj,
         'status_choices': Order.STATUS_CHOICES,
         'status_filter': status_filter,
     }
@@ -224,9 +226,11 @@ def dashboard_users(request):
         order_count=Count('order')
     ).order_by('-date_joined')
 
+    page_obj = Paginator(users, 12).get_page(request.GET.get('page'))
     context = {
         'active': 'users',
-        'users': users,
+        'users': page_obj.object_list,
+        'page_obj': page_obj,
     }
 
     return render(request, 'dashboard/users.html', context)
@@ -253,9 +257,11 @@ def dashboard_order_detail(request, order_id):
 def dashboard_products(request):
     products = Product.objects.select_related('category').order_by('-created_at')
 
+    page_obj = Paginator(products, 12).get_page(request.GET.get('page'))
     context = {
         'active': 'products',
-        'products': products,
+        'products': page_obj.object_list,
+        'page_obj': page_obj,
         'total_products': Product.objects.count(),
         'active_products': Product.objects.filter(is_available=True).count(),
         'in_stock_products': Product.objects.filter(is_available=True, stock__gt=5).count(),
@@ -420,10 +426,16 @@ def dashboard_product_offers(request):
     old_offers = ProductOfferHistory.objects.select_related('product', 'product__category').filter(ends_at__lte=now).order_by('-ends_at')
     for product in products:
         product.offer_history_rows = product.offer_history.all()
+    category_table_page = Paginator(categories, 12).get_page(request.GET.get('category_page'))
+    present_offers_page = Paginator(present_offers, 12).get_page(request.GET.get('present_page'))
+    old_offers_page = Paginator(old_offers, 12).get_page(request.GET.get('old_page'))
     return render(request, 'dashboard/product_offers.html', {
         'active': 'offers',
         'products': products,
         'categories': categories,
+        'category_table_page': category_table_page,
+        'present_offers_page': present_offers_page,
+        'old_offers_page': old_offers_page,
         'selected_product': selected_product,
         'present_offers': present_offers,
         'old_offers': old_offers,
@@ -443,12 +455,21 @@ def dashboard_category_offers(request):
     expired_offers = CategoryOfferHistory.objects.select_related('category').filter(
         ends_at__lte=now
     ).order_by('-ends_at')
+    present_rows = [
+        {'category_name': offer.category_name, 'discount_percent': offer.discount_percent, 'started_at': offer.started_at, 'ends_at': offer.ends_at}
+        for offer in present_offers
+    ]
+    present_rows.extend(
+        {'category_name': category.name, 'discount_percent': category.offer_percent, 'started_at': None, 'ends_at': category.offer_ends_at}
+        for category in legacy_present_categories
+    )
+    present_page = Paginator(present_rows, 12).get_page(request.GET.get('present_page'))
+    expired_page = Paginator(expired_offers, 12).get_page(request.GET.get('expired_page'))
     return render(request, 'dashboard/category_offers.html', {
         'active': 'category_offers',
         'categories': categories,
-        'present_offers': present_offers,
-        'legacy_present_categories': legacy_present_categories,
-        'expired_offers': expired_offers,
+        'present_page': present_page,
+        'expired_page': expired_page,
         'now': now,
     })
 
@@ -458,7 +479,7 @@ def dashboard_previous_offers(request):
     expired = ProductOfferHistory.objects.select_related(
         'product', 'product__category'
     ).filter(ends_at__lte=now).order_by('-ends_at')
-    page_obj = Paginator(expired, 10).get_page(request.GET.get('page'))
+    page_obj = Paginator(expired, 12).get_page(request.GET.get('page'))
     return render(request, 'dashboard/previous_offers.html', {
         'active': 'offers',
         'page_obj': page_obj,
@@ -469,10 +490,12 @@ def dashboard_previous_offers(request):
 def dashboard_offer_detail(request, product_id):
     product = get_object_or_404(Product.objects.select_related('category'), id=product_id)
     offer_history = ProductOfferHistory.objects.filter(product=product).order_by('recorded_at')
+    page_obj = Paginator(offer_history, 12).get_page(request.GET.get('page'))
     return render(request, 'dashboard/product_offer_detail.html', {
         'active': 'offers',
         'product': product,
-        'offer_history': offer_history,
+        'offer_history': page_obj.object_list,
+        'page_obj': page_obj,
         'now': timezone.now(),
     })
 
@@ -484,8 +507,8 @@ def dashboard_offer_history(request):
     category_history = CategoryOfferHistory.objects.select_related(
         'category'
     ).order_by('-recorded_at')
-    product_page = Paginator(product_history, 10).get_page(request.GET.get('product_page'))
-    category_page = Paginator(category_history, 10).get_page(request.GET.get('category_page'))
+    product_page = Paginator(product_history, 12).get_page(request.GET.get('product_page'))
+    category_page = Paginator(category_history, 12).get_page(request.GET.get('category_page'))
     return render(request, 'dashboard/product_offer_history.html', {
         'active': 'offers',
         'product_page': product_page,
@@ -547,7 +570,8 @@ def dashboard_categories(request):
                 category.delete()
                 messages.success(request, f'Category {name} was deleted.')
             return redirect('dashboard:categories')
-    return render(request, 'dashboard/categories.html', {'active': 'categories', 'categories': categories})
+    page_obj = Paginator(categories, 12).get_page(request.GET.get('page'))
+    return render(request, 'dashboard/categories.html', {'active': 'categories', 'categories': page_obj.object_list, 'page_obj': page_obj})
 
 
 @user_passes_test(lambda user: user.is_superuser)
@@ -580,8 +604,8 @@ def dashboard_staff_activity(request):
             Q(product_name__icontains=search) | Q(reason__icontains=search) |
             Q(changed_by__username__icontains=search)
         )
-    activity_page = Paginator(records, 25).get_page(request.GET.get('page'))
-    stock_page = Paginator(movements, 25).get_page(request.GET.get('stock_page'))
+    activity_page = Paginator(records, 12).get_page(request.GET.get('page'))
+    stock_page = Paginator(movements, 12).get_page(request.GET.get('stock_page'))
     context = {
         'active': 'staff_activity',
         'staff_members': staff_members,

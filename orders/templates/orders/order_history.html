@@ -11,6 +11,7 @@
 
     {% if order_items %}
         {% include "orders/_order_history_items.html" %}
+        {% include "includes/pagination.html" with page_obj=items_page page_key="items_page" %}
     {% else %}
         <div class="empty" style="margin:35px 0">
             <div style="font-size:55px">📦</div>

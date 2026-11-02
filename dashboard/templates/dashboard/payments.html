@@ -33,7 +33,7 @@
       <td><a class="pay-view" href="{% url 'dashboard:payment_detail' record.pk %}">View details</a></td>
     </tr>{% endfor %}
     </tbody></table></div>
-    <div class="pay-pagination"><span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} matching record{{ page_obj.paginator.count|pluralize }}</span><span>{% if page_obj.has_previous %}<a href="?q={{ query|urlencode }}&status={{ status_filter|urlencode }}&method={{ method_filter|urlencode }}&page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}{% if page_obj.has_previous and page_obj.has_next %} &nbsp;·&nbsp; {% endif %}{% if page_obj.has_next %}<a href="?q={{ query|urlencode }}&status={{ status_filter|urlencode }}&method={{ method_filter|urlencode }}&page={{ page_obj.next_page_number }}">Next →</a>{% endif %}</span></div>
+    {% include "includes/pagination.html" with page_obj=page_obj %}
     {% else %}<div class="pay-empty"><strong>No payment records found</strong>Try another search or clear the filters.</div>{% endif %}
     <div class="account-footnote">This screen displays records saved in ShopEasy. Payment capture and refunds must still be confirmed through the payment provider; a database status alone does not move money.</div>
   </div>

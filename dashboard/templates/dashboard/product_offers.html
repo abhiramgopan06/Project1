@@ -22,7 +22,8 @@
         </div>
         <div class="category-actions"><button class="btn btn-primary" type="submit">Save Category Offer</button><p class="offer-muted">Enter 0% to cancel the offer for the selected category.</p></div>
     </form>
-    <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Offer</th><th>Expires</th><th>Status</th></tr></thead><tbody>{% for category in categories %}<tr><td><strong>{{ category.name }}</strong></td><td>{% if category.is_offer_active %}{{ category.offer_percent }}% off{% else %}No active offer{% endif %}</td><td>{% if category.offer_ends_at %}{{ category.offer_ends_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td><td>{% if category.is_offer_active %}<span class="offer-percent">Active</span>{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No categories available.</td></tr>{% endfor %}</tbody></table></div>
+    <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Category</th><th>Offer</th><th>Expires</th><th>Status</th></tr></thead><tbody>{% for category in category_table_page %}<tr><td><strong>{{ category.name }}</strong></td><td>{% if category.is_offer_active %}{{ category.offer_percent }}% off{% else %}No active offer{% endif %}</td><td>{% if category.offer_ends_at %}{{ category.offer_ends_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td><td>{% if category.is_offer_active %}<span class="offer-percent">Active</span>{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No categories available.</td></tr>{% endfor %}</tbody></table></div>
+    {% include "includes/pagination.html" with page_obj=category_table_page page_key="category_page" %}
 </section>
 
 <style>
@@ -144,12 +145,14 @@
     <p class="offer-muted">Manage active offers and review offers that have ended.</p>
     <h4>Present Offers</h4>
     <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
-    {% for product in present_offers %}<tr><td><strong>{{ product.name }}</strong></td><td><span class="offer-percent">{{ product.discount_percent }}% OFF</span></td><td>{{ product.discount_ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' product.id %}">View</a> <a class="btn btn-primary" href="{% url 'dashboard:product_offers' %}?product={{ product.id }}">Edit</a></td></tr>{% empty %}<tr><td colspan="4">There are no present offers.</td></tr>{% endfor %}
+    {% for product in present_offers_page %}<tr><td><strong>{{ product.name }}</strong></td><td><span class="offer-percent">{{ product.discount_percent }}% OFF</span></td><td>{{ product.discount_ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' product.id %}">View</a> <a class="btn btn-primary" href="{% url 'dashboard:product_offers' %}?product={{ product.id }}">Edit</a></td></tr>{% empty %}<tr><td colspan="4">There are no present offers.</td></tr>{% endfor %}
     </tbody></table></div>
+    {% include "includes/pagination.html" with page_obj=present_offers_page page_key="present_page" %}
     <h4 id="old-offers" style="margin-top:28px">Previous Offers</h4>
     <div class="table-scroll"><table class="dashboard-table"><thead><tr><th>Product</th><th>Offer</th><th>Ended</th><th>Actions</th></tr></thead><tbody>
-    {% for offer in old_offers %}<tr><td><strong>{{ offer.product.name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' offer.product.id %}">View</a></td></tr>{% empty %}<tr><td colspan="4">There are no old offers yet.</td></tr>{% endfor %}
+    {% for offer in old_offers_page %}<tr><td><strong>{{ offer.product.name }}</strong></td><td>{{ offer.discount_percent }}% off</td><td>{{ offer.ends_at|date:"M d, Y H:i" }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:offer_detail' offer.product.id %}">View</a></td></tr>{% empty %}<tr><td colspan="4">There are no old offers yet.</td></tr>{% endfor %}
     </tbody></table></div>
+    {% include "includes/pagination.html" with page_obj=old_offers_page page_key="old_page" %}
 </section>
 
 <section class="checkout-card" style="margin-top:22px;padding:22px">

@@ -107,6 +107,8 @@ def verify_payment(request):
     razorpay_order_id = request.POST.get('razorpay_order_id', '').strip()
     razorpay_signature = request.POST.get('razorpay_signature', '').strip()
     expected_order_id = request.session.get('demo_payment_order_id')
+    if razorpay_payment_id and Order.objects.filter(razorpay_payment_id=razorpay_payment_id).exists():
+        return JsonResponse({'success': False, 'error': 'This payment has already been processed.'}, status=409)
     if not expected_order_id or razorpay_order_id != expected_order_id:
         return JsonResponse({'success': False, 'error': 'Invalid or expired payment session. Please start payment again.'}, status=400)
 
@@ -204,6 +206,11 @@ def verify_payment(request):
                 razorpay_payment_id=razorpay_payment_id,
             )
 
+            from storeextras.models import OrderTrackingEvent, PaymentRecord, ActivityLog
+            OrderTrackingEvent.objects.create(order=order, status='placed', note='Order created after verified payment.', changed_by=request.user)
+            OrderTrackingEvent.objects.create(order=order, status='confirmed', note='Payment verified and order confirmed.', changed_by=request.user)
+            PaymentRecord.objects.get_or_create(order=order, reference=razorpay_payment_id, defaults={'user': request.user, 'method': 'razorpay' if real_payment else 'razorpay (demo)', 'amount': order.total_amount, 'status': PaymentRecord.STATUS_SUCCESS, 'note': 'Payment verified at checkout'})
+            ActivityLog.objects.create(actor=request.user, action='Payment verified', object_type='Order', object_id=str(order.pk), details=f'Payment reference {razorpay_payment_id}; amount {order.total_amount}.')
             for item in cart_items:
                 product = products[item.product_id]
                 selected_variant = getattr(item, '_locked_variant', None)
@@ -279,6 +286,9 @@ def razorpay_webhook(request):
     if not order:
         return JsonResponse({'success': True, 'ignored': True})
     if event == 'payment.captured':
+        existing_record = PaymentRecord.objects.filter(order=order, reference=payment_id, status=PaymentRecord.STATUS_SUCCESS).exists()
+        if existing_record and order.payment_status == 'Paid':
+            return JsonResponse({'success': True, 'duplicate': True})
         expected_amount = int(order.total_amount * 100)
         if payment.get('currency') != 'INR' or payment.get('amount') != expected_amount:
             return JsonResponse({'success': False, 'error': 'Payment amount or currency does not match the order.'}, status=400)

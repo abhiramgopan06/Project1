@@ -1,5 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Order #{{ order.id }} | E-Commerce Store{% endblock %}
+{% block title %}Order #{{ order.id }} | E-Commerce Store
+<section class="card" style="margin-top:24px;padding:20px;border-radius:14px">
+<h2>Order tracking timeline</h2>
+<p>Order updates and timestamps appear here as staff records each delivery stage.</p>
+{% if tracking_events %}<ol style="padding-left:22px">{% for event in tracking_events %}<li style="margin:12px 0"><strong>{{ event.get_status_display }}</strong> <span>{{ event.created_at|date:"d M Y, h:i A" }}</span>{% if event.note %}<div>{{ event.note }}</div>{% endif %}</li>{% endfor %}</ol>{% else %}<p>Tracking updates will appear here when your order progresses.</p>{% endif %}
+<a href="{% url 'storeextras:invoice_pdf' order.id %}" class="btn">Download invoice PDF</a>
+</section>
+
+{% endblock %}
 {% block content %}
 <div class="container" style="margin:12px auto;max-width:1100px"><a class="btn btn-outline" href="{% url 'storeextras:invoice' order.id %}">Print / Download Invoice</a></div>
 <div class="checkout-container">
@@ -177,4 +185,12 @@ document.querySelectorAll('.return-replace-form').forEach(function (form) {
     updateReasonRequirement();
 });
 </script>
+
+<section class="card" style="margin-top:24px;padding:20px;border-radius:14px">
+<h2>Order tracking timeline</h2>
+<p>Order updates and timestamps appear here as staff records each delivery stage.</p>
+{% if tracking_events %}<ol style="padding-left:22px">{% for event in tracking_events %}<li style="margin:12px 0"><strong>{{ event.get_status_display }}</strong> <span>{{ event.created_at|date:"d M Y, h:i A" }}</span>{% if event.note %}<div>{{ event.note }}</div>{% endif %}</li>{% endfor %}</ol>{% else %}<p>Tracking updates will appear here when your order progresses.</p>{% endif %}
+<a href="{% url 'storeextras:invoice_pdf' order.id %}" class="btn">Download invoice PDF</a>
+</section>
+
 {% endblock %}

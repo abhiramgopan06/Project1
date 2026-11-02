@@ -103,3 +103,18 @@ class BackInStockAlertTests(TestCase):
         self.assertTrue(alert.is_notified)
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('Running Shoe', mail.outbox[0].subject)
+
+
+class OrderTrackingAndConsentModelTests(TestCase):
+    def test_abandoned_cart_reminders_are_opt_in_by_default(self):
+        from django.contrib.auth import get_user_model
+        from .models import AbandonedCartConsent
+        user = get_user_model().objects.create_user(username='cart-consent-test', password='safe-test-password')
+        consent = AbandonedCartConsent.objects.create(user=user)
+        self.assertFalse(consent.email_reminders_enabled)
+
+    def test_tracking_status_choices_include_delivery_stages(self):
+        from .models import OrderTrackingEvent
+        statuses = dict(OrderTrackingEvent.STATUS_CHOICES)
+        for status in ('placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'):
+            self.assertIn(status, statuses)

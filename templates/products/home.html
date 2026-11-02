@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}E-Commerce Store | Online Store{% endblock %}
+{% block title %}ShopEasy | Online Shopping{% endblock %}
 
 {% block content %}
 <div class="container home-page-polish">
@@ -41,7 +41,30 @@
 
 
 
-
+    {% if recently_viewed %}
+    <section class="recently-viewed-section" style="margin:28px 0">
+        <div class="section-head">
+            <div>
+                <h2>Recently Viewed</h2>
+                <p>Pick up where you left off.</p>
+            </div>
+        </div>
+        <div class="product-grid recently-viewed-grid">
+            {% for product in recently_viewed %}
+            <article class="product-card">
+                <a class="product-image" href="{% url 'products:product_detail' product.id %}">
+                    {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span class="product-image-placeholder">📦</span>{% endif %}
+                </a>
+                <div class="product-info">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <div class="price">₹{{ product.discounted_price|floatformat:2 }}</div>
+                    <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View product</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     {% if products %}
     <div class="section-head">
@@ -311,29 +334,9 @@
     </div>
 
     <div class="shop-layout">
-        <aside class="filter-sidebar" aria-label="Product filters">
-            <form method="get" action="{% url 'products:home' %}" class="filter-form">
-                <h3>Filters</h3>
-                <label for="filter-search">Search</label>
-                <input id="filter-search" type="search" name="q" value="{{ request.GET.q }}" placeholder="Product name">
-                <label for="filter-category">Category</label>
-                <select id="filter-category" name="category">
-                    <option value="">All Categories</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-                <label for="filter-min-price">Minimum price</label>
-                <input id="filter-min-price" type="number" min="0" step="0.01" name="min_price" value="{{ request.GET.min_price }}" placeholder="₹0">
-                <label for="filter-max-price">Maximum price</label>
-                <input id="filter-max-price" type="number" min="0" step="0.01" name="max_price" value="{{ request.GET.max_price }}" placeholder="₹100000">
-                {% if price_error %}<p class="filter-error">{{ price_error }}</p>{% endif %}
-                <button class="filter-submit" type="submit">Apply Filters</button>
-                <a class="filter-clear" href="{% url 'products:home' %}">Clear</a>
-            </form>
-        </aside>
 
-        <section class="all-products-content">
+
+        <section>
             {% if products %}
                 <div class="product-grid">
                     {% for product in products %}
@@ -474,43 +477,12 @@
                 </nav>
                 {% endif %}
     </div>
-
-    {% if recently_viewed %}
-    <section class="recently-viewed-section">
-        <div class="section-head">
-            <div>
-                <h2>Recently Viewed</h2>
-                <p>Pick up where you left off. Drag to browse.</p>
-            </div>
-        </div>
-        <section class="product-carousel recently-viewed-carousel" aria-label="Recently Viewed">
-            <button class="product-carousel-arrow product-carousel-prev" type="button" aria-label="Previous recently viewed products">&#10094;</button>
-            <div class="product-carousel-viewport">
-                <div class="product-carousel-track">
-                    {% for product in recently_viewed %}
-                    <article class="product-card product-carousel-card">
-                        <a class="product-image" href="{% url 'products:product_detail' product.id %}">
-                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<span class="product-image-placeholder">📦</span>{% endif %}
-                        </a>
-                        <div class="product-info">
-                            <h3 class="product-title">{{ product.name }}</h3>
-                            <div class="price">₹{{ product.discounted_price|floatformat:2 }}</div>
-                            <a class="btn btn-outline" href="{% url 'products:product_detail' product.id %}">View product</a>
-                        </div>
-                    </article>
-                    {% endfor %}
-                </div>
-            </div>
-            <button class="product-carousel-arrow product-carousel-next" type="button" aria-label="Next recently viewed products">&#10095;</button>
-        </section>
-    </section>
-    {% endif %}
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".product-desc").forEach(function (description) {
-        const fullText = description.dataset.description.replace(/\\u([0-9a-fA-F]{4})/g, function (_, code) { return String.fromCharCode(parseInt(code, 16)); }).trim();
+        const fullText = description.dataset.description.trim();
         const textElement = description.querySelector(".desc-text");
         const moreButton = description.querySelector(".desc-more");
         const words = fullText.split(/\s+/).filter(Boolean);
@@ -586,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function toggleDescription(button) {
     const description = button.closest(".product-desc");
     const textElement = description.querySelector(".desc-text");
-    const fullText = description.dataset.description.replace(/\\u([0-9a-fA-F]{4})/g, function (_, code) { return String.fromCharCode(parseInt(code, 16)); }).trim();
+    const fullText = description.dataset.description.trim();
     const words = fullText.split(/\s+/).filter(Boolean);
     const wordLimit = 12;
 

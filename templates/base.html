@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}E-Commerce Store{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261102_filtercard">
+    <title>{% block title %}ShopEasy{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261102c">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -14,7 +14,7 @@
 <body>
 <header class="navbar">
     <div class="container nav-inner">
-        <a class="brand" href="{% url 'products:home' %}">E-Commerce Shop</a>
+        <a class="brand" href="{% url 'products:home' %}">ShopEasy</a>
 
         <form class="nav-search" method="get" action="{% url 'products:home' %}">
             <input type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
@@ -92,7 +92,7 @@
     <div class="container footer-top">
 
         <div class="footer-col footer-white">
-            <h4>E-Commerce Shop</h4>
+            <h4>ShopEasy</h4>
             <a href="#">About Us</a>
             <a href="#">Blog</a>
             <a href="#">Careers</a>
@@ -141,7 +141,7 @@
     <div class="container footer-bottom">
         <p class="footer-copyright">
             <i class="fa-solid fa-bag-shopping"></i>
-            &copy; {% now "Y" %} E-Commerce Shop — All rights reserved.
+            &copy; {% now "Y" %} ShopEasy — All rights reserved.
         </p>
 
         <div class="footer-payments">

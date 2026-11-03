@@ -84,7 +84,7 @@ def home(request):
     featured_products = Product.objects.filter(is_available=True).select_related('category').order_by('created_at')[:12]
     recommendations = recommended_products(request.user, limit=8) if request.user.is_authenticated else []
     recently_viewed = []
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and not request.user.is_staff:
         from .models import ProductHistory
         recently_viewed = Product.objects.filter(
             user_history__user=request.user,

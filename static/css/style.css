@@ -2077,29 +2077,34 @@ main {
     color: #334155;
 }
 
-.order-status-pending {
+.order-status-pending,
+.dash-status.order-status-pending {
     background: #fef3c7;
     color: #92400e;
 }
 
-.order-status-confirmed {
+.order-status-confirmed,
+.dash-status.order-status-confirmed {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.order-status-shipped,
+.dash-status.order-status-shipped {
     background: #dbeafe;
-    color: #1e40af;
+    color: #1d4ed8;
 }
 
-.order-status-shipped {
-    background: #ede9fe;
-    color: #5b21b6;
-}
-
-.order-status-delivered {
+.order-status-delivered,
+.dash-status.order-status-delivered {
     background: #dcfce7;
     color: #166534;
 }
 
-.order-status-cancelled {
+.order-status-cancelled,
+.dash-status.order-status-cancelled {
     background: #fee2e2;
-    color: #991b1b;
+    color: #b91c1c;
 }
 
 .order-list {

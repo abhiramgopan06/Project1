@@ -1,0 +1,22 @@
+ShopEasy update notes
+
+Changes in this update:
+1. Staff and superusers no longer receive the Recently Viewed product list on the shop home page. Regular customers continue to see their own Recently Viewed products.
+2. Order status badges now use consistent colours:
+   - Pending: yellow
+   - Confirmed: orange
+   - Shipped: blue
+   - Delivered: green
+   - Cancelled: red
+3. The colours are applied to the admin order list and dashboard recent orders, as well as existing customer order-status badges.
+
+Install:
+1. Back up your current db.sqlite3 and .env files.
+2. Extract this ZIP into a new folder.
+3. Copy the updated source files into your project. Keep your own .env file and database.
+4. Activate your existing virtual environment.
+5. Run: python manage.py check
+6. Run: python manage.py runserver
+7. Refresh the browser with Ctrl+Shift+R.
+
+No database migration is required for these changes.

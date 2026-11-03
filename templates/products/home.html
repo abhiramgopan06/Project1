@@ -475,7 +475,7 @@
                 {% endif %}
     </div>
 
-    {% if recently_viewed %}
+    {% if recently_viewed and request.user.is_authenticated and not request.user.is_staff %}
     <section class="recently-viewed-section">
         <div class="section-head">
             <div>

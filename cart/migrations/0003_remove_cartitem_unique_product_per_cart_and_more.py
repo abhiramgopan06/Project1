@@ -1,7 +1,6 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-
 class Migration(migrations.Migration):
     dependencies = [
         ('cart', '0002_unique_cart_product'),

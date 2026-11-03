@@ -251,7 +251,6 @@ def verify_payment(request):
     except Cart.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Cart not found.'}, status=404)
 
-
 @csrf_exempt
 @require_POST
 def razorpay_webhook(request):

@@ -2,10 +2,8 @@ from contextvars import ContextVar
 
 _current_actor = ContextVar('current_store_actor', default=None)
 
-
 def get_current_actor():
     return _current_actor.get()
-
 
 class StoreActorMiddleware:
     def __init__(self, get_response):

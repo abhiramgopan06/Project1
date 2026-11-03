@@ -21,7 +21,7 @@ def load_env_file():
             continue
         name, value = line.split('=', 1)
         value = value.strip().strip('"').strip("'")
-                                                                    
+
         os.environ.setdefault(name.strip(), value)
 
 load_env_file()
@@ -120,7 +120,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '').strip()
-                                                                   
+
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
@@ -134,9 +134,9 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = f'E-Commerce Shop <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'E-Commerce Shop <noreply@ecommerce.local>'
 
-OTP_EXPIRY_MINUTES = 10                                  
-OTP_RESEND_SECONDS = 30                                                   
-OTP_MAX_ATTEMPTS = 5                                      
+OTP_EXPIRY_MINUTES = 10
+OTP_RESEND_SECONDS = 30
+OTP_MAX_ATTEMPTS = 5
 
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')

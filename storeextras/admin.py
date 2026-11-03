@@ -27,7 +27,6 @@ class ActivityLogAdmin(admin.ModelAdmin):
     list_filter = ('action', 'object_type', 'created_at')
     search_fields = ('actor__username', 'details', 'object_id')
 
-
 @admin.register(BackInStockAlert)
 class BackInStockAlertAdmin(admin.ModelAdmin):
     list_display = ('product', 'variant', 'email', 'is_notified', 'created_at', 'notified_at')

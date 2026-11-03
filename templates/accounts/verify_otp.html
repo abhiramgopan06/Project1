@@ -62,7 +62,6 @@
         <div class="otp-resend">
             <span>Didn't get the code?</span>
 
-            
             <form method="post" action="{% url 'resend_otp' %}">
                 {% csrf_token %}
                 <button type="submit" class="otp-resend-btn" id="resend-btn" data-wait="{{ resend_wait }}">

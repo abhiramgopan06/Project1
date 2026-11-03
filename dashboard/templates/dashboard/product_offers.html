@@ -18,7 +18,7 @@
         <div class="category-fields">
             <div><label for="offer-category">Category</label><select id="offer-category" name="category" required><option value="">Select category</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></div>
             <div><label for="category-discount">Discount (%)</label><input id="category-discount" name="category_discount_percent" type="number" min="0" max="90" value="10" required></div>
-            <div><label for="duration-days">Duration (days)</label><input id="duration-days" name="duration_days" type="number" min="1" max="365" value="2" required><small>Example: 2 days for a weekend offer.</small></div>
+            <div><label for="category-duration-days">Duration (days)</label><input id="category-duration-days" name="duration_days" type="number" min="1" max="365" value="2" required><small>Example: 2 days for a weekend offer.</small></div>
         </div>
         <div class="category-actions"><button class="btn btn-primary" type="submit">Save Category Offer</button><p class="offer-muted">Enter 0% to cancel the offer for the selected category.</p></div>
     </form>
@@ -27,10 +27,13 @@
 </section>
 
 <style>
-    
+
     .offer-page-card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 18px; padding: 28px; margin: 22px 0; box-shadow: 0 8px 24px rgba(15,23,42,.045); }
     .offer-page-card h3, .checkout-card h3 { color: var(--text-color, #172033); letter-spacing: -.25px; }
     .offer-muted { color: var(--muted-text, #64748b); font-size: 13px; line-height: 1.6; margin: 5px 0; }
+    .offer-product-filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(190px,.65fr) auto; gap:14px; align-items:end; margin:18px 0 12px; }
+    .offer-product-filters label { display:flex; flex-direction:column; gap:7px; font-size:13px; font-weight:750; color:var(--text-color,#172033); }
+    .offer-product-filters input,.offer-product-filters select { width:100%; min-height:43px; padding:10px 12px; border:1px solid var(--border-color,#dbe3ee); border-radius:10px; background:var(--card-bg,#fff); color:var(--text-color,#172033); }
     .offer-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; margin: 18px 0 22px; }
     .offer-product-option { display: flex; align-items: flex-start; gap: 13px; border: 1px solid var(--border-color, #dbe3ee); border-radius: 15px; padding: 15px; cursor: pointer; min-width: 0; background: var(--card-bg, #fff); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
     .offer-product-option:hover { border-color: #94a3b8; box-shadow: 0 7px 18px rgba(15,23,42,.07); transform: translateY(-2px); }
@@ -63,7 +66,7 @@
     .category-actions { display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:18px; }
     .category-actions .offer-muted { margin:0; }
     .offer-cancel-link { display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:10px;padding:11px 18px;font-weight:700;color:#334155;text-decoration:none;margin-left:8px; }
-    @media (max-width: 760px) { .category-fields { grid-template-columns:1fr; } .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
+    @media (max-width: 760px) { .offer-product-filters { grid-template-columns:1fr; } .category-fields { grid-template-columns:1fr; } .offer-page-card { padding: 18px; } .selected-product-info { grid-template-columns: 1fr; padding: 17px; gap: 18px; } .selected-product-image, .selected-product-placeholder { height: 220px; min-height: 220px; max-width: 100%; } .offer-product-grid { grid-template-columns: 1fr; } .offer-product-option { padding: 12px; } }
     @media (max-width: 420px) { .offer-product-thumb, .offer-product-placeholder { width: 76px; height: 88px; } .offer-page-card { padding: 14px; } .selected-product-info h3 { font-size: 21px !important; } }
     .offer-history-buttons { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 20px; }
     .offer-history-buttons .btn { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
@@ -71,12 +74,17 @@
 
 <section class="offer-page-card">
     <h3 style="margin:0 0 6px">1. Select a product</h3>
-    <p class="offer-muted">Each option includes a product image, name, price, and current offer. Select the correct product, then press “Choose this product”.</p>
+    <p class="offer-muted">Search or filter the catalog, compare each product’s image, category, price, stock and current offer, then select a card.</p>
+    <div class="offer-product-filters">
+        <label for="offer-product-search">Search products<input id="offer-product-search" type="search" placeholder="Search by product name…" autocomplete="off"></label>
+        <label for="offer-product-category">Filter by category<select id="offer-product-category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.name|lower }}">{{ category.name }}</option>{% endfor %}</select></label>
+        <span id="offer-product-count" class="offer-muted" aria-live="polite"></span>
+    </div>
 
     <form method="get" action="{% url 'dashboard:product_offers' %}#product-information">
         <div class="offer-product-grid">
             {% for product in products %}
-            <label class="offer-product-option">
+            <label class="offer-product-option" data-product-name="{{ product.name|lower }}" data-product-category="{% if product.category %}{{ product.category.name|lower }}{% endif %}">
                 <input type="radio" name="product" value="{{ product.id }}" {% if selected_product.id == product.id %}checked{% endif %} required>
                 {% if product.image %}
                     <img class="offer-product-thumb" src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -87,7 +95,8 @@
                     <span class="offer-product-name" style="display:block">{{ product.name }}</span>
                     <span class="offer-muted" style="display:block">Price: ₹{{ product.price|floatformat:2 }}</span>
                     <span class="offer-muted" style="display:block">Category: {% if product.category %}{{ product.category }}{% else %}Not set{% endif %}</span>
-                    <span class="offer-muted" style="display:block">Current offer: {% if product.effective_discount_percent %}{{ product.effective_discount_percent }}% off{% else %}None{% endif %}</span>
+                    <span class="offer-muted" style="display:block">Stock: {{ product.stock }}</span>
+                    <span class="offer-muted" style="display:block">Current offer: {% if product.effective_discount_percent %}{{ product.effective_discount_percent }}% off · ₹{{ product.discounted_price|floatformat:2 }}{% else %}None · ₹{{ product.price|floatformat:2 }}{% endif %}</span>
                 </span>
             </label>
             {% empty %}
@@ -180,6 +189,25 @@
 
 <script>
 (function () {
+    const search = document.getElementById('offer-product-search');
+    const categoryFilter = document.getElementById('offer-product-category');
+    const productCards = Array.from(document.querySelectorAll('.offer-product-option'));
+    const productCount = document.getElementById('offer-product-count');
+    function filterProducts() {
+        const term = (search?.value || '').trim().toLowerCase();
+        const category = (categoryFilter?.value || '').toLowerCase();
+        let visible = 0;
+        productCards.forEach(card => {
+            const matches = (card.dataset.productName || '').includes(term) && (!category || card.dataset.productCategory === category);
+            card.hidden = !matches;
+            if (matches) visible += 1;
+        });
+        if (productCount) productCount.textContent = visible + ' product' + (visible === 1 ? '' : 's');
+    }
+    search?.addEventListener('input', filterProducts);
+    categoryFilter?.addEventListener('change', filterProducts);
+    filterProducts();
+
     const input = document.getElementById('discount-percent');
     const preview = document.getElementById('offer-preview');
     if (!input || !preview) return;

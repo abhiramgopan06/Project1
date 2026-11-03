@@ -1,4 +1,4 @@
-                                                              
+
 
 import re
 from datetime import timedelta
@@ -95,7 +95,7 @@ class RegistrationOtpTests(TestCase):
         self.register()
         response = self.client.post(reverse('resend_otp'), follow=True)
         self.assertContains(response, 'Please wait')
-        self.assertEqual(len(mail.outbox), 1)                       
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_resend_sends_new_code_and_old_code_stops_working(self):
         self.register()

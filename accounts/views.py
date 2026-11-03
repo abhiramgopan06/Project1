@@ -42,7 +42,7 @@ def register(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False                                               
+            user.is_active = False
             user.save()
 
             UserProfile.objects.create(
@@ -108,7 +108,7 @@ def verify_otp(request):
             if is_ok:
                 user.is_active = True
                 user.save(update_fields=['is_active'])
-                otp.delete()                                            
+                otp.delete()
                 request.session.pop('otp_user_id', None)
 
                 messages.success(
@@ -196,7 +196,7 @@ def google_login(request):
         'response_type': 'code',
         'scope': 'openid email profile',
         'state': state,
-        'prompt': 'select_account',                                     
+        'prompt': 'select_account',
     })
     return redirect(f'{GOOGLE_AUTH_URL}?{query}')
 
@@ -230,7 +230,7 @@ def google_callback(request):
         return redirect('login')
 
     try:
-                                            
+
         token_response = requests.post(GOOGLE_TOKEN_URL, data={
             'code': code,
             'client_id': settings.GOOGLE_CLIENT_ID,
@@ -261,14 +261,14 @@ def google_callback(request):
     user = User.objects.filter(email__iexact=email).first()
 
     if user is None:
-                                                         
+
         user = User(
             username=make_unique_username(email),
             email=email,
             first_name=(info.get('given_name') or '')[:150],
             last_name=(info.get('family_name') or '')[:150],
         )
-        user.set_unusable_password()                                          
+        user.set_unusable_password()
         user.save()
         UserProfile.objects.create(user=user)
 

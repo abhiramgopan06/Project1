@@ -1,6 +1,5 @@
 from django.db import migrations, models
 
-
 class Migration(migrations.Migration):
     dependencies = [
         ('orders', '0008_return_inspection_and_refund'),

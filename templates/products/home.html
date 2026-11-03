@@ -39,10 +39,6 @@
         </div>
     </section>
 
-
-
-
-
     {% if products %}
     <div class="section-head">
         <div>
@@ -81,7 +77,6 @@
                         {% endif %}
                     </a>
 
-                    
                     {% if user.is_authenticated and not user.is_staff %}
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}
@@ -158,8 +153,6 @@
     </section>
     {% endif %}
 
-
-
     <div class="section-head" id="categories">
         <div>
             <h2>Shop by Category</h2>
@@ -233,7 +226,6 @@
                         {% endif %}
                     </a>
 
-                    
                     {% if user.is_authenticated and not user.is_staff %}
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}
@@ -360,7 +352,6 @@
                             {% endif %}
                         </a>
 
-                        
                     {% if user.is_authenticated and not user.is_staff %}
                     <form class="product-wishlist-form" method="post" action="{% url 'storeextras:wishlist_toggle' product.id %}">
                         {% csrf_token %}

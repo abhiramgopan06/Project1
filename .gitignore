@@ -1,10 +1,7 @@
-*.pyc
 .env
-__pycache__/
-db.sqlite3
-media/
-
-# Local virtual environment
-env/
 venv/
-.venv/
+env/
+__pycache__/
+*.py[cod]
+.git/
+staticfiles/

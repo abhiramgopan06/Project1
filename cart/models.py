@@ -41,7 +41,7 @@ class CartItem(models.Model):
 
     @property
     def total_price(self):
-    
+
         unit_price = self.variant.effective_price if self.variant_id else self.product.discounted_price
         return unit_price * self.quantity
 

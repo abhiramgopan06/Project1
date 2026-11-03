@@ -107,7 +107,6 @@ def export_stock_csv(request):
         writer.writerow([variant.product_id, 'Variant', variant.product.name, variant.product.category.name, f'{variant.get_option_type_display()}: {variant.display_value}', variant.sku, variant.stock, variant.effective_price, variant.is_active])
     return response
 
-
 @staff_member_required
 def export_sales_excel(request):
     from openpyxl import Workbook

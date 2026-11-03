@@ -69,7 +69,6 @@ class ActivityLog(models.Model):
     def __str__(self):
         return f'{self.action} - {self.created_at:%Y-%m-%d %H:%M}'
 
-
 class StockReservation(models.Model):
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='reservations')
     variant = models.ForeignKey('products.ProductVariant', on_delete=models.CASCADE, null=True, blank=True, related_name='reservations')
@@ -86,7 +85,6 @@ class StockReservation(models.Model):
 
     def __str__(self):
         return f'{self.product.name}: {self.quantity} reserved'
-
 
 class BackInStockAlert(models.Model):
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='stock_alerts')

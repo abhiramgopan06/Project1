@@ -48,7 +48,6 @@ class RecommendationHistoryTests(TestCase):
         self.client.post(reverse('cart:add_to_cart', args=[self.mouse.id]), {'next': reverse('products:home')})
         self.assertEqual(ProductHistory.objects.get(user=self.user, product=self.mouse).cart_count, 1)
 
-
     def test_recently_viewed_is_specific_to_logged_in_user(self):
         other_user = User.objects.create_user(username='otheruser', password='Testpass123!')
         record_product_history(self.user, self.mouse, 'view')

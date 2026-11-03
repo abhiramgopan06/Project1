@@ -7,7 +7,6 @@ from django.utils import timezone
 from products.models import Product, ProductVariant
 from .models import BackInStockAlert, Notification, StockMovement
 
-
 def send_stock_alert(alert, subject, message, notification_title, notification_message, product_id):
     if alert.user_id:
         Notification.objects.create(
@@ -28,11 +27,9 @@ def send_stock_alert(alert, subject, message, notification_title, notification_m
         alert.notified_at = timezone.now()
         alert.save(update_fields=['is_notified', 'notified_at'])
 
-
 @receiver(pre_save, sender=Product)
 def remember_product_stock(sender, instance, **kwargs):
     instance._previous_stock = sender.objects.filter(pk=instance.pk).values_list('stock', flat=True).first() if instance.pk else 0
-
 
 @receiver(post_save, sender=Product)
 def record_product_stock_change(sender, instance, created, **kwargs):
@@ -59,11 +56,9 @@ def record_product_stock_change(sender, instance, created, **kwargs):
             instance.pk,
         )
 
-
 @receiver(pre_save, sender=ProductVariant)
 def remember_variant_stock(sender, instance, **kwargs):
     instance._previous_stock = sender.objects.filter(pk=instance.pk).values_list('stock', flat=True).first() if instance.pk else 0
-
 
 @receiver(post_save, sender=ProductVariant)
 def record_variant_stock_change(sender, instance, created, **kwargs):

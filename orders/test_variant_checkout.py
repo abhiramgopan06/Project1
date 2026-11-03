@@ -8,7 +8,6 @@ from cart.models import Cart, CartItem
 from products.models import Category, Product, ProductVariant
 from .models import Order, OrderItem
 
-
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class VariantCheckoutTests(TestCase):
     def setUp(self):

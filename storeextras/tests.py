@@ -9,7 +9,6 @@ from cart.models import Cart, CartItem
 from products.models import Category, Product, ProductVariant
 from .models import BackInStockAlert
 
-
 class ProductVariantTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -51,7 +50,6 @@ class ProductVariantTests(TestCase):
         self.assertEqual(response.status_code, 302)
         item = CartItem.objects.get(cart__user=self.user, product=self.product, variant=self.variant)
         self.assertEqual(item.quantity, 1)
-
 
 class BackInStockAlertTests(TestCase):
     def setUp(self):

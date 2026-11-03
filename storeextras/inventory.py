@@ -5,7 +5,6 @@ from django.utils import timezone
 from products.models import Product, ProductVariant
 from .models import StockReservation
 
-
 def reserve_stock(*, user, product_id, quantity, variant_id=None, minutes=15):
     if quantity < 1:
         raise ValueError('Quantity must be at least one.')
@@ -29,7 +28,6 @@ def reserve_stock(*, user, product_id, quantity, variant_id=None, minutes=15):
             expires_at=now + timedelta(minutes=max(1, min(minutes, 60))),
         )
 
-
 def release_reservation(reference):
     with transaction.atomic():
         reservation = StockReservation.objects.select_for_update().filter(reference=reference, released=False).first()
@@ -38,7 +36,6 @@ def release_reservation(reference):
         reservation.released = True
         reservation.save(update_fields=['released'])
         return True
-
 
 def release_expired_reservations():
     return StockReservation.objects.filter(released=False, expires_at__lte=timezone.now()).update(released=True)

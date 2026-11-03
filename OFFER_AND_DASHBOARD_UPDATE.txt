@@ -1,0 +1,29 @@
+DASHBOARD AND PROMOTIONS UPDATE
+
+Product offers
+- Product selection now uses visual cards with product image, category, price, stock, and current discount.
+- Search and category filters help staff find products faster.
+- Selecting a product opens a detail area with the regular price, current price, description, category, and stock.
+- The discount preview updates while the discount percentage is changed.
+- Category-wide offers are available directly on the Product Offers page, with current status and expiry dates.
+- Category offers can still be reviewed through the dedicated Category Offers page.
+- Product-specific active and expired offers remain available, with links to edit offers and inspect offer history.
+- Category and product offers continue to use the existing Django view logic and model properties.
+
+Admin dashboard
+- The dashboard home page has a clearer welcome area, summary cards, recent orders, staff activity, low-stock alerts, and quick actions.
+- Shared dashboard styles were refined for responsive layouts and clearer form focus states.
+
+Setup
+- Open the project folder containing manage.py.
+- Create and activate a virtual environment.
+- Install packages with: pip install -r requirements.txt
+- Copy .env.example to .env and add your own credentials only if required.
+- Run: python manage.py check
+- Run: python manage.py migrate
+- Run: python manage.py runserver
+
+Security and testing notes
+- A real .env file is not included in this ZIP. Keep credentials private.
+- Python source compilation passed during packaging.
+- A full Django check and browser-based end-to-end tests could not be run in this build environment because Django is not installed here. Test the offer forms, expiry, category discounts, and storefront prices locally after installing dependencies.

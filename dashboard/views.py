@@ -15,7 +15,6 @@ from products.models import Product, Category, ProductOfferHistory, CategoryOffe
 from products.forms import ProductForm
 from storeextras.models import ActivityLog, StockMovement, PaymentRecord
 
-
 def _save_product_variants(request, product):
     if request.POST.get('enable_variants') != 'on':
         product.variants.update(is_active=False)
@@ -68,7 +67,6 @@ def _save_product_variants(request, product):
         submitted_skus.add(variant.sku)
     product.variants.exclude(sku__in=submitted_skus).update(is_active=False)
 
-
 @staff_member_required
 def dashboard_home(request):
     if not request.user.is_superuser:
@@ -102,7 +100,6 @@ def dashboard_home(request):
     }
 
     return render(request, 'dashboard/home.html', context)
-
 
 @staff_member_required
 def staff_dashboard_home(request):
@@ -175,7 +172,6 @@ def dashboard_payment_detail(request, payment_id):
         pk=payment_id,
     )
     return render(request, 'storeextras/payment_detail.html', {'record': record, 'is_admin_payment_view': True})
-
 
 @staff_member_required
 def dashboard_orders(request):
@@ -384,7 +380,7 @@ def dashboard_product_offers(request):
             )
             ActivityLog.objects.create(actor=request.user, action='Category offer created', object_type='Category', object_id=category.pk, details=f'{percent}% offer on {category.name} for {duration} day(s), ending {category.offer_ends_at}.')
             messages.success(request, f'{percent}% offer set for {category.name} for {duration} day(s).')
-        return redirect('dashboard:category_offers')
+        return redirect('/dashboard/offers/#category-offers')
 
     if request.method == 'POST':
         if not selected_product:
@@ -516,7 +512,6 @@ def dashboard_offer_history(request):
         'now': timezone.now(),
     })
 
-
 @user_passes_test(lambda user: user.is_superuser)
 @require_POST
 def toggle_staff_role(request, user_id):
@@ -573,7 +568,6 @@ def dashboard_categories(request):
     page_obj = Paginator(categories, 12).get_page(request.GET.get('page'))
     return render(request, 'dashboard/categories.html', {'active': 'categories', 'categories': page_obj.object_list, 'page_obj': page_obj})
 
-
 @user_passes_test(lambda user: user.is_superuser)
 def dashboard_staff_activity(request):
     staff_members = User.objects.filter(is_staff=True, is_superuser=False).order_by('username')
@@ -626,7 +620,6 @@ def dashboard_staff_activity(request):
         ).count(),
     }
     return render(request, 'dashboard/staff_activity.html', context)
-
 
 @staff_member_required
 def dashboard_integrations(request):

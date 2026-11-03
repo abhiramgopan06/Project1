@@ -7,7 +7,6 @@ from django.urls import reverse
 from products.models import Category, Product, ProductVariant
 from .models import Cart, CartItem
 
-
 class CartPricingTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

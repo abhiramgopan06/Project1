@@ -13,7 +13,6 @@ from products.models import Product
 from orders.models import Order, ReturnReplaceRequest
 from .models import WishlistItem, Notification, PaymentRecord, StockMovement, ActivityLog, BackInStockAlert
 
-
 @require_POST
 def request_stock_alert(request, product_id):
     product = get_object_or_404(Product, pk=product_id, is_available=True)
@@ -233,7 +232,6 @@ def return_management(request):
         return redirect('storeextras:return_management')
     page_obj = Paginator(requests, 12).get_page(request.GET.get('page'))
     return render(request, 'storeextras/return_management.html', {'requests': page_obj.object_list, 'page_obj': page_obj, 'active': 'returns'})
-
 
 @login_required
 def customer_dashboard(request):
